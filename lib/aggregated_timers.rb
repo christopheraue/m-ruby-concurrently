@@ -1,5 +1,5 @@
 require_relative "../mrblib/version"
-
-module AggregatedTimers
-  # Your code goes here...
-end
+require_relative "../mrblib/wall_clock"
+require_relative "../mrblib/aggregated_timers"
+require_relative "../mrblib/timer"
+require_relative "../mrblib/collection"
