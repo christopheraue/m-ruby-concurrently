@@ -1,4 +1,4 @@
-require "aggregated_timers/version"
+require_relative "../mrblib/version"
 
 module AggregatedTimers
   # Your code goes here...
