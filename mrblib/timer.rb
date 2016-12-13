@@ -5,14 +5,14 @@ module IOEventLoop
       @seconds = seconds || @seconds
       @repeat = opts.fetch(:repeat, @repeat) || false
       @callback = callback || @callback
-      @collection = opts[:collection]
+      @timers = opts[:timers]
       repeat opts.fetch(:start_time, WallClock.now)
     end
 
     def repeat(start_time = WallClock.now)
       raise Error, 'timer still running' if @timeout_time
       @timeout_time = start_time + @seconds
-      @collection.schedule(self) if @collection
+      @timers.schedule(self) if @timers
       true
     end
 

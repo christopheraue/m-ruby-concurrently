@@ -1,24 +1,24 @@
 module IOEventLoop
-  class Collection
+  class Timers
     def initialize
       @timers = []
     end
 
     def after(seconds, &on_timeout)
-      Timer.new(seconds, collection: self, &on_timeout)
+      Timer.new(seconds, timers: self, &on_timeout)
     end
 
     def every(seconds, &on_timeout)
-      Timer.new(seconds, collection: self, repeat: true, &on_timeout)
+      Timer.new(seconds, timers: self, repeat: true, &on_timeout)
     end
 
-    def attach_to(collection)
-      @collection = collection
+    def attach_to(parent_timers)
+      @parent_timers = parent_timers
     end
 
     def schedule(timer)
-      if @collection
-        @collection.schedule timer
+      if @parent_timers
+        @parent_timers.schedule timer
       else
         index = bisect_left(@timers, timer)
         @timers.insert(index, timer)

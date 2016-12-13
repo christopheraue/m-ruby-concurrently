@@ -1,13 +1,13 @@
-describe IOEventLoop::Collection do
+describe IOEventLoop::Timers do
   subject(:instance) { described_class.new }
 
-  context "when the collection does not itself belong to a collection" do
+  context "when it does not itself belong to another timers collection" do
     it { expect(instance.waiting_time).to be nil }
     it { expect(instance.trigger).to be false }
 
     context "when it has attached timers" do
       let!(:timer1) { instance.after(seconds1, &callback1) }
-      let!(:timer2) { IOEventLoop::Timer.new(seconds2, collection: instance, &callback2) }
+      let!(:timer2) { IOEventLoop::Timer.new(seconds2, timers: instance, &callback2) }
       let!(:timer3) { instance.after(seconds3, &callback3) }
       let(:seconds1) { 0.1 }
       let(:seconds2) { 0.3 }
@@ -77,9 +77,9 @@ describe IOEventLoop::Collection do
     end
   end
 
-  context "when the collection belongs to a parent collection" do
-    let(:parent_collection) { described_class.new }
-    before { instance.attach_to parent_collection }
+  context "when it is attached to parent timers" do
+    let(:parent_timers) { described_class.new }
+    before { instance.attach_to parent_timers }
 
     let!(:timer) { instance.after(seconds, &callback) }
     let(:seconds) { 1.34 }
@@ -88,12 +88,12 @@ describe IOEventLoop::Collection do
     it { expect(instance.waiting_time).to be nil }
     it { expect(instance.trigger).to be false }
 
-    it { expect(parent_collection.waiting_time).to be_within(0.2).of(seconds) }
-    it { expect(parent_collection.trigger).to be false }
+    it { expect(parent_timers.waiting_time).to be_within(0.2).of(seconds) }
+    it { expect(parent_timers.trigger).to be false }
 
     context "when the timer is canceled" do
       before { timer.cancel }
-      it { expect(parent_collection.waiting_time).to be nil }
+      it { expect(parent_timers.waiting_time).to be nil }
     end
 
     context "when the timer can be triggered immediately" do
@@ -104,9 +104,9 @@ describe IOEventLoop::Collection do
         it { expect(instance.trigger).to be false }
       end
 
-      context "when triggering through the parent collection" do
+      context "when triggering through the parent timers" do
         before { expect(callback).to receive(:call) }
-        it { expect(parent_collection.trigger).to be true }
+        it { expect(parent_timers.trigger).to be true }
       end
     end
   end
