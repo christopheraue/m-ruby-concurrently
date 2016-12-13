@@ -33,7 +33,9 @@ to the shortest timer interval across all its actors.
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_runtime_dependency "callbacks_attachable", "~> 1.1"
   spec.add_development_dependency "bundler", "~> 1.12"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "rspec-mocks-matchers-send_message", "~> 0.3"
 end
