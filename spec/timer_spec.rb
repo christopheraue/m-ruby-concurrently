@@ -1,15 +1,15 @@
-describe AggregatedTimers::Timer do
+describe IOEventLoop::Timer do
   subject(:instance) { described_class.new(seconds, repeat: repeat, start_time: start_time, &callback) }
 
   let(:seconds) { 1.5 }
   let(:repeat) { false }
-  let(:start_time) { AggregatedTimers::WallClock.now }
+  let(:start_time) { IOEventLoop::WallClock.now }
   let(:callback) { proc{} }
 
   shared_context "for a running timer" do |seconds:, repeat: false|
     after { expect(instance.canceled?).to be false }
     after { expect(instance.seconds).to be seconds }
-    after { expect(instance.waiting_time).to be_within(0.02).of((start_time - AggregatedTimers::WallClock.now) + seconds) }
+    after { expect(instance.waiting_time).to be_within(0.02).of((start_time - IOEventLoop::WallClock.now) + seconds) }
     after { expect(instance.timeout_time).to be_within(0.02).of(start_time + seconds) }
     after { expect(instance.repeats?).to be repeat }
   end
@@ -49,7 +49,7 @@ describe AggregatedTimers::Timer do
 
     context "when given no callback" do
       let(:callback) { nil }
-      it { is_expected.to raise_error AggregatedTimers::Error, 'no block given' }
+      it { is_expected.to raise_error IOEventLoop::Error, 'no block given' }
     end
   end
 
@@ -58,7 +58,7 @@ describe AggregatedTimers::Timer do
 
     context "when canceled" do
       before { instance.cancel }
-      it { is_expected.to raise_error AggregatedTimers::Error, 'timer canceled' }
+      it { is_expected.to raise_error IOEventLoop::Error, 'timer canceled' }
     end
 
     context "when one-shot" do
@@ -71,7 +71,7 @@ describe AggregatedTimers::Timer do
     context "when recurring" do
       let(:repeat) { true }
       before { expect(callback).to receive(:call) }
-      before { @start_time = AggregatedTimers::WallClock.now }
+      before { @start_time = IOEventLoop::WallClock.now }
       it { is_expected.to be true }
       before { @start_time = instance.timeout_time  }
       def start_time; @start_time end
@@ -83,7 +83,7 @@ describe AggregatedTimers::Timer do
     subject { instance.repeat }
 
     context "when the timer is still running" do
-      it { is_expected.to raise_error AggregatedTimers::Error, 'timer still running' }
+      it { is_expected.to raise_error IOEventLoop::Error, 'timer still running' }
     end
 
     context "when the timer has been canceled" do

@@ -1,3 +1,0 @@
-module AggregatedTimers
-
-end

@@ -1,4 +1,4 @@
 require 'bundler/setup'
 Bundler.require(:development)
 
-require 'aggregated_timers'
+require 'io_event_loop'

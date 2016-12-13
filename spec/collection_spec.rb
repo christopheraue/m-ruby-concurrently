@@ -1,4 +1,4 @@
-describe AggregatedTimers::Collection do
+describe IOEventLoop::Collection do
   subject(:instance) { described_class.new }
 
   context "when the collection does not itself belong to a collection" do
@@ -7,7 +7,7 @@ describe AggregatedTimers::Collection do
 
     context "when it has attached timers" do
       let!(:timer1) { instance.after(seconds1, &callback1) }
-      let!(:timer2) { AggregatedTimers::Timer.new(seconds2, collection: instance, &callback2) }
+      let!(:timer2) { IOEventLoop::Timer.new(seconds2, collection: instance, &callback2) }
       let!(:timer3) { instance.after(seconds3, &callback3) }
       let(:seconds1) { 0.1 }
       let(:seconds2) { 0.3 }

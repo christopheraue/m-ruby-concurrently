@@ -1,4 +1,4 @@
-module AggregatedTimers
+module IOEventLoop
   class Collection
     def initialize
       @timers = []

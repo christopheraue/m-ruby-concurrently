@@ -1,4 +1,4 @@
-# (m)Ruby AggregatedTimers
+# (m)Ruby IOEventLoop
 
 Manage independent one-time or recurring timers. Timers can be put into a
 collection to get aggregated values of all timers. Collections of timers
@@ -21,7 +21,7 @@ to the shortest timer interval across all its actors.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'aggregated_timers'
+gem 'io_event_loop'
 ```
 
 And then execute:
@@ -30,21 +30,21 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install aggregated_timers
+    $ gem install io_event_loop
 
 ## mruby Installation
 
 To directly add it to an mruby build config or GemBox:
 ```ruby
 MRuby::Build.new do |conf| # or MRuby::GemBox.new do |conf|
-  conf.gem github: 'christopheraue/m-ruby-aggregated_timers'
+  conf.gem github: 'christopheraue/m-ruby-io_event_loop'
 end
 ```
 
 To use it in an mruby gem:
 ```ruby
 MRuby::Gem::Specification.new('mruby-your_gem') do |spec|
-  spec.add_dependency 'mruby-aggregated_timers', github: 'christopheraue/m-ruby-aggregated_timers'
+  spec.add_dependency 'mruby-io_event_loop', github: 'christopheraue/m-ruby-io_event_loop'
 end
 ```
 

@@ -1,7 +1,7 @@
 require_relative 'mrblib/version'
 
-MRuby::Gem::Specification.new('mruby-aggregated_timers') do |spec|
-  spec.version      = AggregatedTimers::VERSION
+MRuby::Gem::Specification.new('mruby-io_event_loop') do |spec|
+  spec.version      = IOEventLoop::VERSION
   spec.summary      = %q{Manage independent timers or collections of timers and aggregate their collective timeout.}
   spec.description  = <<-DESC
 Manage independent one-time or recurring timers. Timers can be put into a
@@ -20,10 +20,10 @@ Thus, the event loop manages a collection of each attached actor's timer
 collection. When the event loop polls for new input it limits the waiting time
 to the shortest timer interval across all its actors.
 DESC
-  spec.homepage     = "https://github.com/christopheraue/m-ruby-aggregated_timers"
+  spec.homepage     = "https://github.com/christopheraue/m-ruby-io_event_loop"
   spec.license      = 'MIT'
   spec.authors      = ['Christopher Aue']
-  spec.email         = ["rubygems@christopheraue.net"]
+  spec.email        = ["rubygems@christopheraue.net"]
 
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
 end

@@ -1,4 +1,4 @@
-module AggregatedTimers
+module IOEventLoop
   module WallClock
     @start_time = Time.now.to_f
   end

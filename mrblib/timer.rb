@@ -1,4 +1,4 @@
-module AggregatedTimers
+module IOEventLoop
   class Timer
     def initialize(seconds, opts = {}, &callback)
       raise Error, 'no block given' unless callback

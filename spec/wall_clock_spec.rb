@@ -1,4 +1,4 @@
-describe AggregatedTimers::WallClock do
+describe IOEventLoop::WallClock do
   describe ".now" do
     it "returns the current time offset since initialization" do
       waiting_time = 0.1
