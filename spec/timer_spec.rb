@@ -1,11 +1,12 @@
 describe AggregatedTimers::Timer do
-  subject(:instance) { described_class.new(1.5, repeat: repeat, &callback) }
+  subject(:instance) { described_class.new(seconds, repeat: repeat, start_time: start_time, &callback) }
 
+  let(:seconds) { 1.5 }
   let(:repeat) { false }
+  let(:start_time) { AggregatedTimers::WallClock.now }
   let(:callback) { proc{} }
 
   shared_context "for a running timer" do |seconds:, repeat: false|
-    let(:start_time) { AggregatedTimers::WallClock.now } unless method_defined? :start_time
     after { expect(instance.canceled?).to be false }
     after { expect(instance.seconds).to be seconds }
     after { expect(instance.waiting_time).to be_within(0.02).of((start_time - AggregatedTimers::WallClock.now) + seconds) }
@@ -22,6 +23,24 @@ describe AggregatedTimers::Timer do
   end
 
   describe "Initialization" do
+    context "when called with another waiting time" do
+      let(:seconds) { 2.4 }
+      it { is_expected.not_to raise_error }
+      include_context "for a running timer", seconds: 2.4
+    end
+
+    context "when called with another repeat setting" do
+      let(:repeat) { true }
+      it { is_expected.not_to raise_error }
+      include_context "for a running timer", seconds: 1.5, repeat: true
+    end
+
+    context "when called with a custom start time" do
+      let(:start_time) { 12.24 }
+      it { is_expected.not_to raise_error }
+      include_context "for a running timer", seconds: 1.5
+    end
+
     context "when given a callback" do
       let(:callback) { proc{} }
       it { is_expected.not_to raise_error }
@@ -32,74 +51,6 @@ describe AggregatedTimers::Timer do
       let(:callback) { nil }
       it { is_expected.to raise_error AggregatedTimers::Error, 'no block given' }
     end
-  end
-
-  describe "#restart" do
-    subject { instance.restart(seconds, repeat: repeat, start_time: start_time, &callback) }
-
-    let(:seconds) { 1 }
-    let(:repeat) { false }
-    let(:start_time) { AggregatedTimers::WallClock.now }
-    let(:callback) { proc{} }
-
-    let!(:instance) { described_class.new(1, repeat: false, &init_callback) }
-    let(:init_callback) { proc{} }
-
-    before { expect(instance).to receive(:trigger_event).with(:restart, instance).and_call_original }
-
-    context "when called without arguments" do
-      subject { instance.restart }
-      it { is_expected.to be true }
-      include_context "for a running timer", seconds: 1
-    end
-
-    context "when called with a changed waiting time" do
-      context "when given a number" do
-        let(:seconds) { 2.4 }
-        it { is_expected.to be true }
-        include_context "for a running timer", seconds: 2.4
-      end
-
-      context "when given nil" do
-        let(:seconds) { nil }
-        it { is_expected.to be true }
-        include_context "for a running timer", seconds: 1
-      end
-    end
-
-    context "when called with a changed repeat setting" do
-      context "when given a boolean" do
-        let(:repeat) { true }
-        it { is_expected.to be true }
-        include_context "for a running timer", seconds: 1, repeat: true
-      end
-
-      context "when given nil" do
-        let(:repeat) { nil }
-        it { is_expected.to be true }
-        include_context "for a running timer", seconds: 1
-      end
-    end
-
-    context "when called with a custom start time" do
-      let(:start_time) { 12.24 }
-      it { is_expected.to be true }
-      include_context "for a running timer", seconds: 1
-    end
-
-    context "when called with a changed callback" do
-      let(:callback) { proc{} }
-      it { is_expected.to be true }
-      include_context "for a running timer", seconds: 1
-    end
-  end
-
-  describe "#cancel" do
-    subject { instance.cancel }
-
-    before { expect(instance).to receive(:trigger_event).with(:cancel, instance).and_call_original }
-    it { is_expected.to be true }
-    include_context "for a canceled timer"
   end
 
   describe "#trigger" do
@@ -120,10 +71,19 @@ describe AggregatedTimers::Timer do
     context "when recurring" do
       let(:repeat) { true }
       before { expect(callback).to receive(:call) }
-      let!(:start_time) { instance.timeout_time }
+      before { @start_time = AggregatedTimers::WallClock.now }
       it { is_expected.to be true }
+      before { @start_time = instance.timeout_time  }
+      def start_time; @start_time end
       include_context "for a running timer", seconds: 1.5, repeat: true
     end
+  end
+
+  describe "#cancel" do
+    subject { instance.cancel }
+
+    it { is_expected.to be true }
+    include_context "for a canceled timer"
   end
 
   describe "#inspect" do

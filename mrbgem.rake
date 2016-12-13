@@ -25,6 +25,5 @@ DESC
   spec.authors      = ['Christopher Aue']
   spec.email         = ["rubygems@christopheraue.net"]
 
-  spec.add_dependency 'mruby-callbacks_attachable', '~> 1.1', github: 'christopheraue/ruby-callbacks_attachable'
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
 end
