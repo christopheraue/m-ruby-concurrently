@@ -14,12 +14,12 @@ describe AggregatedTimers::Timer do
     after { expect(instance.repeats?).to be repeat }
   end
 
-  shared_context "for a canceled timer" do
+  shared_context "for a canceled timer" do |seconds:, repeat: false|
     after { expect(instance.canceled?).to be true }
-    after { expect(instance.seconds).to be nil }
+    after { expect(instance.seconds).to be seconds }
     after { expect(instance.timeout_time).to be nil }
     after { expect(instance.waiting_time).to be nil }
-    after { expect(instance.repeats?).to be nil }
+    after { expect(instance.repeats?).to be repeat }
   end
 
   describe "Initialization" do
@@ -65,7 +65,7 @@ describe AggregatedTimers::Timer do
       let(:repeat) { false }
       before { expect(callback).to receive(:call) }
       it { is_expected.to be true }
-      include_context "for a canceled timer"
+      include_context "for a canceled timer", seconds: 1.5
     end
 
     context "when recurring" do
@@ -79,11 +79,25 @@ describe AggregatedTimers::Timer do
     end
   end
 
+  describe "#repeat" do
+    subject { instance.repeat }
+
+    context "when the timer is still running" do
+      it { is_expected.to raise_error AggregatedTimers::Error, 'timer still running' }
+    end
+
+    context "when the timer has been canceled" do
+      before { instance.cancel }
+      it { is_expected.to be true }
+      include_context "for a running timer", seconds: 1.5
+    end
+  end
+
   describe "#cancel" do
     subject { instance.cancel }
 
     it { is_expected.to be true }
-    include_context "for a canceled timer"
+    include_context "for a canceled timer", seconds: 1.5
   end
 
   describe "#inspect" do

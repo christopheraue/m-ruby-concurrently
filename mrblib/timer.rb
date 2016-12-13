@@ -4,19 +4,27 @@ module AggregatedTimers
       raise Error, 'no block given' unless callback
       @seconds = seconds || @seconds
       @repeat = opts.fetch(:repeat, @repeat) || false
-      @timeout_time = opts.fetch(:start_time, WallClock.now) + @seconds
       @callback = callback || @callback
+      repeat opts.fetch(:start_time, WallClock.now)
+    end
+
+    def repeat(start_time = WallClock.now)
+      raise Error, 'timer still running' if @timeout_time
+      @timeout_time = start_time + @seconds
+      true
     end
 
     def trigger
-      raise Error, 'timer canceled' unless @callback
+      raise Error, 'timer canceled' unless @timeout_time
       @callback.call
-      @repeat ? (@timeout_time += @seconds) : cancel
+      old_timeout_time = @timeout_time
+      cancel
+      repeat(old_timeout_time) if @repeat
       true
     end
 
     def cancel
-      @timeout_time = @seconds = @repeat = @callback = nil
+      @timeout_time = nil
       true
     end
 
