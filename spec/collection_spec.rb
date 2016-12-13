@@ -49,7 +49,7 @@ describe AggregatedTimers::Collection do
         end
       end
 
-      context "when the timeouts can be triggered immediately" do
+      context "when the timers can be triggered immediately" do
         let(:seconds1) { 0 }
         let(:seconds2) { 0 }
         let(:seconds3) { 0 }
@@ -73,6 +73,40 @@ describe AggregatedTimers::Collection do
         before { expect(callback).to receive(:call).twice }
         before { expect(instance.trigger).to be true }
         it { expect(instance.trigger).to be true }
+      end
+    end
+  end
+
+  context "when the collection belongs to a parent collection" do
+    let(:parent_collection) { described_class.new }
+    before { instance.attach_to parent_collection }
+
+    let!(:timer) { instance.after(seconds, &callback) }
+    let(:seconds) { 1.34 }
+    let(:callback) { proc{} }
+
+    it { expect(instance.waiting_time).to be nil }
+    it { expect(instance.trigger).to be false }
+
+    it { expect(parent_collection.waiting_time).to be_within(0.2).of(seconds) }
+    it { expect(parent_collection.trigger).to be false }
+
+    context "when the timer is canceled" do
+      before { timer.cancel }
+      it { expect(parent_collection.waiting_time).to be nil }
+    end
+
+    context "when the timer can be triggered immediately" do
+      let(:seconds) { 0 }
+
+      context "when triggering through the instance" do
+        before { expect(callback).not_to receive(:call) }
+        it { expect(instance.trigger).to be false }
+      end
+
+      context "when triggering through the parent collection" do
+        before { expect(callback).to receive(:call) }
+        it { expect(parent_collection.trigger).to be true }
       end
     end
   end

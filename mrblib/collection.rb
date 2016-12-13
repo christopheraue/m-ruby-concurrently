@@ -12,9 +12,17 @@ module AggregatedTimers
       Timer.new(seconds, collection: self, repeat: true, &on_timeout)
     end
 
+    def attach_to(collection)
+      @collection = collection
+    end
+
     def schedule(timer)
-      index = bisect_left(@timers, timer)
-      @timers.insert(index, timer)
+      if @collection
+        @collection.schedule timer
+      else
+        index = bisect_left(@timers, timer)
+        @timers.insert(index, timer)
+      end
     end
 
     def waiting_time
