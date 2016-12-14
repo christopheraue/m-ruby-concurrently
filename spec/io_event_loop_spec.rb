@@ -27,14 +27,14 @@ describe IOEventLoop do
 
       context "when its waiting to be readable" do
         before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
-        before { instance.await_read(reader) }
+        before { instance.await_readable(reader) }
 
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
 
       context "when its waiting to be writable" do
-        before { instance.await_write(writer) }
+        before { instance.await_writable(writer) }
 
         it { is_expected.to be nil }
         after do
