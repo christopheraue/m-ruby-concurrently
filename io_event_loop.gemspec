@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.name          = "io_event_loop"
   spec.version       = IOEventLoop::VERSION
   spec.summary      = %q{Comfortably manage IO objects polled by event loop.}
-  spec.description  = 'TODO'
+  spec.description  = spec.summary
 
   spec.homepage      = "https://github.com/christopheraue/m-ruby-io_event_loop"
   spec.license       = "MIT"
