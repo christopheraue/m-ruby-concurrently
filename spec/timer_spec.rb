@@ -102,7 +102,11 @@ describe IOEventLoop::Timer do
 
   describe "#inspect" do
     subject { instance.inspect }
-    it { is_expected.to eq "#<#{described_class}:0x#{'%014x' % instance.__id__} waits another #{instance.waiting_time.round(3)} seconds>" }
+
+    context "when running" do
+      before { allow(instance).to receive(:waiting_time).and_return(1.79854) }
+      it { is_expected.to eq "#<#{described_class}:0x#{'%014x' % instance.__id__} waits another 1.799 seconds>" }
+    end
 
     context "when canceled" do
       before { instance.cancel }
