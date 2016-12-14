@@ -7,28 +7,24 @@ class IOEventLoop < FiberedEventLoop
     @writers = []
 
     super do
-      if @timers.waiting_time == 0
-        @timers.triggerable.each{ |timer| fibered{ timer.trigger } }
-      end
+      @timers.triggerable.each{ |timer| fibered{ timer.trigger } } if @timers.waiting_time == 0
 
-      if selected = IO.select(@readers, @writers, nil, @timers.waiting_time)
+      if fibered_registered?
+        next
+      elsif @readers.empty? and @writers.empty? and not @timers.waiting_time
+        stop
+      elsif selected = IO.select(@readers, @writers, nil, @timers.waiting_time)
         selected[0].each{ |readable| fibered{ hand_result_to readable, @readers.delete(readable) } }
         selected[1].each{ |writable| fibered{ hand_result_to writable, @writers.delete(writable) } }
       end
-
-      stop if @readers.empty? and @writers.empty? and not @timers.waiting_time
     end
   end
 
   attr_reader :timers
 
-  def wait_for_readable(channel)
-    @readers << channel
-    wait_for_result channel
-  end
-
-  def wait_for_writable(channel)
-    @writers << channel
-    wait_for_result channel
+  def wait_for(io, mode)
+    bucket = (mode == :w) ? @writers : @readers
+    bucket << io
+    wait_for_result io
   end
 end
