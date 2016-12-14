@@ -1,9 +1,9 @@
 # coding: utf-8
-require_relative 'mrblib/version'
+load './mrblib/version.rb'
 
 Gem::Specification.new do |spec|
-  spec.name          = "io_event_loop"
-  spec.version       = IOEventLoop::VERSION
+  spec.name         = "io_event_loop"
+  spec.version      = IOEventLoop::VERSION
   spec.summary      = %q{Comfortably manage IO objects polled by event loop.}
   spec.description  = spec.summary
 
