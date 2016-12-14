@@ -33,6 +33,7 @@ module IOEventLoop
     attr_reader :seconds
 
     attr_reader :timeout_time
+    alias_method :to_f, :timeout_time
 
     def waiting_time
       if @timeout_time
@@ -49,8 +50,8 @@ module IOEventLoop
       not waiting_time
     end
 
-    def >(timer)
-      @timeout_time > timer.timeout_time
+    def >(time_or_timer)
+      @timeout_time > time_or_timer.to_f
     end
 
     def inspect

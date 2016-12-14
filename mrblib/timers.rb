@@ -30,17 +30,14 @@ module IOEventLoop
       @timers.last && @timers.last.waiting_time
     end
 
-    def trigger
-      @timers.pop while @timers.last && @timers.last.canceled?
-      if @timers.last && @timers.last.waiting_time == 0
-        @timers.pop.trigger
-      else
-        false
-      end
+    def triggerable
+      trigger_threshold = bisect_left(@timers, WallClock.now)
+      @timers.pop(@timers.length - trigger_threshold).delete_if(&:canceled?)
     end
 
-    # Return the left-most index where to insert timer e, in a list a, assuming
-    # a is sorted in descending order in O(log n).
+    # Return the left-most index in a list of timers a corresponding to a
+    # cutoff time or timer e in O(log n), assuming a is sorted in descending
+    # order.
     # Shamelessly copied from https://github.com/celluloid/timers/blob/master/lib/timers/events.rb
     private def bisect_left(a, e, l = 0, u = a.length)
       while l < u

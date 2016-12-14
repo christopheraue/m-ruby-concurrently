@@ -3,7 +3,7 @@ describe IOEventLoop::Timers do
 
   context "when it does not itself belong to another timers collection" do
     it { expect(instance.waiting_time).to be nil }
-    it { expect(instance.trigger).to be false }
+    it { expect(instance.triggerable).to eq [] }
 
     context "when it has attached timers" do
       let!(:timer1) { instance.after(seconds1, &callback1) }
@@ -17,7 +17,7 @@ describe IOEventLoop::Timers do
       let(:callback3) { proc{} }
 
       it { expect(instance.waiting_time).to be_within(0.02).of(seconds1) }
-      it { expect(instance.trigger).to be false }
+      it { expect(instance.triggerable).to eq [] }
 
       context "when the next timeout has been canceled" do
         before { timer1.cancel }
@@ -53,13 +53,7 @@ describe IOEventLoop::Timers do
         let(:seconds1) { 0 }
         let(:seconds2) { 0 }
         let(:seconds3) { 0 }
-        before { expect(callback1).to receive(:call).ordered }
-        before { expect(callback2).to receive(:call).ordered }
-        before { expect(callback3).to receive(:call).ordered }
-        before { expect(instance.trigger).to be true }
-        before { expect(instance.trigger).to be true }
-        before { expect(instance.trigger).to be true }
-        it { expect(instance.trigger).to be false }
+        before { expect(instance.triggerable).to eq [timer1, timer2, timer3] }
       end
     end
 
@@ -70,9 +64,8 @@ describe IOEventLoop::Timers do
       it { expect(instance.waiting_time).to be 0 }
 
       context "when it is triggered" do
-        before { expect(callback).to receive(:call).twice }
-        before { expect(instance.trigger).to be true }
-        it { expect(instance.trigger).to be true }
+        before { instance.triggerable.first.trigger }
+        it { expect(instance.triggerable).to eq [timer] }
       end
     end
   end
@@ -86,10 +79,10 @@ describe IOEventLoop::Timers do
     let(:callback) { proc{} }
 
     it { expect(instance.waiting_time).to be nil }
-    it { expect(instance.trigger).to be false }
+    it { expect(instance.triggerable).to eq [] }
 
     it { expect(parent_timers.waiting_time).to be_within(0.2).of(seconds) }
-    it { expect(parent_timers.trigger).to be false }
+    it { expect(parent_timers.triggerable).to eq [] }
 
     context "when the timer is canceled" do
       before { timer.cancel }
@@ -100,13 +93,11 @@ describe IOEventLoop::Timers do
       let(:seconds) { 0 }
 
       context "when triggering through the instance" do
-        before { expect(callback).not_to receive(:call) }
-        it { expect(instance.trigger).to be false }
+        it { expect(instance.triggerable).to eq [] }
       end
 
       context "when triggering through the parent timers" do
-        before { expect(callback).to receive(:call) }
-        it { expect(parent_timers.trigger).to be true }
+        it { expect(parent_timers.triggerable).to eq [timer] }
       end
     end
   end
