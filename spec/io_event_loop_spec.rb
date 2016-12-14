@@ -20,21 +20,21 @@ describe IOEventLoop do
       it { is_expected.to be nil }
     end
 
-    context "when it has an IO object waiting" do
+    context "when it has an IO object waiting for a single event" do
       let(:pipe) { IO.pipe }
       let(:reader) { pipe[0] }
       let(:writer) { pipe[1] }
 
       context "when its waiting to be readable" do
         before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
-        before { instance.wait_for(reader, :r) }
+        before { instance.await_read(reader) }
 
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
 
       context "when its waiting to be writable" do
-        before { instance.wait_for(writer, :w) }
+        before { instance.await_write(writer) }
 
         it { is_expected.to be nil }
         after do
@@ -44,4 +44,11 @@ describe IOEventLoop do
       end
     end
   end
+
+  # attaching and detaching readers and writers is implicitly tested while
+  # testing #await_{read,write}
+  it { is_expected.to respond_to :attach_reader }
+  it { is_expected.to respond_to :detach_reader }
+  it { is_expected.to respond_to :attach_writer }
+  it { is_expected.to respond_to :detach_writer }
 end
