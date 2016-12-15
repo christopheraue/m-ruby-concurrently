@@ -38,13 +38,13 @@ class IOEventLoop < FiberedEventLoop
     @writers.delete(io)
   end
 
-  def await_readable(io)
-    attach_reader(io) { hand_result_to io, detach_reader(io) }
+  def wait_for_readable(io)
+    attach_reader(io) { hand_result_to(io, detach_reader(io)) }
     wait_for_result io
   end
 
-  def await_writable(io)
-    attach_writer(io) { hand_result_to io, detach_writer(io) }
+  def wait_for_writable(io)
+    attach_writer(io) { hand_result_to(io, detach_writer(io)) }
     wait_for_result io
   end
 end
