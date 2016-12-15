@@ -50,12 +50,12 @@ class IOEventLoop < FiberedEventLoop
   end
 
   def wait_for_readable(io)
-    attach_reader(io) { hand_result_to(io, detach_reader(io)) }
+    attach_reader(io) { detach_reader(io); hand_result_to(io, :readable) }
     wait_for_result io
   end
 
   def wait_for_writable(io)
-    attach_writer(io) { hand_result_to(io, detach_writer(io)) }
+    attach_writer(io) { detach_writer(io); hand_result_to(io, :writable) }
     wait_for_result io
   end
 end
