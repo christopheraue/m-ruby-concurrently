@@ -6,27 +6,24 @@ class IOEventLoop < FiberedEventLoop
       @repeat = opts.fetch(:repeat, @repeat) || false
       @callback = callback || @callback
       @timers = opts[:timers]
-      repeat opts.fetch(:start_time, WallClock.now)
-    end
-
-    def repeat(start_time = WallClock.now)
-      raise Error, 'timer still running' if @timeout_time
-      @timeout_time = start_time + @seconds
+      @timeout_time = opts.fetch(:start_time, WallClock.now) + @seconds
       @timers.schedule(self) if @timers
-      true
     end
 
     def trigger
-      raise Error, 'timer canceled' unless @timeout_time
+      raise Error, 'timer canceled' unless @callback
       @callback.call
-      old_timeout_time = @timeout_time
-      cancel
-      repeat(old_timeout_time) if @repeat
+      if @repeat
+        @timeout_time += @seconds
+        @timers.schedule(self) if @timers
+      else
+        cancel
+      end
       true
     end
 
     def cancel
-      @timeout_time = nil
+      @callback = nil
       true
     end
 
@@ -36,7 +33,7 @@ class IOEventLoop < FiberedEventLoop
     alias_method :to_f, :timeout_time
 
     def waiting_time
-      if @timeout_time
+      if @callback
         waiting_time = @timeout_time - WallClock.now
         waiting_time < 0 ? 0 : waiting_time
       end
