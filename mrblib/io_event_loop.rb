@@ -3,6 +3,7 @@ Object.__send__(:remove_const, :IOEventLoop) if Object.const_defined? :IOEventLo
 class IOEventLoop < FiberedEventLoop
   def initialize
     @timers = Timers.new
+    @result_timers = {}
     @readers = {}
     @writers = {}
 
@@ -36,6 +37,16 @@ class IOEventLoop < FiberedEventLoop
 
   def detach_writer(io)
     @writers.delete(io)
+  end
+
+  def wait_for_result(id, timeout = nil, &on_timeout)
+    @result_timers[id] = @timers.after(timeout, &on_timeout) if timeout
+    super id
+  end
+
+  def hand_result_to(id, result)
+    @result_timers.delete(id).cancel if @result_timers.key? id
+    super
   end
 
   def wait_for_readable(io)

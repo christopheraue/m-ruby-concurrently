@@ -51,4 +51,17 @@ describe IOEventLoop do
   it { is_expected.to respond_to :detach_reader }
   it { is_expected.to respond_to :attach_writer }
   it { is_expected.to respond_to :detach_writer }
+
+  describe "#wait_for_result with timeout" do
+    subject { instance.wait_for_result(:id, 0.02) { raise "Time's up!" } }
+
+    context "when the result arrives in time" do
+      before { instance.timers.after(0.01) { instance.hand_result_to(:id, :result) } }
+      it { is_expected.to be :result }
+    end
+
+    context "when evaluation of result is too slow" do
+      it { is_expected.to raise_error "Time's up!" }
+    end
+  end
 end
