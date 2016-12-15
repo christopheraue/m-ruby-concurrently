@@ -12,17 +12,9 @@ class IOEventLoop < FiberedEventLoop
       Timer.new(seconds, timers: self, repeat: true, &on_timeout)
     end
 
-    def attach_to(parent_timers)
-      @parent_timers = parent_timers
-    end
-
     def schedule(timer)
-      if @parent_timers
-        @parent_timers.schedule timer
-      else
-        index = bisect_left(@timers, timer)
-        @timers.insert(index, timer)
-      end
+      index = bisect_left(@timers, timer)
+      @timers.insert(index, timer)
     end
 
     def waiting_time

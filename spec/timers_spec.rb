@@ -69,36 +69,4 @@ describe IOEventLoop::Timers do
       end
     end
   end
-
-  context "when it is attached to parent timers" do
-    let(:parent_timers) { described_class.new }
-    before { instance.attach_to parent_timers }
-
-    let!(:timer) { instance.after(seconds, &callback) }
-    let(:seconds) { 1.34 }
-    let(:callback) { proc{} }
-
-    it { expect(instance.waiting_time).to be nil }
-    it { expect(instance.triggerable).to eq [] }
-
-    it { expect(parent_timers.waiting_time).to be_within(0.2).of(seconds) }
-    it { expect(parent_timers.triggerable).to eq [] }
-
-    context "when the timer is canceled" do
-      before { timer.cancel }
-      it { expect(parent_timers.waiting_time).to be nil }
-    end
-
-    context "when the timer can be triggered immediately" do
-      let(:seconds) { 0 }
-
-      context "when triggering through the instance" do
-        it { expect(instance.triggerable).to eq [] }
-      end
-
-      context "when triggering through the parent timers" do
-        it { expect(parent_timers.triggerable).to eq [timer] }
-      end
-    end
-  end
 end
