@@ -45,12 +45,62 @@ describe IOEventLoop do
     end
   end
 
-  # attaching and detaching readers and writers is implicitly tested while
-  # testing #wait_for_{readable,writable}
-  it { is_expected.to respond_to :attach_reader }
-  it { is_expected.to respond_to :detach_reader }
-  it { is_expected.to respond_to :attach_writer }
-  it { is_expected.to respond_to :detach_writer }
+  describe "#attach_reader and #detach_reader" do
+    subject { instance.start }
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
+    context "when watching readability" do
+      before { instance.attach_reader(reader, &callback1) }
+      let(:callback1) { proc{ instance.detach_reader(reader) } }
+
+      # make the reader readable
+      before { instance.timers.after(0.01) { writer.write 'Message!' } }
+
+      context "when running the loop" do
+        before { expect(callback1).to receive(:call).and_call_original }
+        it { is_expected.to be nil }
+      end
+
+      context "when watching the same IO for a second time" do
+        before { instance.attach_reader(reader, &callback2) }
+        let(:callback2) { proc{ instance.detach_reader(reader) } }
+
+        before { expect(callback2).to receive(:call).and_call_original.ordered }
+        before { expect(callback1).to receive(:call).and_call_original.ordered }
+        it { is_expected.to be nil }
+      end
+    end
+  end
+
+  describe "#attach_writer and #detach_writer" do
+    subject { instance.start }
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
+    context "when watching writability" do
+      before { instance.attach_writer(writer, &callback1) }
+      let(:callback1) { proc{ instance.detach_writer(writer) } }
+
+      context "when running the loop" do
+        before { expect(callback1).to receive(:call).and_call_original }
+        it { is_expected.to be nil }
+      end
+
+      context "when watching the same IO for a second time" do
+        before { instance.attach_writer(writer, &callback2) }
+        let(:callback2) { proc{ instance.detach_writer(writer) } }
+
+        before { expect(callback2).to receive(:call).and_call_original.ordered }
+        before { expect(callback1).to receive(:call).and_call_original.ordered }
+        it { is_expected.to be nil }
+      end
+    end
+  end
 
   describe "#wait_for_result with timeout" do
     subject { instance.wait_for_result(:id, 0.02) { raise "Time's up!" } }
