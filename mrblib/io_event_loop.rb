@@ -43,8 +43,8 @@ class IOEventLoop < FiberedEventLoop
     @writers.delete(io) if @writers[io].empty?
   end
 
-  def wait_for_result(id, timeout = nil, &on_timeout)
-    @result_timers[id] = @timers.after(timeout, &on_timeout) if timeout
+  def wait_for_result(id, timeout = nil) # &on_timeout
+    @result_timers[id] = @timers.after(timeout){ hand_result_to(@id, yield) } if timeout
     super id
   end
 
