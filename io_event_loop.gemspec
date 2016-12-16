@@ -4,7 +4,7 @@ load './mrblib/version.rb'
 Gem::Specification.new do |spec|
   spec.name         = "io_event_loop"
   spec.version      = IOEventLoop::VERSION
-  spec.summary      = %q{Comfortably manage IO objects polled by event loop.}
+  spec.summary      = %q{Comfortably manage IO objects polled by an event loop.}
   spec.description  = spec.summary
 
   spec.homepage      = "https://github.com/christopheraue/m-ruby-io_event_loop"
@@ -13,7 +13,6 @@ Gem::Specification.new do |spec|
   spec.email         = ["rubygems@christopheraue.net"]
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
