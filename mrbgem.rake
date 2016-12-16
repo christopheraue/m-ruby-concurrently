@@ -10,5 +10,6 @@ MRuby::Gem::Specification.new('mruby-io_event_loop') do |spec|
   spec.authors      = ['Christopher Aue']
 
   spec.add_dependency 'mruby-fibered_event_loop', '~> 1.0', github: 'christopheraue/m-ruby-fibered_event_loop'
+  spec.add_dependency 'mruby-io', github: 'iij/mruby-io'
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
 end
