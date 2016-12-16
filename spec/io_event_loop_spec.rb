@@ -114,4 +114,57 @@ describe IOEventLoop do
       it { is_expected.to raise_error "Time's up!" }
     end
   end
+
+  describe "#wait_for_readable" do
+    subject { instance.wait_for_readable(reader, *timeout, &timeout_callback) }
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
+    let(:timeout) { nil }
+    let(:timeout_callback) { nil }
+
+    context "when it has a timeout" do
+      let(:timeout) { 0.02 }
+      let(:timeout_callback) { proc{ raise "Time's up!" } }
+
+      context "when readable in time" do
+        before { instance.timers.after(0.01) { writer.write 'Wake up!' } }
+        it { is_expected.to be :readable }
+      end
+
+      context "when not readable in time" do
+        it { is_expected.to raise_error "Time's up!" }
+      end
+    end
+  end
+
+  describe "#wait_for_writable" do
+    subject { instance.wait_for_writable(writer, *timeout, &timeout_callback) }
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
+    let(:timeout) { nil }
+    let(:timeout_callback) { nil }
+
+    context "when it has a timeout" do
+      let(:timeout) { 0.02 }
+      let(:timeout_callback) { proc{ raise "Time's up!" } }
+
+      # jam pipe: default pipe buffer size on linux is 65536
+      before { writer.write('a' * 65536) }
+
+      context "when writable in time" do
+        before { instance.timers.after(0.01) { reader.read(65536) } } # clear the pipe
+        it { is_expected.to be :writable }
+      end
+
+      context "when not writable in time" do
+        it { is_expected.to raise_error "Time's up!" }
+      end
+    end
+  end
 end
