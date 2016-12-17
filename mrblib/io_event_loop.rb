@@ -8,15 +8,18 @@ class IOEventLoop < FiberedEventLoop
     @writers = {}
 
     super do
-      @timers.triggerable.each{ |timer| once{ timer.trigger } } if @timers.waiting_time == 0
+      waiting_time = @timers.waiting_time
+
+      triggerable = waiting_time == 0 ? @timers.triggerable : []
+      triggerable.each{ |timer| once{ timer.trigger } } unless triggerable.empty?
 
       if once_pending?
         next
-      elsif @readers.empty? and @writers.empty? and not @timers.waiting_time
+      elsif @readers.empty? and @writers.empty? and not waiting_time
         stop # would block indefinitely otherwise
-      elsif selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
-        selected[0].each{ |readable_io| once &@readers[readable_io].last }
-        selected[1].each{ |writable_io| once &@writers[writable_io].last }
+      elsif selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
+        selected[0].each{ |readable_io| once &@readers[readable_io].last } unless selected[0].empty?
+        selected[1].each{ |writable_io| once &@writers[writable_io].last } unless selected[1].empty?
       end
     end
   end

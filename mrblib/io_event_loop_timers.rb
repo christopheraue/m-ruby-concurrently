@@ -18,8 +18,8 @@ class IOEventLoop < FiberedEventLoop
     end
 
     def waiting_time
-      @timers.pop while @timers.last && @timers.last.canceled?
-      @timers.last && @timers.last.waiting_time
+      @timers.pop while last = @timers.last and last.canceled?
+      last.waiting_time if last
     end
 
     def triggerable

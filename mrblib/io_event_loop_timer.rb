@@ -44,7 +44,7 @@ class IOEventLoop < FiberedEventLoop
     end
 
     def canceled?
-      not waiting_time
+      not @callback
     end
 
     def >(time_or_timer)
