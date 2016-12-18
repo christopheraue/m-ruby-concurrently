@@ -64,19 +64,8 @@ describe IOEventLoop do
       # make the reader readable
       before { instance.timers.after(0.01) { writer.write 'Message!' } }
 
-      context "when running the loop" do
-        before { expect(callback1).to receive(:call).and_call_original }
-        it { is_expected.to be nil }
-      end
-
-      context "when watching the same IO for a second time" do
-        before { instance.attach_reader(reader, &callback2) }
-        let(:callback2) { proc{ instance.detach_reader(reader) } }
-
-        before { expect(callback2).to receive(:call).and_call_original.ordered }
-        before { expect(callback1).to receive(:call).and_call_original.ordered }
-        it { is_expected.to be nil }
-      end
+      before { expect(callback1).to receive(:call).and_call_original }
+      it { is_expected.to be nil }
     end
   end
 
@@ -91,19 +80,8 @@ describe IOEventLoop do
       before { instance.attach_writer(writer, &callback1) }
       let(:callback1) { proc{ instance.detach_writer(writer) } }
 
-      context "when running the loop" do
-        before { expect(callback1).to receive(:call).and_call_original }
-        it { is_expected.to be nil }
-      end
-
-      context "when watching the same IO for a second time" do
-        before { instance.attach_writer(writer, &callback2) }
-        let(:callback2) { proc{ instance.detach_writer(writer) } }
-
-        before { expect(callback2).to receive(:call).and_call_original.ordered }
-        before { expect(callback1).to receive(:call).and_call_original.ordered }
-        it { is_expected.to be nil }
-      end
+      before { expect(callback1).to receive(:call).and_call_original }
+      it { is_expected.to be nil }
     end
   end
 

@@ -18,8 +18,8 @@ class IOEventLoop < FiberedEventLoop
       elsif @readers.empty? and @writers.empty? and not waiting_time
         stop # would block indefinitely otherwise
       elsif selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-        selected[0].each{ |readable_io| once &@readers[readable_io].last } unless selected[0].empty?
-        selected[1].each{ |writable_io| once &@writers[writable_io].last } unless selected[1].empty?
+        selected[0].each{ |readable_io| once(&@readers[readable_io]) } unless selected[0].empty?
+        selected[1].each{ |writable_io| once(&@writers[writable_io]) } unless selected[1].empty?
       else
         next
       end
@@ -29,23 +29,19 @@ class IOEventLoop < FiberedEventLoop
   attr_reader :timers
 
   def attach_reader(io, &on_readable)
-    @readers[io] ||= []
-    @readers[io] << on_readable
+    @readers[io] = on_readable
   end
 
   def attach_writer(io, &on_writable)
-    @writers[io] ||= []
-    @writers[io] << on_writable
+    @writers[io] = on_writable
   end
 
   def detach_reader(io)
-    @readers[io].pop
-    @readers.delete(io) if @readers[io].empty?
+    @readers.delete(io)
   end
 
   def detach_writer(io)
-    @writers[io].pop
-    @writers.delete(io) if @writers[io].empty?
+    @writers.delete(io)
   end
 
   def wait_for_result(id, timeout = nil) # &on_timeout
