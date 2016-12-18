@@ -9,9 +9,7 @@ class IOEventLoop < FiberedEventLoop
 
     super do
       waiting_time = @timers.waiting_time
-
-      triggerable = waiting_time == 0 ? @timers.triggerable : []
-      triggerable.each{ |timer| once{ timer.trigger } } unless triggerable.empty?
+      @timers.triggerable.each{ |timer| once{ timer.trigger } } if waiting_time == 0
 
       if once_pending?
         next
@@ -20,6 +18,8 @@ class IOEventLoop < FiberedEventLoop
       elsif selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
         selected[0].each{ |readable_io| once &@readers[readable_io].last } unless selected[0].empty?
         selected[1].each{ |writable_io| once &@writers[writable_io].last } unless selected[1].empty?
+      else
+        next
       end
     end
   end
