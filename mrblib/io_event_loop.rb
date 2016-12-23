@@ -1,7 +1,7 @@
 Object.__send__(:remove_const, :IOEventLoop) if Object.const_defined? :IOEventLoop
 
 class IOEventLoop < FiberedEventLoop
-  def initialize
+  def initialize(*)
     @timers = Timers.new
     @result_timers = {}
     @readers = {}
@@ -11,7 +11,7 @@ class IOEventLoop < FiberedEventLoop
       waiting_time = @timers.waiting_time
       @timers.triggerable.each{ |timer| once{ timer.trigger } } if waiting_time == 0
 
-      custom_iteration
+      trigger :iteration
 
       if once_pending?
         next
@@ -24,10 +24,6 @@ class IOEventLoop < FiberedEventLoop
         next
       end
     end
-  end
-
-  def custom_iteration
-    # do nothing by default
   end
 
   attr_reader :timers
