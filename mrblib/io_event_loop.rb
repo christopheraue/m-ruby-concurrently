@@ -11,7 +11,7 @@ class IOEventLoop < FiberedEventLoop
       waiting_time = @timers.waiting_time
       @timers.triggerable.each{ |timer| once{ timer.trigger } } if waiting_time == 0
 
-      yield if block_given?
+      custom_iteration
 
       if once_pending?
         next
@@ -24,6 +24,10 @@ class IOEventLoop < FiberedEventLoop
         next
       end
     end
+  end
+
+  def custom_iteration
+    # do nothing by default
   end
 
   attr_reader :timers

@@ -1,7 +1,6 @@
 describe IOEventLoop do
-  subject(:instance) { IOEventLoop.new{ each_iteration.call } }
+  subject(:instance) { IOEventLoop.new }
 
-  let(:each_iteration) { proc{} }
   it { is_expected.to be_a FiberedEventLoop }
 
   describe "#start" do
@@ -9,7 +8,7 @@ describe IOEventLoop do
 
     context "when it has no timers and nothing to watch" do
       before { expect(instance).to receive(:stop).and_call_original }
-      before { expect(each_iteration).to receive(:call) }
+      before { expect(instance).to receive(:custom_iteration) }
       it { is_expected.to be nil }
     end
 
@@ -18,7 +17,7 @@ describe IOEventLoop do
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
-      before { expect(each_iteration).to receive(:call).exactly(3).times }
+      before { expect(instance).to receive(:custom_iteration).exactly(3).times }
       before { expect(instance).to receive(:stop).and_call_original }
       it { is_expected.to be nil }
     end
@@ -32,7 +31,7 @@ describe IOEventLoop do
         before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
         before { instance.wait_for_readable(reader) }
 
-        before { expect(each_iteration).to receive(:call) }
+        before { expect(instance).to receive(:custom_iteration) }
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
@@ -40,7 +39,7 @@ describe IOEventLoop do
       context "when its waiting to be writable" do
         before { instance.wait_for_writable(writer) }
 
-        before { expect(each_iteration).to receive(:call) }
+        before { expect(instance).to receive(:custom_iteration) }
         it { is_expected.to be nil }
         after do
           writer.write 'Hello!'; writer.close
