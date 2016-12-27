@@ -63,6 +63,13 @@ class IOEventLoop < FiberedEventLoop
     @readers.key? io and waits_for_result? io
   end
 
+  def cancel_waiting_for_readable(io)
+    if waits_for_readable? io
+      detach_reader(io)
+      hand_result_to(io, :canceled)
+    end
+  end
+
   def wait_for_writable(io, *args, &block)
     attach_writer(io) { detach_writer(io); hand_result_to(io, :writable) }
     wait_for_result io, *args, &block
@@ -70,5 +77,12 @@ class IOEventLoop < FiberedEventLoop
 
   def waits_for_writable?(io)
     @writers.key? io and waits_for_result? io
+  end
+
+  def cancel_waiting_for_writable(io)
+    if waits_for_writable? io
+      detach_writer(io)
+      hand_result_to(io, :canceled)
+    end
   end
 end

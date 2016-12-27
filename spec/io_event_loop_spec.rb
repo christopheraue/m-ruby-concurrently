@@ -115,6 +115,14 @@ describe IOEventLoop do
         it { is_expected.to be :readable }
         after { expect(instance.waits_for_readable? reader).to be false }
       end
+
+      context "when canceled" do
+        before { instance.timers.after(0.01) { instance.cancel_waiting_for_readable reader } }
+
+        before { instance.timers.after(0.005) { expect(instance.waits_for_readable? reader).to be true } }
+        it { is_expected.to be :canceled }
+        after { expect(instance.waits_for_readable? reader).to be false }
+      end
     end
 
     context "when it waits indefinitely" do
@@ -156,6 +164,14 @@ describe IOEventLoop do
 
         before { instance.timers.after(0.005) { expect(instance.waits_for_writable? writer).to be true } }
         it { is_expected.to be :writable }
+        after { expect(instance.waits_for_writable? writer).to be false }
+      end
+
+      context "when canceled" do
+        before { instance.timers.after(0.01) { instance.cancel_waiting_for_writable writer } }
+
+        before { instance.timers.after(0.005) { expect(instance.waits_for_writable? writer).to be true } }
+        it { is_expected.to be :canceled }
         after { expect(instance.waits_for_writable? writer).to be false }
       end
     end
