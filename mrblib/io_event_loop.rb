@@ -45,7 +45,7 @@ class IOEventLoop < FiberedEventLoop
   end
 
   def wait_for_result(id, timeout = nil) # &on_timeout
-    @result_timers[id] = @timers.after(timeout){ hand_result_to(@id, yield) } if timeout
+    @result_timers[id] = @timers.after(timeout){ hand_result_to(id, yield) } if timeout
     super id
   end
 
