@@ -110,7 +110,10 @@ describe IOEventLoop do
     shared_examples "for readability" do
       context "when readable after some time" do
         before { instance.timers.after(0.01) { writer.write 'Wake up!' } }
+
+        before { instance.timers.after(0.005) { expect(instance.waits_for_readable? reader).to be true } }
         it { is_expected.to be :readable }
+        after { expect(instance.waits_for_readable? reader).to be false }
       end
     end
 
@@ -150,7 +153,10 @@ describe IOEventLoop do
     shared_examples "for writability" do
       context "when writability after some time" do
         before { instance.timers.after(0.01) { reader.read(65536) } } # clear the pipe
+
+        before { instance.timers.after(0.005) { expect(instance.waits_for_writable? writer).to be true } }
         it { is_expected.to be :writable }
+        after { expect(instance.waits_for_writable? writer).to be false }
       end
     end
 

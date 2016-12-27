@@ -59,8 +59,16 @@ class IOEventLoop < FiberedEventLoop
     wait_for_result io, *args, &block
   end
 
+  def waits_for_readable?(io)
+    @readers.key? io and waits_for_result? io
+  end
+
   def wait_for_writable(io, *args, &block)
     attach_writer(io) { detach_writer(io); hand_result_to(io, :writable) }
     wait_for_result io, *args, &block
+  end
+
+  def waits_for_writable?(io)
+    @writers.key? io and waits_for_result? io
   end
 end
