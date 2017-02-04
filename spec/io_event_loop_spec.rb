@@ -138,7 +138,7 @@ describe IOEventLoop do
 
     context "when it has a timeout" do
       let(:timeout) { 0.02 }
-      let(:timeout_callback) { proc{ raise "Time's up!" } }
+      let(:timeout_callback) { proc{ instance.stop raise: "Time's up!" } }
 
       include_examples "for readability"
 
@@ -189,7 +189,7 @@ describe IOEventLoop do
 
     context "when it has a timeout" do
       let(:timeout) { 0.02 }
-      let(:timeout_callback) { proc{ raise "Time's up!" } }
+      let(:timeout_callback) { proc{ instance.stop raise: "Time's up!" } }
 
       include_examples "for writability"
 
