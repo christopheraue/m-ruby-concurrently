@@ -138,7 +138,7 @@ describe IOEventLoop do
 
     context "when it has a timeout" do
       let(:timeout) { 0.02 }
-      let(:timeout_callback) { proc{ instance.stop raise: "Time's up!" } }
+      let(:timeout_callback) { proc{ raise "Time's up!" } }
 
       include_examples "for readability"
 
@@ -159,7 +159,7 @@ describe IOEventLoop do
     before { writer.write('a' * 65536) }
 
     shared_examples "for writability" do
-      context "when writability after some time" do
+      context "when writable after some time" do
         before { instance.timers.after(0.01) { reader.read(65536) } } # clear the pipe
 
         before { instance.timers.after(0.005) { expect(instance.waits_for_writable? writer).to be true } }
@@ -189,7 +189,7 @@ describe IOEventLoop do
 
     context "when it has a timeout" do
       let(:timeout) { 0.02 }
-      let(:timeout_callback) { proc{ instance.stop raise: "Time's up!" } }
+      let(:timeout_callback) { proc{ raise "Time's up!" } }
 
       include_examples "for writability"
 
