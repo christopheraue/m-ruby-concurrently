@@ -19,30 +19,30 @@ describe IOEventLoop::Timers do
       it { expect(instance.waiting_time).to be_within(0.02).of(seconds1) }
       it { expect(instance.triggerable).to eq [] }
 
-      context "when the next timeout has been canceled" do
+      context "when the next timeout has been cancelled" do
         before { timer1.cancel }
         it { expect(instance.waiting_time).to be_within(0.02).of(seconds3) }
 
-        context "when the timeout after the next has also been canceled" do
+        context "when the timeout after the next has also been cancelled" do
           before { timer3.cancel }
           it { expect(instance.waiting_time).to be_within(0.02).of(seconds2) }
 
-          context "when the last timeout has also been canceled" do
+          context "when the last timeout has also been cancelled" do
             before { timer2.cancel }
             it { expect(instance.waiting_time).to be nil }
           end
         end
       end
 
-      context "when the timeout after the next has been canceled" do
+      context "when the timeout after the next has been cancelled" do
         before { timer3.cancel }
         it { expect(instance.waiting_time).to be_within(0.02).of(seconds1) }
 
-        context "when the last timeout has also been canceled" do
+        context "when the last timeout has also been cancelled" do
           before { timer2.cancel }
           it { expect(instance.waiting_time).to be_within(0.02).of(seconds1) }
 
-          context "when the last timeout has also been canceled" do
+          context "when the last timeout has also been cancelled" do
             before { timer1.cancel }
             it { expect(instance.waiting_time).to be nil }
           end

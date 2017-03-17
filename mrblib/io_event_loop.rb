@@ -69,7 +69,7 @@ class IOEventLoop < FiberedEventLoop
   def cancel_awaiting_readable(io)
     if awaits_readable? io
       detach_reader(io)
-      resume(io, :canceled)
+      resume(io, :cancelled)
     end
   end
 
@@ -85,7 +85,7 @@ class IOEventLoop < FiberedEventLoop
   def cancel_awaiting_writable(io)
     if awaits_writable? io
       detach_writer(io)
-      resume(io, :canceled)
+      resume(io, :cancelled)
     end
   end
 end

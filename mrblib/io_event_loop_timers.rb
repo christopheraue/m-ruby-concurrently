@@ -18,13 +18,13 @@ class IOEventLoop < FiberedEventLoop
     end
 
     def waiting_time
-      @timers.pop while last = @timers.last and last.canceled?
+      @timers.pop while last = @timers.last and last.cancelled?
       last.waiting_time if last
     end
 
     def triggerable
       trigger_threshold = bisect_left(@timers, WallClock.now)
-      @timers.pop(@timers.length - trigger_threshold).delete_if(&:canceled?)
+      @timers.pop(@timers.length - trigger_threshold).delete_if(&:cancelled?)
     end
 
     # Return the left-most index in a list of timers a corresponding to a

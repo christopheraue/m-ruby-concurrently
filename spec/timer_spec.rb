@@ -7,15 +7,15 @@ describe IOEventLoop::Timer do
   let(:callback) { proc{} }
 
   shared_context "for a running timer" do |seconds:, repeat: false|
-    after { expect(instance.canceled?).to be false }
+    after { expect(instance.cancelled?).to be false }
     after { expect(instance.seconds).to be seconds }
     after { expect(instance.waiting_time).to be_within(0.02).of((start_time - IOEventLoop::WallClock.now) + seconds) }
     after { expect(instance.timeout_time).to be_within(0.02).of(start_time + seconds) }
     after { expect(instance.repeats?).to be repeat }
   end
 
-  shared_context "for a canceled timer" do |seconds:, repeat: false|
-    after { expect(instance.canceled?).to be true }
+  shared_context "for a cancelled timer" do |seconds:, repeat: false|
+    after { expect(instance.cancelled?).to be true }
     after { expect(instance.seconds).to be seconds }
     after { expect(instance.waiting_time).to be nil }
     after { expect(instance.timeout_time).to be_within(0.02).of(start_time + seconds) }
@@ -56,16 +56,16 @@ describe IOEventLoop::Timer do
   describe "#trigger" do
     subject { instance.trigger }
 
-    context "when canceled" do
+    context "when cancelled" do
       before { instance.cancel }
-      it { is_expected.to raise_error IOEventLoop::Error, 'timer canceled' }
+      it { is_expected.to raise_error IOEventLoop::Error, 'timer cancelled' }
     end
 
     context "when one-shot" do
       let(:repeat) { false }
       before { expect(callback).to receive(:call) }
       it { is_expected.to be true }
-      include_context "for a canceled timer", seconds: 1.5
+      include_context "for a cancelled timer", seconds: 1.5
     end
 
     context "when recurring" do
@@ -83,7 +83,7 @@ describe IOEventLoop::Timer do
     subject { instance.cancel }
 
     it { is_expected.to be true }
-    include_context "for a canceled timer", seconds: 1.5
+    include_context "for a cancelled timer", seconds: 1.5
   end
 
   describe "#inspect" do
@@ -94,7 +94,7 @@ describe IOEventLoop::Timer do
       it { is_expected.to eq "#<#{described_class}:0x#{'%014x' % instance.__id__} waits another 1.799 seconds>" }
     end
 
-    context "when canceled" do
+    context "when cancelled" do
       before { instance.cancel }
       it { is_expected.to eq "#<#{described_class}:0x#{'%014x' % instance.__id__} CANCELED>" }
     end

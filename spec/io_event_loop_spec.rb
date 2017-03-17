@@ -113,11 +113,11 @@ describe IOEventLoop do
         after { expect(instance.awaits_readable? reader).to be false }
       end
 
-      context "when canceled" do
+      context "when cancelled" do
         before { instance.timers.after(0.01) { instance.cancel_awaiting_readable reader } }
 
         before { instance.timers.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
-        it { is_expected.to be :canceled }
+        it { is_expected.to be :cancelled }
         after { expect(instance.awaits_readable? reader).to be false }
       end
     end
@@ -162,11 +162,11 @@ describe IOEventLoop do
         after { expect(instance.awaits_writable? writer).to be false }
       end
 
-      context "when canceled" do
+      context "when cancelled" do
         before { instance.timers.after(0.01) { instance.cancel_awaiting_writable writer } }
 
         before { instance.timers.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
-        it { is_expected.to be :canceled }
+        it { is_expected.to be :cancelled }
         after { expect(instance.awaits_writable? writer).to be false }
       end
     end
