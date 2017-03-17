@@ -57,33 +57,33 @@ class IOEventLoop < FiberedEventLoop
     super
   end
 
-  def wait_for_readable(io, *args, &block)
+  def await_readable(io, *args, &block)
     attach_reader(io) { detach_reader(io); resume(io, :readable) }
     await io, *args, &block
   end
 
-  def waits_for_readable?(io)
+  def awaits_readable?(io)
     @readers.key? io and awaits? io
   end
 
-  def cancel_waiting_for_readable(io)
-    if waits_for_readable? io
+  def cancel_awaiting_readable(io)
+    if awaits_readable? io
       detach_reader(io)
       resume(io, :canceled)
     end
   end
 
-  def wait_for_writable(io, *args, &block)
+  def await_writable(io, *args, &block)
     attach_writer(io) { detach_writer(io); resume(io, :writable) }
     await io, *args, &block
   end
 
-  def waits_for_writable?(io)
+  def awaits_writable?(io)
     @writers.key? io and awaits? io
   end
 
-  def cancel_waiting_for_writable(io)
-    if waits_for_writable? io
+  def cancel_awaiting_writable(io)
+    if awaits_writable? io
       detach_writer(io)
       resume(io, :canceled)
     end

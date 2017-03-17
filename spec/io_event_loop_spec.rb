@@ -29,7 +29,7 @@ describe IOEventLoop do
 
       context "when its waiting to be readable" do
         before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
-        before { instance.wait_for_readable(reader) }
+        before { instance.await_readable(reader) }
 
         before { expect(instance).to receive(:trigger).with(:iteration) }
         it { is_expected.to be nil }
@@ -37,7 +37,7 @@ describe IOEventLoop do
       end
 
       context "when its waiting to be writable" do
-        before { instance.wait_for_writable(writer) }
+        before { instance.await_writable(writer) }
 
         before { expect(instance).to receive(:trigger).with(:iteration) }
         it { is_expected.to be nil }
@@ -97,8 +97,8 @@ describe IOEventLoop do
     end
   end
 
-  describe "#wait_for_readable" do
-    subject { instance.wait_for_readable(reader, opts) }
+  describe "#await_readable" do
+    subject { instance.await_readable(reader, opts) }
 
     let(:pipe) { IO.pipe }
     let(:reader) { pipe[0] }
@@ -108,17 +108,17 @@ describe IOEventLoop do
       context "when readable after some time" do
         before { instance.timers.after(0.01) { writer.write 'Wake up!' } }
 
-        before { instance.timers.after(0.005) { expect(instance.waits_for_readable? reader).to be true } }
+        before { instance.timers.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :readable }
-        after { expect(instance.waits_for_readable? reader).to be false }
+        after { expect(instance.awaits_readable? reader).to be false }
       end
 
       context "when canceled" do
-        before { instance.timers.after(0.01) { instance.cancel_waiting_for_readable reader } }
+        before { instance.timers.after(0.01) { instance.cancel_awaiting_readable reader } }
 
-        before { instance.timers.after(0.005) { expect(instance.waits_for_readable? reader).to be true } }
+        before { instance.timers.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :canceled }
-        after { expect(instance.waits_for_readable? reader).to be false }
+        after { expect(instance.awaits_readable? reader).to be false }
       end
     end
 
@@ -143,8 +143,8 @@ describe IOEventLoop do
     end
   end
 
-  describe "#wait_for_writable" do
-    subject { instance.wait_for_writable(writer, opts) }
+  describe "#await_writable" do
+    subject { instance.await_writable(writer, opts) }
 
     let(:pipe) { IO.pipe }
     let(:reader) { pipe[0] }
@@ -157,17 +157,17 @@ describe IOEventLoop do
       context "when writable after some time" do
         before { instance.timers.after(0.01) { reader.read(65536) } } # clear the pipe
 
-        before { instance.timers.after(0.005) { expect(instance.waits_for_writable? writer).to be true } }
+        before { instance.timers.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :writable }
-        after { expect(instance.waits_for_writable? writer).to be false }
+        after { expect(instance.awaits_writable? writer).to be false }
       end
 
       context "when canceled" do
-        before { instance.timers.after(0.01) { instance.cancel_waiting_for_writable writer } }
+        before { instance.timers.after(0.01) { instance.cancel_awaiting_writable writer } }
 
-        before { instance.timers.after(0.005) { expect(instance.waits_for_writable? writer).to be true } }
+        before { instance.timers.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :canceled }
-        after { expect(instance.waits_for_writable? writer).to be false }
+        after { expect(instance.awaits_writable? writer).to be false }
       end
     end
 
