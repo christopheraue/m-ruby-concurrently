@@ -44,8 +44,11 @@ class IOEventLoop < FiberedEventLoop
     @writers.delete(io)
   end
 
-  def await(id, timeout = nil) # &on_timeout
-    @result_timers[id] = @timers.after(timeout){ resume(id, yield) } if timeout
+  def await(id, opts = {})
+    if timeout = opts.fetch(:within, false)
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} seconds"))
+      @result_timers[id] = @timers.after(timeout){ resume(id, timeout_result) }
+    end
     super id
   end
 

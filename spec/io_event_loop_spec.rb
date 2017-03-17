@@ -85,10 +85,7 @@ describe IOEventLoop do
   end
 
   describe "#await with timeout" do
-    subject do
-      result = instance.await(:id, 0.02) { RuntimeError.new "Time's up!" }
-      (result.is_a? RuntimeError) ? raise(result) : result
-    end
+    subject { instance.await(:id, within: 0.02, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")) }
 
     context "when the result arrives in time" do
       before { instance.timers.after(0.01) { instance.resume(:id, :result) } }
@@ -96,12 +93,12 @@ describe IOEventLoop do
     end
 
     context "when evaluation of result is too slow" do
-      it { is_expected.to raise_error "Time's up!" }
+      it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
     end
   end
 
   describe "#wait_for_readable" do
-    subject { instance.wait_for_readable(reader, *timeout, &timeout_callback) }
+    subject { instance.wait_for_readable(reader, opts) }
 
     let(:pipe) { IO.pipe }
     let(:reader) { pipe[0] }
@@ -126,8 +123,7 @@ describe IOEventLoop do
     end
 
     context "when it waits indefinitely" do
-      let(:timeout) { nil }
-      let(:timeout_callback) { nil }
+      let(:opts) { { within: nil, timeout_result: nil } }
 
       include_examples "for readability"
 
@@ -137,19 +133,18 @@ describe IOEventLoop do
     end
 
     context "when it has a timeout" do
-      let(:timeout) { 0.02 }
-      let(:timeout_callback) { proc{ raise "Time's up!" } }
+      let(:opts) { { within: 0.02, timeout_result: IOEventLoop::TimeoutError.new("Time's up!") } }
 
       include_examples "for readability"
 
       context "when not readable in time" do
-        it { is_expected.to raise_error "Time's up!" }
+        it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
       end
     end
   end
 
   describe "#wait_for_writable" do
-    subject { instance.wait_for_writable(writer, *timeout, &timeout_callback) }
+    subject { instance.wait_for_writable(writer, opts) }
 
     let(:pipe) { IO.pipe }
     let(:reader) { pipe[0] }
@@ -177,8 +172,7 @@ describe IOEventLoop do
     end
 
     context "when it waits indefinitely" do
-      let(:timeout) { nil }
-      let(:timeout_callback) { nil }
+      let(:opts) { { within: nil, timeout_result: nil } }
 
       include_examples "for writability"
 
@@ -188,13 +182,12 @@ describe IOEventLoop do
     end
 
     context "when it has a timeout" do
-      let(:timeout) { 0.02 }
-      let(:timeout_callback) { proc{ raise "Time's up!" } }
+      let(:opts) { { within: 0.02, timeout_result: IOEventLoop::TimeoutError.new("Time's up!") } }
 
       include_examples "for writability"
 
       context "when not writable in time" do
-        it { is_expected.to raise_error "Time's up!" }
+        it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
       end
     end
   end
