@@ -84,14 +84,14 @@ describe IOEventLoop do
     end
   end
 
-  describe "#wait_for_result with timeout" do
+  describe "#await with timeout" do
     subject do
-      result = instance.wait_for_result(:id, 0.02) { RuntimeError.new "Time's up!" }
+      result = instance.await(:id, 0.02) { RuntimeError.new "Time's up!" }
       (result.is_a? RuntimeError) ? raise(result) : result
     end
 
     context "when the result arrives in time" do
-      before { instance.timers.after(0.01) { instance.hand_result_to(:id, :result) } }
+      before { instance.timers.after(0.01) { instance.resume(:id, :result) } }
       it { is_expected.to be :result }
     end
 
