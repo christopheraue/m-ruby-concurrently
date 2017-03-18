@@ -46,7 +46,7 @@ class IOEventLoop < FiberedEventLoop
 
   def await(id, opts = {})
     if timeout = opts.fetch(:within, false)
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} seconds"))
+      timeout_result = opts.fetch(:timeout_result, IOEventLoop::TimeoutError.new("waiting timed out after #{timeout} second(s)"))
       @result_timers[id] = @timers.after(timeout){ resume(id, timeout_result) }
     end
     super id
