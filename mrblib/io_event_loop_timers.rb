@@ -5,7 +5,7 @@ class IOEventLoop < FiberedEventLoop
     end
 
     def timers
-      @timers.reverse
+      @timers.dup
     end
 
     def after(seconds, &on_timeout)
@@ -28,7 +28,7 @@ class IOEventLoop < FiberedEventLoop
 
     def triggerable
       trigger_threshold = bisect_left(@timers, WallClock.now)
-      @timers.pop(@timers.length - trigger_threshold).reverse
+      @timers.pop(@timers.length - trigger_threshold)
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order

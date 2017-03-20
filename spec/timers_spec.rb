@@ -15,7 +15,7 @@ describe IOEventLoop::Timers do
     let(:callback2) { proc{} }
     let(:callback3) { proc{} }
 
-    it { expect(instance.timers).to eq [timer1, timer3, timer2] }
+    it { expect(instance.timers).to eq [timer2, timer3, timer1] }
     it { expect(instance.waiting_time).to be_within(0.02).of(seconds1) }
     it { expect(instance.triggerable).to eq [] }
 
@@ -53,13 +53,13 @@ describe IOEventLoop::Timers do
       let(:seconds1) { 0 }
       let(:seconds2) { 0.1 }
       let(:seconds3) { 0 }
-      it { expect(instance.triggerable).to eq [timer1, timer3] }
+      it { expect(instance.triggerable).to eq [timer3, timer1] }
 
       context "when a timer cancels a timer coming afterwards in the same triggerable batch" do
         let(:callback1) { proc{ timer3.cancel } }
         before { expect(callback1).to receive(:call).and_call_original }
         before { expect(callback3).not_to receive(:call) }
-        it { expect{ instance.triggerable.each(&:trigger) }.not_to raise_error }
+        it { expect{ instance.triggerable.reverse_each(&:trigger) }.not_to raise_error }
       end
     end
 
@@ -67,7 +67,7 @@ describe IOEventLoop::Timers do
       let(:seconds1) { 0 }
       let(:seconds2) { 0 }
       let(:seconds3) { 0 }
-      it { expect(instance.triggerable).to eq [timer1, timer2, timer3] }
+      it { expect(instance.triggerable).to eq [timer3, timer2, timer1] }
     end
   end
 

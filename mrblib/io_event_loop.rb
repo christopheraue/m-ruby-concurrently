@@ -9,7 +9,7 @@ class IOEventLoop < FiberedEventLoop
 
     super do
       waiting_time = @timers.waiting_time
-      @timers.triggerable.each{ |timer| once{ timer.trigger } } if waiting_time == 0
+      @timers.triggerable.reverse_each{ |timer| once{ timer.trigger } } if waiting_time == 0
 
       trigger :iteration
 
