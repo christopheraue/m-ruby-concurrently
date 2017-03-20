@@ -4,6 +4,10 @@ class IOEventLoop < FiberedEventLoop
       @timers = []
     end
 
+    def timers
+      @timers.reverse
+    end
+
     def after(seconds, &on_timeout)
       Timer.new(seconds, timers: self, &on_timeout)
     end
@@ -24,12 +28,11 @@ class IOEventLoop < FiberedEventLoop
 
     def triggerable
       trigger_threshold = bisect_left(@timers, WallClock.now)
-      @timers.pop(@timers.length - trigger_threshold).delete_if(&:cancelled?)
+      @timers.pop(@timers.length - trigger_threshold).delete_if(&:cancelled?).reverse
     end
 
-    # Return the left-most index in a list of timers a corresponding to a
-    # cutoff time or timer e in O(log n), assuming a is sorted in descending
-    # order.
+    # Return the left-most index in a list of timers sorted in DESCENDING order
+    # relative to a time or timer e in O(log n).
     # Shamelessly copied from https://github.com/celluloid/timers/blob/master/lib/timers/events.rb
     private def bisect_left(a, e, l = 0, u = a.length)
       while l < u
