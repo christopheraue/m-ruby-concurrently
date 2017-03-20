@@ -11,15 +11,18 @@ class IOEventLoop < FiberedEventLoop
     end
 
     def trigger
-      raise Error, 'timer cancelled' unless @callback
-      @callback.call
-      if @repeat
-        @timeout_time += @seconds
-        @timers.schedule(self) if @timers
+      if @callback
+        @callback.call
+        if @repeat
+          @timeout_time += @seconds
+          @timers.schedule(self) if @timers
+        else
+          cancel
+        end
+        true
       else
-        cancel
+        false
       end
-      true
     end
 
     def cancel

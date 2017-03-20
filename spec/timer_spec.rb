@@ -58,7 +58,7 @@ describe IOEventLoop::Timer do
 
     context "when cancelled" do
       before { instance.cancel }
-      it { is_expected.to raise_error IOEventLoop::Error, 'timer cancelled' }
+      it { is_expected.to be false }
     end
 
     context "when one-shot" do

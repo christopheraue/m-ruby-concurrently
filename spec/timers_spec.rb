@@ -54,6 +54,13 @@ describe IOEventLoop::Timers do
       let(:seconds2) { 0.1 }
       let(:seconds3) { 0 }
       it { expect(instance.triggerable).to eq [timer1, timer3] }
+
+      context "when a timer cancels a timer coming afterwards in the same triggerable batch" do
+        let(:callback1) { proc{ timer3.cancel } }
+        before { expect(callback1).to receive(:call).and_call_original }
+        before { expect(callback3).not_to receive(:call) }
+        it { expect{ instance.triggerable.each(&:trigger) }.not_to raise_error }
+      end
     end
 
     context "when all timers can be triggered immediately" do
