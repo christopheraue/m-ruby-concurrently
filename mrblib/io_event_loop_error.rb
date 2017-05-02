@@ -1,4 +1,7 @@
-class IOEventLoop < FiberedEventLoop
-  class Error < FiberedEventLoop::Error; end
-  class TimeoutError < FiberedEventLoop::CancelledError; end
+class IOEventLoop
+  class Error < StandardError; end
+  class UnknownWaitingIdError < Error; end
+  class CancelledError < Error; end
+  class TimeoutError < CancelledError; end
+  class EventWatcherError < Error; end
 end

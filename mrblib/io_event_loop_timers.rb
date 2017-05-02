@@ -1,4 +1,4 @@
-class IOEventLoop < FiberedEventLoop
+class IOEventLoop
   class Timers
     def initialize
       @timers = []

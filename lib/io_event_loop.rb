@@ -1,4 +1,5 @@
-require "fibered_event_loop"
+require "fiber"
+require "callbacks_attachable"
 require "hitimes"
 
 dir = File.dirname File.dirname __FILE__
