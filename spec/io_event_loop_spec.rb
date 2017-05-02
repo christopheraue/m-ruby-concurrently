@@ -8,7 +8,6 @@ describe IOEventLoop do
 
     context "when it has no timers and nothing to watch" do
       before { expect(instance).to receive(:stop).and_call_original }
-      before { expect(instance).to receive(:trigger).with(:iteration) }
       it { is_expected.to be nil }
     end
 
@@ -17,7 +16,6 @@ describe IOEventLoop do
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
-      before { expect(instance).to receive(:trigger).with(:iteration).exactly(3).times }
       before { expect(instance).to receive(:stop).and_call_original }
       it { is_expected.to be nil }
     end
@@ -31,7 +29,6 @@ describe IOEventLoop do
         before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
         before { instance.await_readable(reader) }
 
-        before { expect(instance).to receive(:trigger).with(:iteration) }
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
@@ -39,7 +36,6 @@ describe IOEventLoop do
       context "when its waiting to be writable" do
         before { instance.await_writable(writer) }
 
-        before { expect(instance).to receive(:trigger).with(:iteration) }
         it { is_expected.to be nil }
         after do
           writer.write 'Hello!'; writer.close

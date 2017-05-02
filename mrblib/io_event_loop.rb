@@ -8,8 +8,6 @@ class IOEventLoop < FiberedEventLoop
     @writers = {}
 
     super do
-      trigger :iteration
-
       if (waiting_time = @timers.waiting_time) == 0
         @timers.triggerable.reverse_each(&:trigger)
       elsif waiting_time or @readers.any? or @writers.any?
