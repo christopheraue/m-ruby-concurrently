@@ -23,22 +23,6 @@ class IOEventLoop < FiberedEventLoop
 
   attr_reader :timers
 
-  def attach_reader(io, &on_readable)
-    @readers[io] = on_readable
-  end
-
-  def attach_writer(io, &on_writable)
-    @writers[io] = on_writable
-  end
-
-  def detach_reader(io)
-    @readers.delete(io)
-  end
-
-  def detach_writer(io)
-    @writers.delete(io)
-  end
-
   def await(id, opts = {})
     if timeout = opts.fetch(:within, false)
       timeout_result = opts.fetch(:timeout_result, IOEventLoop::TimeoutError.new("waiting timed out after #{timeout} second(s)"))
@@ -50,6 +34,17 @@ class IOEventLoop < FiberedEventLoop
   def resume(id, result)
     @result_timers.delete(id).cancel if @result_timers.key? id
     super
+  end
+
+
+  # Readable IO
+
+  def attach_reader(io, &on_readable)
+    @readers[io] = on_readable
+  end
+
+  def detach_reader(io)
+    @readers.delete(io)
   end
 
   def await_readable(io, *args, &block)
@@ -66,6 +61,17 @@ class IOEventLoop < FiberedEventLoop
       detach_reader(io)
       resume(io, :cancelled)
     end
+  end
+
+
+  # Writable IO
+
+  def attach_writer(io, &on_writable)
+    @writers[io] = on_writable
+  end
+
+  def detach_writer(io)
+    @writers.delete(io)
   end
 
   def await_writable(io, *args, &block)
