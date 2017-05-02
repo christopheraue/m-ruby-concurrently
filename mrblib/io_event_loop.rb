@@ -11,11 +11,11 @@ class IOEventLoop < FiberedEventLoop
       trigger :iteration
 
       if (waiting_time = @timers.waiting_time) == 0
-        @timers.triggerable.reverse_each{ |timer| once{ timer.trigger } }
+        @timers.triggerable.reverse_each(&:trigger)
       elsif waiting_time or @readers.any? or @writers.any?
         if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-          selected[0].each{ |readable_io| once(&@readers[readable_io]) } unless selected[0].empty?
-          selected[1].each{ |writable_io| once(&@writers[writable_io]) } unless selected[1].empty?
+          selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
+          selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
         end
       else
         stop # would block indefinitely otherwise
