@@ -8,23 +8,12 @@ class IOEventLoop
     @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
     @concurrencies = {}
-    @new_concurrencies = []
+    @run_queue = []
     @waiting_concurrencies = {}
 
     @timers = Timers.new
     @readers = {}
     @writers = {}
-  end
-
-  def forgive_iteration_errors!
-    @stop_and_raise_error.cancel
-  end
-
-
-  # Flow control
-
-  def start
-    @running = true
 
     @timer_concurrency = Concurrency.new self do
       while @timer_concurrency.await_result
@@ -40,27 +29,27 @@ class IOEventLoop
         end
       end
     end
+  end
 
-    @select_concurrency = Concurrency.new self do
-      while @select_concurrency.await_result
-        if @timers.waiting_time or @readers.any? or @writers.any?
-          if @timers.waiting_time == 0
-            @timer_concurrency.resume
-          else
-            @io_concurrency.resume
-          end
-        else
-          @running = false # would block indefinitely otherwise
-        end
-      end
-    end
+  def forgive_iteration_errors!
+    @stop_and_raise_error.cancel
+  end
+
+
+  # Flow control
+
+  def start
+    @running = true
 
     while @running
-      if @new_concurrencies.any?
-        @new_concurrencies.each(&:resume)
-        @new_concurrencies = []
+      if @run_queue.any?
+        @run_queue.each(&:resume).clear
+      elsif @timers.waiting_time == 0
+        @run_queue.push @timer_concurrency
+      elsif @timers.waiting_time or @readers.any? or @writers.any?
+        @run_queue.push @io_concurrency
       else
-        @select_concurrency.resume
+        @running = false # would block indefinitely otherwise
       end
     end
 
@@ -79,7 +68,7 @@ class IOEventLoop
   def once(&block)
     concurrency = Concurrency.new(self, &block)
     @concurrencies[concurrency.fiber] = concurrency
-    @new_concurrencies.push concurrency
+    @run_queue.push concurrency
     start unless @running
   end
 
