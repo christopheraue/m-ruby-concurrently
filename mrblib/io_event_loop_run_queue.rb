@@ -1,6 +1,7 @@
 class IOEventLoop
   class RunQueue
-    def initialize
+    def initialize(loop)
+      @loop = loop
       @items = []
     end
 
@@ -11,13 +12,13 @@ class IOEventLoop
 
     def waiting_time
       if last = @items.delete_if(&:cancelled?).last
-        waiting_time = last.resume_time - WallClock.now
+        waiting_time = last.resume_time - @loop.wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
 
     def pending
-      @items.pop @items.length - bisect_left(@items, WallClock.now)
+      @items.pop @items.length - bisect_left(@items, @loop.wall_clock.now)
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order

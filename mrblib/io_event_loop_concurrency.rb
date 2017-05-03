@@ -12,7 +12,7 @@ class IOEventLoop
           loop.trigger :error, e
         end
       end
-      @resume_time = WallClock.now + after
+      @resume_time = @loop.wall_clock.now + after
       @loop.concurrencies[@fiber] = self
     end
 

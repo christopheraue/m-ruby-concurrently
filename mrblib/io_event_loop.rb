@@ -4,13 +4,15 @@ class IOEventLoop
   include CallbacksAttachable
 
   def initialize(*)
+    @wall_clock = WallClock.new
+
     @running = false
     @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
     @concurrencies = {}
     @waiting_concurrencies = {}
 
-    @run_queue = RunQueue.new
+    @run_queue = RunQueue.new self
     @readers = {}
     @writers = {}
   end
@@ -18,6 +20,8 @@ class IOEventLoop
   def forgive_iteration_errors!
     @stop_and_raise_error.cancel
   end
+
+  attr_reader :wall_clock
 
 
   # Flow control
