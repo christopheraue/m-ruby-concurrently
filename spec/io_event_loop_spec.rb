@@ -94,7 +94,7 @@ describe IOEventLoop do
         instance.await(:request)
       end }
 
-      it { is_expected.to raise_error IOEventLoop::CancelledError, 'resume error' }
+      it { is_expected.to raise_error FiberError, 'resume error' }
     end
 
     context "when #await is given a timeout" do

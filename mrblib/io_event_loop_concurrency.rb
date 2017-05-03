@@ -13,7 +13,7 @@ class IOEventLoop
     attr_reader :fiber
 
     def resume
-      @fiber.resume true
+      @fiber.resume @result
     end
 
     def await_result
@@ -22,7 +22,7 @@ class IOEventLoop
     end
 
     def inject_result(result)
-      @fiber.resume result
+      @result = result
     end
   end
 end

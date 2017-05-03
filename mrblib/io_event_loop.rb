@@ -20,6 +20,7 @@ class IOEventLoop
         @timers.triggerable.reverse_each(&:trigger)
       end
     end
+    @timer_concurrency.inject_result true
 
     @io_concurrency = Concurrency.new self do
       while @io_concurrency.await_result
@@ -29,6 +30,7 @@ class IOEventLoop
         end
       end
     end
+    @io_concurrency.inject_result true
   end
 
   def forgive_iteration_errors!
@@ -99,6 +101,7 @@ class IOEventLoop
 
       if concurrency = waiting[:concurrency]
         concurrency.inject_result result
+        @run_queue.push concurrency
       else
         stop result
       end
