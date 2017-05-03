@@ -1,6 +1,7 @@
 class IOEventLoop
   class Timers
-    def initialize
+    def initialize(loop)
+      @loop = loop
       @timers = []
     end
 
@@ -14,17 +15,11 @@ class IOEventLoop
     end
 
     def after(seconds, &on_timeout)
-      timer = Timer.new(seconds, on_timeout)
-      schedule timer
-      timer
+      Concurrency.new(@loop, after: seconds, &on_timeout)
     end
 
     def every(seconds) # &on_timeout
-      timer = after seconds do
-        yield
-        timer.repeat
-        schedule timer
-      end
+      timer = after(seconds) { yield; timer.defer seconds }
     end
 
     def schedule(timer)
@@ -33,7 +28,10 @@ class IOEventLoop
     end
 
     def waiting_time
-      any? ? @timers.last.waiting_time : nil
+      if any?
+        waiting_time = @timers.last.resume_time - WallClock.now
+        waiting_time < 0 ? 0 : waiting_time
+      end
     end
 
     def pending?

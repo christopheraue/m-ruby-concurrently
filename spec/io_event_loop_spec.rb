@@ -12,7 +12,7 @@ describe IOEventLoop do
     end
 
     context "when it has nothing to watch but a timer to wait for" do
-      before { instance.timers.after(0.01, &callback) }
+      before { instance.timers.after(0.01) { callback.call } }
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
@@ -95,7 +95,7 @@ describe IOEventLoop do
         instance.await(:request)
       end }
 
-      it { is_expected.to raise_error FiberError, 'resume error' }
+      it { is_expected.to raise_error IOEventLoop::CancelledError, 'resume error' }
     end
 
     context "when #await is given a timeout" do

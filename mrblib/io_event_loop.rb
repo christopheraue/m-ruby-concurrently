@@ -8,27 +8,11 @@ class IOEventLoop
     @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
     @concurrencies = {}
-    @run_queue = []
     @waiting_concurrencies = {}
 
-    @timers = Timers.new
+    @timers = Timers.new self
     @readers = {}
     @writers = {}
-
-    @timer_concurrency = Concurrency.new self do
-      while @timer_concurrency.await_result
-        @timers.triggerable.reverse_each(&:trigger)
-      end
-    end
-
-    @io_concurrency = Concurrency.new self do
-      while @io_concurrency.await_result
-        if selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
-          selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
-          selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
-        end
-      end
-    end
   end
 
   def forgive_iteration_errors!
@@ -38,18 +22,19 @@ class IOEventLoop
 
   # Flow control
 
-  attr_reader :concurrencies, :run_queue
+  attr_reader :concurrencies
 
   def start
     @running = true
 
     while @running
-      if @run_queue.any?
-        @run_queue.each{ |fiber, result| fiber.resume result }.clear
-      elsif @timers.pending?
-        @timer_concurrency.resume_with true
+      if @timers.pending?
+        @timers.triggerable.reverse_each{ |concurrency| concurrency.resume_with true }
       elsif @timers.any? or @readers.any? or @writers.any?
-        @io_concurrency.resume_with true
+        if selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
+          selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
+          selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+        end
       else
         @running = false # would block indefinitely otherwise
       end
