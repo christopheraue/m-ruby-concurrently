@@ -20,7 +20,6 @@ class IOEventLoop
         @timers.triggerable.reverse_each(&:trigger)
       end
     end
-    @timer_concurrency.inject_result true
 
     @io_concurrency = Concurrency.new self do
       while @io_concurrency.await_result
@@ -30,7 +29,6 @@ class IOEventLoop
         end
       end
     end
-    @io_concurrency.inject_result true
   end
 
   def forgive_iteration_errors!
@@ -40,16 +38,18 @@ class IOEventLoop
 
   # Flow control
 
+  attr_reader :concurrencies, :run_queue
+
   def start
     @running = true
 
     while @running
       if @run_queue.any?
-        @run_queue.each(&:resume).clear
+        @run_queue.each{ |fiber, result| fiber.resume result }.clear
       elsif @timers.pending?
-        @run_queue.push @timer_concurrency
+        @timer_concurrency.resume_with true
       elsif @timers.any? or @readers.any? or @writers.any?
-        @run_queue.push @io_concurrency
+        @io_concurrency.resume_with true
       else
         @running = false # would block indefinitely otherwise
       end
@@ -68,9 +68,7 @@ class IOEventLoop
   end
 
   def once(&block)
-    concurrency = Concurrency.new(self, &block)
-    @concurrencies[concurrency.fiber] = concurrency
-    @run_queue.push concurrency
+    Concurrency.new(self, &block)
     start unless @running
   end
 
@@ -100,8 +98,7 @@ class IOEventLoop
       end
 
       if concurrency = waiting[:concurrency]
-        concurrency.inject_result result
-        @run_queue.push concurrency
+        concurrency.resume_with result
       else
         stop result
       end

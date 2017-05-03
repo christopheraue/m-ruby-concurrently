@@ -69,13 +69,14 @@ describe IOEventLoop do
     end
 
     context "when waiting originates from a fiber" do
-      subject { instance.once{ instance.resume(:request, :result) } }
+      subject { instance.once{ @resume_result = instance.resume(:request, :result) } }
 
       before { instance.once{ @result = instance.await(:request) } }
       before { instance.once{ instance.await(:another_request) } }
 
       it { is_expected.to be nil }
       after { expect(@result).to be :result }
+      after { expect(@resume_result).to be :resumed }
       after { expect(instance.awaits? :request).to be false }
       after { expect(instance.awaits? :another_request).to be true }
     end
