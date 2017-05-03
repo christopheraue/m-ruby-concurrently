@@ -2,8 +2,9 @@ class IOEventLoop
   class Concurrency
     include Comparable
 
-    def initialize(loop, after = 0) #&block
+    def initialize(loop, start_time = loop.wall_clock.now) #&block
       @loop = loop
+      @start_time = start_time
       @cancelled = false
       @fiber = Fiber.new do
         begin
@@ -12,19 +13,18 @@ class IOEventLoop
           loop.trigger :error, e
         end
       end
-      @resume_time = @loop.wall_clock.now + after
       @loop.concurrencies[@fiber] = self
     end
 
-    attr_reader :resume_time
-    alias_method :to_f, :resume_time
+    attr_reader :start_time
+    alias_method :to_f, :start_time
 
     def defer(seconds)
-      @resume_time += seconds
+      @start_time += seconds
     end
 
     def <=>(other)
-      @resume_time <=> other.to_f
+      @start_time <=> other.to_f
     end
 
     def start

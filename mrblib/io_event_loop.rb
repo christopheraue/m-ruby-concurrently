@@ -110,7 +110,7 @@ class IOEventLoop
   # Timers
 
   def after(seconds, &on_timeout)
-    concurrency = Concurrency.new(self, seconds, &on_timeout)
+    concurrency = Concurrency.new(self, @wall_clock.now+seconds, &on_timeout)
     @run_queue.schedule concurrency
     concurrency
   end
