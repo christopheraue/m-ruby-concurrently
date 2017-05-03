@@ -12,7 +12,7 @@ describe IOEventLoop do
     end
 
     context "when it has nothing to watch but a timer to wait for" do
-      before { instance.after(0.01) { callback.call } }
+      before { instance.after(0.0001) { callback.call } }
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
@@ -25,7 +25,7 @@ describe IOEventLoop do
       let(:writer) { pipe[1] }
 
       context "when its waiting to be readable" do
-        before { instance.after(0.01) { writer.write 'Wake up!'; writer.close } }
+        before { instance.after(0.0001) { writer.write 'Wake up!'; writer.close } }
         before { instance.await_readable(reader) }
 
         it { is_expected.to be :readable }
@@ -99,12 +99,12 @@ describe IOEventLoop do
     end
 
     context "when #await is given a timeout" do
-      subject { instance.await(:id, within: 0.02, timeout_result: timeout_result) }
+      subject { instance.await(:id, within: 0.0002, timeout_result: timeout_result) }
 
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
-        before { instance.after(0.01) { instance.resume(:id, :result) } }
+        before { instance.after(0.0001) { instance.resume(:id, :result) } }
         it { is_expected.to be :result }
       end
 
@@ -176,9 +176,9 @@ describe IOEventLoop do
     let!(:timer1) { instance.after(seconds1) { callback1.call } }
     let!(:timer2) { instance.after(seconds2) { callback2.call } }
     let!(:timer3) { instance.after(seconds3) { callback3.call } }
-    let(:seconds1) { 0.001 }
-    let(:seconds2) { 0.003 }
-    let(:seconds3) { 0.002 }
+    let(:seconds1) { 0.0001 }
+    let(:seconds2) { 0.0003 }
+    let(:seconds3) { 0.0002 }
     let(:callback1) { proc{} }
     let(:callback2) { proc{} }
     let(:callback3) { proc{} }
@@ -242,7 +242,7 @@ describe IOEventLoop do
 
     context "when a timer cancels a timer coming afterwards in the same batch" do
       let(:seconds1) { 0 }
-      let(:seconds2) { 0.001 }
+      let(:seconds2) { 0.0001 }
       let(:seconds3) { 0 }
       let(:callback1) { proc{ timer3.cancel } }
 
@@ -267,7 +267,7 @@ describe IOEventLoop do
     subject { instance.start }
 
     before { @count = 0 }
-    let!(:timer) { instance.every(0.001) do
+    let!(:timer) { instance.every(0.0001) do
       if (@count += 1) > 3
         timer.cancel
       else
@@ -292,7 +292,7 @@ describe IOEventLoop do
       let(:callback1) { proc{ instance.detach_reader(reader) } }
 
       # make the reader readable
-      before { instance.after(0.01) { writer.write 'Message!' } }
+      before { instance.after(0.0001) { writer.write 'Message!' } }
 
       before { expect(callback1).to receive(:call).and_call_original }
       it { is_expected.to be nil }
@@ -324,17 +324,17 @@ describe IOEventLoop do
 
     shared_examples "for readability" do
       context "when readable after some time" do
-        before { instance.after(0.01) { writer.write 'Wake up!' } }
+        before { instance.after(0.0001) { writer.write 'Wake up!' } }
 
-        before { instance.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
+        before { instance.after(0.00005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :readable }
         after { expect(instance.awaits_readable? reader).to be false }
       end
 
       context "when cancelled" do
-        before { instance.after(0.01) { instance.cancel_awaiting_readable reader } }
+        before { instance.after(0.0001) { instance.cancel_awaiting_readable reader } }
 
-        before { instance.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
+        before { instance.after(0.00005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :cancelled }
         after { expect(instance.awaits_readable? reader).to be false }
       end
@@ -351,7 +351,7 @@ describe IOEventLoop do
     end
 
     context "when it has a timeout" do
-      let(:opts) { { within: 0.02, timeout_result: IOEventLoop::TimeoutError.new("Time's up!") } }
+      let(:opts) { { within: 0.0002, timeout_result: IOEventLoop::TimeoutError.new("Time's up!") } }
 
       include_examples "for readability"
 
@@ -373,17 +373,17 @@ describe IOEventLoop do
 
     shared_examples "for writability" do
       context "when writable after some time" do
-        before { instance.after(0.01) { reader.read(65536) } } # clear the pipe
+        before { instance.after(0.0001) { reader.read(65536) } } # clear the pipe
 
-        before { instance.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
+        before { instance.after(0.00005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :writable }
         after { expect(instance.awaits_writable? writer).to be false }
       end
 
       context "when cancelled" do
-        before { instance.after(0.01) { instance.cancel_awaiting_writable writer } }
+        before { instance.after(0.0001) { instance.cancel_awaiting_writable writer } }
 
-        before { instance.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
+        before { instance.after(0.00005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :cancelled }
         after { expect(instance.awaits_writable? writer).to be false }
       end
