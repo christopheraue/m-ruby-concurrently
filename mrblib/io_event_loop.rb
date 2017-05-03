@@ -26,25 +26,28 @@ class IOEventLoop
   def start
     @running = true
 
+    @select_concurrency = Concurrency.new self do
+      while true
+        if @timers.waiting_time or @readers.any? or @writers.any?
+          if @timers.waiting_time == 0
+            @timers.triggerable.reverse_each(&:trigger)
+          elsif selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
+            selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
+            selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+          end
+        else
+          @running = false # would block indefinitely otherwise
+        end
+        @select_concurrency.await_result
+      end
+    end
+
     while @running
       if @new_concurrencies.any?
         @new_concurrencies.each(&:start)
         @new_concurrencies = []
       else
-        begin
-          if (waiting_time = @timers.waiting_time) == 0
-            @timers.triggerable.reverse_each(&:trigger)
-          elsif waiting_time or @readers.any? or @writers.any?
-            if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-              selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
-              selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
-            end
-          else
-            @running = false # would block indefinitely otherwise
-          end
-        rescue Exception => e
-          trigger :error, e
-        end
+        @select_concurrency.start
       end
     end
 
