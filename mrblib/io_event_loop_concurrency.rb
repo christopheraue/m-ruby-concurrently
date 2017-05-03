@@ -1,5 +1,7 @@
 class IOEventLoop
   class Concurrency
+    include Comparable
+
     def initialize(loop, opts = {}) #&block
       @loop = loop
       @fiber = Fiber.new do
@@ -41,8 +43,8 @@ class IOEventLoop
       @cancelled
     end
 
-    def >(other)
-      @resume_time > other.to_f
+    def <=>(other)
+      @resume_time <=> other.to_f
     end
   end
 end

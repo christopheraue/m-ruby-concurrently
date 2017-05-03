@@ -28,10 +28,10 @@ class IOEventLoop
     @running = true
 
     while @running
-      if @run_queue.pending?
+      if (waiting_time = @run_queue.waiting_time) == 0
         @run_queue.pending.reverse_each{ |concurrency| concurrency.resume_with true }
-      elsif @run_queue.items? or @readers.any? or @writers.any?
-        if selected = IO.select(@readers.keys, @writers.keys, nil, @run_queue.waiting_time)
+      elsif @readers.any? or @writers.any? or waiting_time
+        if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
           selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
           selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
         end

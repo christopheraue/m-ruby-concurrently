@@ -13,19 +13,11 @@ class IOEventLoop
       @items.insert(index, timer)
     end
 
-    def items?
-      @items.delete_if(&:cancelled?).any?
-    end
-
     def waiting_time
-      if items?
-        waiting_time = @items.last.resume_time - WallClock.now
+      if last = @items.delete_if(&:cancelled?).last
+        waiting_time = last.resume_time - WallClock.now
         waiting_time < 0 ? 0 : waiting_time
       end
-    end
-
-    def pending?
-      waiting_time == 0
     end
 
     def pending
