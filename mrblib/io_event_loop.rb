@@ -40,7 +40,7 @@ class IOEventLoop
               selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
             end
           else
-            stop # would block indefinitely otherwise
+            @running = false # would block indefinitely otherwise
           end
         rescue Exception => e
           trigger :error, e
@@ -62,6 +62,7 @@ class IOEventLoop
 
   def once(&block)
     @once.unshift RescuedFiber.new(self, &block)
+    start unless @running
   end
 
   def await(id, opts = {})

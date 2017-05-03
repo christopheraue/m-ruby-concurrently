@@ -28,14 +28,14 @@ describe IOEventLoop do
         before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
         before { instance.await_readable(reader) }
 
-        it { is_expected.to be nil }
+        it { is_expected.to be :readable }
         after { expect(reader.read).to eq 'Wake up!' }
       end
 
       context "when its waiting to be writable" do
         before { instance.await_writable(writer) }
 
-        it { is_expected.to be nil }
+        it { is_expected.to be :writable }
 
         after do
           writer.write 'Hello!'; writer.close
@@ -46,9 +46,7 @@ describe IOEventLoop do
   end
 
   describe "an iteration causing an error" do
-    subject { instance.start }
-
-    before { instance.once{ raise 'evil error' } }
+    subject { instance.once{ raise 'evil error' }  }
 
     before { expect(instance).to receive(:trigger).with(:error,
       (be_a(RuntimeError).and have_attributes message: 'evil error')).and_call_original }
@@ -65,17 +63,16 @@ describe IOEventLoop do
 
   describe "#await, #awaits? and #resume" do
     context "when waiting originates from the root fiber" do
-      before { instance.once{ instance.resume(:request, :result) } }
-      it { expect(instance.await(:request)).to be :result }
+      subject { instance.resume(:request, :result) }
+      before { instance.await(:request) }
+      it { is_expected.to be :result }
     end
 
     context "when waiting originates from a fiber" do
-      # The loop has to be started first to enter a fiber
-      subject { instance.start }
+      subject { instance.once{ instance.resume(:request, :result) } }
 
       before { instance.once{ @result = instance.await(:request) } }
       before { instance.once{ instance.await(:another_request) } }
-      before { instance.once{ instance.resume(:request, :result) } }
 
       it { is_expected.to be nil }
       after { expect(@result).to be :result }
@@ -89,14 +86,13 @@ describe IOEventLoop do
     end
 
     context "when resuming a fiber raises an error" do
-      subject { instance.start }
+      subject { instance.once{ instance.resume(:request, :result) } }
 
       # e.g. resuming the fiber raises a FiberError
       before { instance.once do
         allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
         instance.await(:request)
       end }
-      before { instance.once{ instance.resume(:request, :result) } }
 
       it { is_expected.to raise_error IOEventLoop::CancelledError, 'resume error' }
     end
@@ -127,9 +123,8 @@ describe IOEventLoop do
 
   describe "#cancel" do
     context "when cancelling the root fiber" do
-      subject { instance.await(:request) }
-      
-      before { instance.once{ instance.cancel(:request, *reason) } }
+      subject { instance.once{ instance.cancel(:request, *reason) } }
+      before { instance.await(:request) }
       let(:reason) { nil }
       it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting for id :request cancelled" }
 
@@ -140,8 +135,7 @@ describe IOEventLoop do
     end
 
     context "when cancelling an iteration fiber" do
-      # The loop has to be started first to enter a fiber
-      subject { instance.start }
+      subject { instance.once{ @cancel_result = instance.cancel(:request, *reason) } }
 
       before { instance.once do
         begin
@@ -150,7 +144,6 @@ describe IOEventLoop do
           @result = e
         end
       end }
-      before { instance.once{ @cancel_result = instance.cancel(:request, *reason) } }
       let(:reason) { nil }
 
       context "when giving no explicit reason" do
@@ -173,28 +166,6 @@ describe IOEventLoop do
     context "when cancelling a fiber with an unknown id" do
       subject { instance.cancel(:unknown) }
       it { is_expected.to raise_error IOEventLoop::UnknownWaitingIdError, "unknown waiting id :unknown" }
-    end
-  end
-
-  describe "#once" do
-    subject { instance.start }
-
-    context "when the once block executes no request of its own" do
-      before { instance.once{ @once_ran1 = 1 } }
-      before { instance.once{ @once_ran2 = 2 } }
-
-      it { is_expected.to be nil }
-      after { expect(@once_ran1).to be 1 }
-      after { expect(@once_ran2).to be 2 }
-    end
-
-    context "when the once block itself waits for a request" do
-      before { instance.once{ @once_result = instance.await(:request) } }
-      before { instance.once{ :do_nothing } }
-      before { instance.once{ instance.resume(:request, :result) } }
-
-      it { is_expected.to be nil }
-      after { expect(@once_result).to be :result }
     end
   end
 

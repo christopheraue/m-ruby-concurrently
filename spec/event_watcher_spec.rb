@@ -51,7 +51,6 @@ describe IOEventLoop::EventWatcher do
 
     context "when we are already waiting" do
       before { loop.once{ instance.await } }
-      before { loop.once{ loop.stop } }
       before { loop.start }
       it { expect{ subject }.to raise_error IOEventLoop::EventWatcherError, 'already waiting' }
     end
