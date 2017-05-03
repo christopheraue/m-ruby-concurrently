@@ -1,7 +1,5 @@
 class IOEventLoop
-  class Fiber < ::Fiber; end
-
-  class RescuedFiber
+  class Concurrency
     def initialize(loop, &block)
       @fiber = Fiber.new do
         begin
@@ -12,8 +10,19 @@ class IOEventLoop
       end
     end
 
-    def resume
+    attr_reader :fiber
+
+    def start
       @fiber.resume
+    end
+
+    def await_result
+      result = Fiber.yield
+      (CancelledError === result) ? raise(result) : result
+    end
+
+    def inject_result(result)
+      @fiber.resume result
     end
   end
 end

@@ -7,8 +7,9 @@ class IOEventLoop
     @running = false
     @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
-    @waiting = {}
-    @once = []
+    @concurrencies = {}
+    @new_concurrencies = []
+    @waiting_concurrencies = {}
 
     @timers = Timers.new
     @readers = {}
@@ -26,10 +27,9 @@ class IOEventLoop
     @running = true
 
     while @running
-      if @once.any?
-        while fiber = @once.pop
-          fiber.resume
-        end
+      if @new_concurrencies.any?
+        @new_concurrencies.each(&:start)
+        @new_concurrencies = []
       else
         begin
           if (waiting_time = @timers.waiting_time) == 0
@@ -61,12 +61,14 @@ class IOEventLoop
   end
 
   def once(&block)
-    @once.unshift RescuedFiber.new(self, &block)
+    concurrency = Concurrency.new(self, &block)
+    @concurrencies[concurrency.fiber] = concurrency
+    @new_concurrencies.push concurrency
     start unless @running
   end
 
   def await(id, opts = {})
-    fiber = ::Fiber.current
+    concurrency = @concurrencies[Fiber.current]
 
     timer = if timeout = opts.fetch(:within, false)
       timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
@@ -75,26 +77,23 @@ class IOEventLoop
       nil
     end
 
-    @waiting[id] = { fiber: fiber, timer: timer }
+    @waiting_concurrencies[id] = { concurrency: concurrency, timer: timer }
 
-    case fiber
-    when Fiber
-      result = ::Fiber.yield
-      (CancelledError === result) ? raise(result) : result
+    if concurrency
+      concurrency.await_result
     else
       start
     end
   end
 
   def resume(id, result)
-    if waiting = @waiting.delete(id)
+    if waiting = @waiting_concurrencies.delete(id)
       if timer = waiting[:timer]
         timer.cancel
       end
 
-      case fiber = waiting[:fiber]
-      when Fiber
-        fiber.resume result
+      if concurrency = waiting[:concurrency]
+        concurrency.inject_result result
       else
         stop result
       end
@@ -104,7 +103,7 @@ class IOEventLoop
   end
 
   def awaits?(id)
-    @waiting.key? id
+    @waiting_concurrencies.key? id
   end
 
   def cancel(id, reason = "waiting for id #{id.inspect} cancelled")
