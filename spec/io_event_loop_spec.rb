@@ -264,15 +264,20 @@ describe IOEventLoop do
   end
 
   describe "#every" do
-    let!(:timer) { instance.every(0) {} }
+    subject { instance.start }
 
-    it { expect(instance.run_queue.waiting_time).to be 0 }
+    before { @count = 0 }
+    let!(:timer) { instance.every(0.001) do
+      if (@count += 1) > 3
+        timer.cancel
+      else
+        callback.call
+      end
+    end }
+    let(:callback) { proc{} }
 
-    context "when it is triggered" do
-      before { instance.run_queue.pending.first.resume_with true }
-      it { expect(instance.run_queue.pending).to eq [timer] }
-      after { expect(timer).not_to be_cancelled }
-    end
+    before { expect(callback).to receive(:call).exactly(3).times }
+    it { is_expected.not_to raise_error }
   end
 
   describe "#attach_reader and #detach_reader" do

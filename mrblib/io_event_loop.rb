@@ -109,7 +109,13 @@ class IOEventLoop
   end
 
   def every(seconds) # &on_timeout
-    timer = after(seconds) { yield; timer.defer seconds }
+    timer = after(seconds) do
+      while true
+        yield
+        timer.defer seconds
+        timer.await_result
+      end
+    end
   end
 
 
