@@ -171,72 +171,95 @@ describe IOEventLoop do
   end
 
   describe "#after" do
-    before { expect(instance.run_queue.waiting_time).to be nil }
-    before { expect(instance.run_queue.pending).to eq [] }
+    subject { instance.start }
 
     let!(:timer1) { instance.after(seconds1) { callback1.call } }
     let!(:timer2) { instance.after(seconds2) { callback2.call } }
     let!(:timer3) { instance.after(seconds3) { callback3.call } }
-    let(:seconds1) { 0.1 }
-    let(:seconds2) { 0.3 }
-    let(:seconds3) { 0.2 }
+    let(:seconds1) { 0.001 }
+    let(:seconds2) { 0.003 }
+    let(:seconds3) { 0.002 }
     let(:callback1) { proc{} }
     let(:callback2) { proc{} }
     let(:callback3) { proc{} }
 
-    it { expect(instance.run_queue.items).to eq [timer2, timer3, timer1] }
-    it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds1) }
-    it { expect(instance.run_queue.pending).to eq [] }
+    context "when no timer has been cancelled" do
+      before { expect(callback1).to receive(:call).ordered }
+      before { expect(callback3).to receive(:call).ordered }
+      before { expect(callback2).to receive(:call).ordered }
 
-    context "when the first scheduled timer has been cancelled" do
+      it { is_expected.not_to raise_error }
+    end
+
+    context "when the first timer has been cancelled" do
       before { timer1.cancel }
-      it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds3) }
 
-      context "when the second scheduled timer has also been cancelled" do
-        before { timer3.cancel }
-        it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds2) }
-
-        context "when the last timer has also been cancelled" do
-          before { timer2.cancel }
-          it { expect(instance.run_queue.waiting_time).to be nil }
-        end
-      end
+      before { expect(callback1).not_to receive(:call) }
+      before { expect(callback3).to receive(:call).ordered }
+      before { expect(callback2).to receive(:call).ordered }
+      it { is_expected.not_to raise_error }
     end
 
-    context "when the second scheduled timer has been cancelled" do
+    context "when the first and second timer have been cancelled" do
+      before { timer1.cancel }
       before { timer3.cancel }
-      it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds1) }
 
-      context "when the last scheduled timer has also been cancelled" do
-        before { timer2.cancel }
-        it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds1) }
-
-        context "when the first scheduled timer has also been cancelled" do
-          before { timer1.cancel }
-          it { expect(instance.run_queue.waiting_time).to be nil }
-        end
-      end
+      before { expect(callback1).not_to receive(:call) }
+      before { expect(callback3).not_to receive(:call) }
+      before { expect(callback2).to receive(:call).ordered }
+      it { is_expected.not_to raise_error }
     end
 
-    context "when some timers can be triggered immediately" do
+    context "when all timers have been cancelled" do
+      before { timer1.cancel }
+      before { timer3.cancel }
+      before { timer2.cancel }
+
+      before { expect(callback1).not_to receive(:call) }
+      before { expect(callback3).not_to receive(:call) }
+      before { expect(callback2).not_to receive(:call) }
+      it { is_expected.not_to raise_error }
+    end
+
+    context "when the second timer has been cancelled" do
+      before { timer3.cancel }
+
+      before { expect(callback1).to receive(:call).ordered }
+      before { expect(callback3).not_to receive(:call) }
+      before { expect(callback2).to receive(:call).ordered }
+      it { is_expected.not_to raise_error }
+    end
+
+    context "when the second and last timer have been cancelled" do
+      before { timer3.cancel }
+      before { timer2.cancel }
+
+      before { expect(callback1).to receive(:call).ordered }
+      before { expect(callback3).not_to receive(:call) }
+      before { expect(callback2).not_to receive(:call) }
+      it { is_expected.not_to raise_error }
+    end
+
+    context "when a timer cancels a timer coming afterwards in the same batch" do
       let(:seconds1) { 0 }
-      let(:seconds2) { 0.1 }
+      let(:seconds2) { 0.001 }
       let(:seconds3) { 0 }
-      it { expect(instance.run_queue.pending).to eq [timer3, timer1] }
+      let(:callback1) { proc{ timer3.cancel } }
 
-      context "when a timer cancels a timer coming afterwards in the same triggerable batch" do
-        let(:callback1) { proc{ timer3.cancel } }
-        before { expect(callback1).to receive(:call).and_call_original }
-        before { expect(callback3).not_to receive(:call) }
-        it { expect{ instance.run_queue.pending.reverse_each{ |concurrency| concurrency.resume_with true } }.not_to raise_error }
-      end
+      before { expect(callback1).to receive(:call).and_call_original }
+      before { expect(callback3).not_to receive(:call) }
+      it { is_expected.not_to raise_error }
     end
 
-    context "when all timers can be triggered immediately" do
+    context "when all timers are triggered in one go" do
       let(:seconds1) { 0 }
       let(:seconds2) { 0 }
       let(:seconds3) { 0 }
-      it { expect(instance.run_queue.pending).to eq [timer3, timer2, timer1] }
+
+      before { expect(callback1).to receive(:call).ordered }
+      before { expect(callback2).to receive(:call).ordered }
+      before { expect(callback3).to receive(:call).ordered }
+      it { is_expected.not_to raise_error }
     end
   end
 
