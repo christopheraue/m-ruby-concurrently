@@ -1,35 +1,26 @@
 class IOEventLoop
-  class Timers
+  class RunQueue
     def initialize(loop)
       @loop = loop
-      @timers = []
+      @items = []
     end
 
-    def any?
-      @timers.delete_if(&:cancelled?)
-      @timers.any?
-    end
-
-    def timers
-      @timers.dup
-    end
-
-    def after(seconds, &on_timeout)
-      Concurrency.new(@loop, after: seconds, &on_timeout)
-    end
-
-    def every(seconds) # &on_timeout
-      timer = after(seconds) { yield; timer.defer seconds }
+    def items
+      @items.dup
     end
 
     def schedule(timer)
-      index = bisect_left(@timers, timer)
-      @timers.insert(index, timer)
+      index = bisect_left(@items, timer)
+      @items.insert(index, timer)
+    end
+
+    def items?
+      @items.delete_if(&:cancelled?).any?
     end
 
     def waiting_time
-      if any?
-        waiting_time = @timers.last.resume_time - WallClock.now
+      if items?
+        waiting_time = @items.last.resume_time - WallClock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
@@ -38,9 +29,16 @@ class IOEventLoop
       waiting_time == 0
     end
 
-    def triggerable
-      trigger_threshold = bisect_left(@timers, WallClock.now)
-      @timers.pop(@timers.length - trigger_threshold)
+    def pending
+      @items.pop @items.length - bisect_left(@items, WallClock.now)
+    end
+
+    def after(seconds, &on_timeout)
+      Concurrency.new(@loop, after: seconds, &on_timeout)
+    end
+
+    def every(seconds) # &on_timeout
+      timer = after(seconds) { yield; timer.defer seconds }
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order

@@ -1,9 +1,9 @@
-describe IOEventLoop::Timers do
-  subject(:instance) { loop.timers }
+describe IOEventLoop::RunQueue do
+  subject(:instance) { loop.run_queue }
   let(:loop) { IOEventLoop.new }
 
   it { expect(instance.waiting_time).to be nil }
-  it { expect(instance.triggerable).to eq [] }
+  it { expect(instance.pending).to eq [] }
 
   context "when it has attached timers" do
     let!(:timer1) { instance.after(seconds1) { callback1.call } }
@@ -16,9 +16,9 @@ describe IOEventLoop::Timers do
     let(:callback2) { proc{} }
     let(:callback3) { proc{} }
 
-    it { expect(instance.timers).to eq [timer2, timer3, timer1] }
+    it { expect(instance.items).to eq [timer2, timer3, timer1] }
     it { expect(instance.waiting_time).to be_within(0.02).of(seconds1) }
-    it { expect(instance.triggerable).to eq [] }
+    it { expect(instance.pending).to eq [] }
 
     context "when the first scheduled timer has been cancelled" do
       before { timer1.cancel }
@@ -54,13 +54,13 @@ describe IOEventLoop::Timers do
       let(:seconds1) { 0 }
       let(:seconds2) { 0.1 }
       let(:seconds3) { 0 }
-      it { expect(instance.triggerable).to eq [timer3, timer1] }
+      it { expect(instance.pending).to eq [timer3, timer1] }
 
       context "when a timer cancels a timer coming afterwards in the same triggerable batch" do
         let(:callback1) { proc{ timer3.cancel } }
         before { expect(callback1).to receive(:call).and_call_original }
         before { expect(callback3).not_to receive(:call) }
-        it { expect{ instance.triggerable.reverse_each{ |concurrency| concurrency.resume_with true } }.not_to raise_error }
+        it { expect{ instance.pending.reverse_each{ |concurrency| concurrency.resume_with true } }.not_to raise_error }
       end
     end
 
@@ -68,7 +68,7 @@ describe IOEventLoop::Timers do
       let(:seconds1) { 0 }
       let(:seconds2) { 0 }
       let(:seconds3) { 0 }
-      it { expect(instance.triggerable).to eq [timer3, timer2, timer1] }
+      it { expect(instance.pending).to eq [timer3, timer2, timer1] }
     end
   end
 
@@ -78,8 +78,8 @@ describe IOEventLoop::Timers do
     it { expect(instance.waiting_time).to be 0 }
 
     context "when it is triggered" do
-      before { instance.triggerable.first.resume_with true }
-      it { expect(instance.triggerable).to eq [timer] }
+      before { instance.pending.first.resume_with true }
+      it { expect(instance.pending).to eq [timer] }
       after { expect(timer).not_to be_cancelled }
     end
   end

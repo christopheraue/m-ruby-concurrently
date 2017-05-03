@@ -12,7 +12,7 @@ describe IOEventLoop do
     end
 
     context "when it has nothing to watch but a timer to wait for" do
-      before { instance.timers.after(0.01) { callback.call } }
+      before { instance.run_queue.after(0.01) { callback.call } }
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
@@ -25,7 +25,7 @@ describe IOEventLoop do
       let(:writer) { pipe[1] }
 
       context "when its waiting to be readable" do
-        before { instance.timers.after(0.01) { writer.write 'Wake up!'; writer.close } }
+        before { instance.run_queue.after(0.01) { writer.write 'Wake up!'; writer.close } }
         before { instance.await_readable(reader) }
 
         it { is_expected.to be :readable }
@@ -104,7 +104,7 @@ describe IOEventLoop do
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
-        before { instance.timers.after(0.01) { instance.resume(:id, :result) } }
+        before { instance.run_queue.after(0.01) { instance.resume(:id, :result) } }
         it { is_expected.to be :result }
       end
 
@@ -182,7 +182,7 @@ describe IOEventLoop do
       let(:callback1) { proc{ instance.detach_reader(reader) } }
 
       # make the reader readable
-      before { instance.timers.after(0.01) { writer.write 'Message!' } }
+      before { instance.run_queue.after(0.01) { writer.write 'Message!' } }
 
       before { expect(callback1).to receive(:call).and_call_original }
       it { is_expected.to be nil }
@@ -214,17 +214,17 @@ describe IOEventLoop do
 
     shared_examples "for readability" do
       context "when readable after some time" do
-        before { instance.timers.after(0.01) { writer.write 'Wake up!' } }
+        before { instance.run_queue.after(0.01) { writer.write 'Wake up!' } }
 
-        before { instance.timers.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
+        before { instance.run_queue.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :readable }
         after { expect(instance.awaits_readable? reader).to be false }
       end
 
       context "when cancelled" do
-        before { instance.timers.after(0.01) { instance.cancel_awaiting_readable reader } }
+        before { instance.run_queue.after(0.01) { instance.cancel_awaiting_readable reader } }
 
-        before { instance.timers.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
+        before { instance.run_queue.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :cancelled }
         after { expect(instance.awaits_readable? reader).to be false }
       end
@@ -263,17 +263,17 @@ describe IOEventLoop do
 
     shared_examples "for writability" do
       context "when writable after some time" do
-        before { instance.timers.after(0.01) { reader.read(65536) } } # clear the pipe
+        before { instance.run_queue.after(0.01) { reader.read(65536) } } # clear the pipe
 
-        before { instance.timers.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
+        before { instance.run_queue.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :writable }
         after { expect(instance.awaits_writable? writer).to be false }
       end
 
       context "when cancelled" do
-        before { instance.timers.after(0.01) { instance.cancel_awaiting_writable writer } }
+        before { instance.run_queue.after(0.01) { instance.cancel_awaiting_writable writer } }
 
-        before { instance.timers.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
+        before { instance.run_queue.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :cancelled }
         after { expect(instance.awaits_writable? writer).to be false }
       end

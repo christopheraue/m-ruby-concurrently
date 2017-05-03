@@ -12,7 +12,7 @@ class IOEventLoop
       @resume_time = WallClock.now + opts.fetch(:after, 0)
       @cancelled = false
       @loop.concurrencies[@fiber] = self
-      @loop.timers.schedule self
+      @loop.run_queue.schedule self
     end
 
     attr_reader :resume_time
@@ -30,7 +30,7 @@ class IOEventLoop
 
     def defer(seconds)
       @resume_time += seconds
-      @loop.timers.schedule self
+      @loop.run_queue.schedule self
     end
 
     def cancel

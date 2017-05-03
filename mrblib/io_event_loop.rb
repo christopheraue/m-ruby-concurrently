@@ -10,7 +10,7 @@ class IOEventLoop
     @concurrencies = {}
     @waiting_concurrencies = {}
 
-    @timers = Timers.new self
+    @run_queue = RunQueue.new self
     @readers = {}
     @writers = {}
   end
@@ -22,16 +22,16 @@ class IOEventLoop
 
   # Flow control
 
-  attr_reader :concurrencies
+  attr_reader :concurrencies, :run_queue
 
   def start
     @running = true
 
     while @running
-      if @timers.pending?
-        @timers.triggerable.reverse_each{ |concurrency| concurrency.resume_with true }
-      elsif @timers.any? or @readers.any? or @writers.any?
-        if selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
+      if @run_queue.pending?
+        @run_queue.pending.reverse_each{ |concurrency| concurrency.resume_with true }
+      elsif @run_queue.items? or @readers.any? or @writers.any?
+        if selected = IO.select(@readers.keys, @writers.keys, nil, @run_queue.waiting_time)
           selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
           selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
         end
@@ -62,7 +62,7 @@ class IOEventLoop
 
     timer = if timeout = opts.fetch(:within, false)
       timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
-      @timers.after(timeout){ resume(id, timeout_result) }
+      @run_queue.after(timeout){ resume(id, timeout_result) }
     else
       nil
     end
@@ -100,11 +100,6 @@ class IOEventLoop
     resume id, CancelledError.new(reason)
     :cancelled
   end
-
-
-  # Timers
-
-  attr_reader :timers
 
 
   # Readable IO
