@@ -76,7 +76,6 @@ describe IOEventLoop do
 
       it { is_expected.to be nil }
       after { expect(@result).to be :result }
-      after { expect(@resume_result).to be :resumed }
       after { expect(instance.awaits? :request).to be false }
       after { expect(instance.awaits? :another_request).to be true }
     end

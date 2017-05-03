@@ -33,7 +33,7 @@ class IOEventLoop
 
     while @running
       if (waiting_time = @run_queue.waiting_time) == 0
-        @run_queue.pending.reverse_each{ |concurrency| concurrency.resume_with true }
+        @run_queue.run_pending
       elsif @readers.any? or @writers.any? or waiting_time
         if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
           selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?

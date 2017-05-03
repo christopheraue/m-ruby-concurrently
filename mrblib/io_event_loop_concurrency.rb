@@ -27,14 +27,8 @@ class IOEventLoop
       @resume_time <=> other.to_f
     end
 
-    def resume_with(result)
-      @fiber.resume result unless @cancelled
-      :resumed
-    end
-
-    def await_result
-      result = Fiber.yield
-      (CancelledError === result) ? raise(result) : result
+    def start
+      @fiber.resume unless @cancelled
     end
 
     def cancel
@@ -43,6 +37,15 @@ class IOEventLoop
 
     def cancelled?
       @cancelled
+    end
+
+    def resume_with(result)
+      @fiber.resume result
+    end
+
+    def await_result
+      result = Fiber.yield
+      (CancelledError === result) ? raise(result) : result
     end
   end
 end

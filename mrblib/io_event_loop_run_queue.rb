@@ -5,9 +5,9 @@ class IOEventLoop
       @items = []
     end
 
-    def schedule(timer)
-      index = bisect_left(@items, timer)
-      @items.insert(index, timer)
+    def schedule(concurrency)
+      index = bisect_left(@items, concurrency)
+      @items.insert(index, concurrency)
     end
 
     def waiting_time
@@ -17,12 +17,13 @@ class IOEventLoop
       end
     end
 
-    def pending
-      @items.pop @items.length - bisect_left(@items, @loop.wall_clock.now)
+    def run_pending
+      index = bisect_left(@items, @loop.wall_clock.now)
+      @items.pop(@items.length-index).reverse_each(&:start)
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order
-    # relative to a time or timer e in O(log n).
+    # relative to a time or concurrency e in O(log n).
     # Shamelessly copied from https://github.com/celluloid/timers/blob/master/lib/timers/events.rb
     private def bisect_left(a, e, l = 0, u = a.length)
       while l < u
