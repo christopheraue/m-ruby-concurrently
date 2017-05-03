@@ -5,13 +5,14 @@ class IOEventLoop
 
   def initialize(*)
     @running = false
+    @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
+
     @waiting = {}
     @once = []
+
     @timers = Timers.new
-    @result_timers = {}
     @readers = {}
     @writers = {}
-    @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
   end
 
   def forgive_iteration_errors!
@@ -64,12 +65,18 @@ class IOEventLoop
   end
 
   def await(id, opts = {})
-    if timeout = opts.fetch(:within, false)
+    fiber = ::Fiber.current
+
+    timer = if timeout = opts.fetch(:within, false)
       timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
-      @result_timers[id] = @timers.after(timeout){ resume(id, timeout_result) }
+      @timers.after(timeout){ resume(id, timeout_result) }
+    else
+      nil
     end
 
-    case @waiting[id] = ::Fiber.current
+    @waiting[id] = { fiber: fiber, timer: timer }
+
+    case fiber
     when Fiber
       result = ::Fiber.yield
       (CancelledError === result) ? raise(result) : result
@@ -79,15 +86,19 @@ class IOEventLoop
   end
 
   def resume(id, result)
-    @result_timers.delete(id).cancel if @result_timers.key? id
+    if waiting = @waiting.delete(id)
+      if timer = waiting[:timer]
+        timer.cancel
+      end
 
-    case fiber = @waiting.delete(id)
-    when nil
-      raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
-    when Fiber
-      fiber.resume result
+      case fiber = waiting[:fiber]
+      when Fiber
+        fiber.resume result
+      else
+        stop result
+      end
     else
-      stop result
+      raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
     end
   end
 
