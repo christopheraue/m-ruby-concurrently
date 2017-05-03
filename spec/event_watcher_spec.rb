@@ -1,7 +1,7 @@
 describe IOEventLoop::EventWatcher do
   let!(:instance) { described_class.new loop, object, event, *opts }
 
-  let(:loop) { FiberedEventLoop.new{} }
+  let(:loop) { IOEventLoop.new }
   let(:object) { Class.new{ include CallbacksAttachable }.new }
   let(:event) { :event }
   let(:opts) { nil }

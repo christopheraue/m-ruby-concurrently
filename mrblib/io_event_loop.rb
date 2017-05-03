@@ -1,40 +1,109 @@
 Object.__send__(:remove_const, :IOEventLoop) if Object.const_defined? :IOEventLoop
 
-class IOEventLoop < FiberedEventLoop
+class IOEventLoop
+  include CallbacksAttachable
+
   def initialize(*)
+    @running = false
+    @waiting = {}
+    @once = []
     @timers = Timers.new
     @result_timers = {}
     @readers = {}
     @writers = {}
-
-    super do
-      if (waiting_time = @timers.waiting_time) == 0
-        @timers.triggerable.reverse_each(&:trigger)
-      elsif waiting_time or @readers.any? or @writers.any?
-        if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-          selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
-          selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
-        end
-      else
-        stop # would block indefinitely otherwise
-      end
-    end
+    @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
   end
 
-  attr_reader :timers
+  def forgive_iteration_errors!
+    @stop_and_raise_error.cancel
+  end
+
+
+  # Flow control
+
+  def start
+    @running = true
+
+    while @running
+      if @once.any?
+        while fiber = @once.pop
+          fiber.resume
+        end
+      else
+        begin
+          if (waiting_time = @timers.waiting_time) == 0
+            @timers.triggerable.reverse_each(&:trigger)
+          elsif waiting_time or @readers.any? or @writers.any?
+            if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
+              selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
+              selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+            end
+          else
+            stop # would block indefinitely otherwise
+          end
+        rescue Exception => e
+          trigger :error, e
+        end
+      end
+    end
+
+    (CancelledError === @result) ? raise(@result) : @result
+  end
+
+  def stop(result = nil)
+    @running = false
+    @result = result
+  end
+
+  def running?
+    @running
+  end
+
+  def once(&block)
+    @once.unshift RescuedFiber.new(self, &block)
+  end
 
   def await(id, opts = {})
     if timeout = opts.fetch(:within, false)
-      timeout_result = opts.fetch(:timeout_result, IOEventLoop::TimeoutError.new("waiting timed out after #{timeout} second(s)"))
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
       @result_timers[id] = @timers.after(timeout){ resume(id, timeout_result) }
     end
-    super id
+
+    case @waiting[id] = ::Fiber.current
+    when Fiber
+      result = ::Fiber.yield
+      (CancelledError === result) ? raise(result) : result
+    else
+      start
+    end
   end
 
   def resume(id, result)
     @result_timers.delete(id).cancel if @result_timers.key? id
-    super
+
+    case fiber = @waiting.delete(id)
+    when nil
+      raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
+    when Fiber
+      fiber.resume result
+    else
+      stop result
+    end
   end
+
+  def awaits?(id)
+    @waiting.key? id
+  end
+
+  def cancel(id, reason = "waiting for id #{id.inspect} cancelled")
+    resume id, CancelledError.new(reason)
+    :cancelled
+  end
+
+
+  # Timers
+
+  attr_reader :timers
 
 
   # Readable IO
@@ -88,5 +157,12 @@ class IOEventLoop < FiberedEventLoop
       detach_writer(io)
       resume(io, :cancelled)
     end
+  end
+
+
+  # Watching events
+
+  def watch_events(*args)
+    EventWatcher.new(self, *args)
   end
 end

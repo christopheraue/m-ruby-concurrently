@@ -1,8 +1,6 @@
 describe IOEventLoop do
   subject(:instance) { IOEventLoop.new }
 
-  it { is_expected.to be_a FiberedEventLoop }
-
   describe "#start" do
     subject { instance.start }
 
