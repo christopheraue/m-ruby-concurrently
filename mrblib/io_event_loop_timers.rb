@@ -4,6 +4,11 @@ class IOEventLoop
       @timers = []
     end
 
+    def any?
+      @timers.delete_if(&:cancelled?)
+      @timers.any?
+    end
+
     def timers
       @timers.dup
     end
@@ -22,8 +27,11 @@ class IOEventLoop
     end
 
     def waiting_time
-      @timers.pop while last = @timers.last and last.cancelled?
-      last.waiting_time if last
+      any? ? @timers.last.waiting_time : nil
+    end
+
+    def pending?
+      waiting_time == 0
     end
 
     def triggerable

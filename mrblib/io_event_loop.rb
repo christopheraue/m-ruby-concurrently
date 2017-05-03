@@ -46,9 +46,9 @@ class IOEventLoop
     while @running
       if @run_queue.any?
         @run_queue.each(&:resume).clear
-      elsif @timers.waiting_time == 0
+      elsif @timers.pending?
         @run_queue.push @timer_concurrency
-      elsif @timers.waiting_time or @readers.any? or @writers.any?
+      elsif @timers.any? or @readers.any? or @writers.any?
         @run_queue.push @io_concurrency
       else
         @running = false # would block indefinitely otherwise
