@@ -1,7 +1,6 @@
 class IOEventLoop
   class RunQueue
-    def initialize(loop)
-      @loop = loop
+    def initialize
       @items = []
     end
 
@@ -31,14 +30,6 @@ class IOEventLoop
 
     def pending
       @items.pop @items.length - bisect_left(@items, WallClock.now)
-    end
-
-    def after(seconds, &on_timeout)
-      Concurrency.new(@loop, after: seconds, &on_timeout)
-    end
-
-    def every(seconds) # &on_timeout
-      timer = after(seconds) { yield; timer.defer seconds }
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order

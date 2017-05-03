@@ -12,7 +12,7 @@ describe IOEventLoop do
     end
 
     context "when it has nothing to watch but a timer to wait for" do
-      before { instance.run_queue.after(0.01) { callback.call } }
+      before { instance.after(0.01) { callback.call } }
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
@@ -25,7 +25,7 @@ describe IOEventLoop do
       let(:writer) { pipe[1] }
 
       context "when its waiting to be readable" do
-        before { instance.run_queue.after(0.01) { writer.write 'Wake up!'; writer.close } }
+        before { instance.after(0.01) { writer.write 'Wake up!'; writer.close } }
         before { instance.await_readable(reader) }
 
         it { is_expected.to be :readable }
@@ -104,7 +104,7 @@ describe IOEventLoop do
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
-        before { instance.run_queue.after(0.01) { instance.resume(:id, :result) } }
+        before { instance.after(0.01) { instance.resume(:id, :result) } }
         it { is_expected.to be :result }
       end
 
@@ -170,6 +170,88 @@ describe IOEventLoop do
     end
   end
 
+  describe "#after" do
+    before { expect(instance.run_queue.waiting_time).to be nil }
+    before { expect(instance.run_queue.pending).to eq [] }
+
+    let!(:timer1) { instance.after(seconds1) { callback1.call } }
+    let!(:timer2) { instance.after(seconds2) { callback2.call } }
+    let!(:timer3) { instance.after(seconds3) { callback3.call } }
+    let(:seconds1) { 0.1 }
+    let(:seconds2) { 0.3 }
+    let(:seconds3) { 0.2 }
+    let(:callback1) { proc{} }
+    let(:callback2) { proc{} }
+    let(:callback3) { proc{} }
+
+    it { expect(instance.run_queue.items).to eq [timer2, timer3, timer1] }
+    it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds1) }
+    it { expect(instance.run_queue.pending).to eq [] }
+
+    context "when the first scheduled timer has been cancelled" do
+      before { timer1.cancel }
+      it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds3) }
+
+      context "when the second scheduled timer has also been cancelled" do
+        before { timer3.cancel }
+        it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds2) }
+
+        context "when the last timer has also been cancelled" do
+          before { timer2.cancel }
+          it { expect(instance.run_queue.waiting_time).to be nil }
+        end
+      end
+    end
+
+    context "when the second scheduled timer has been cancelled" do
+      before { timer3.cancel }
+      it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds1) }
+
+      context "when the last scheduled timer has also been cancelled" do
+        before { timer2.cancel }
+        it { expect(instance.run_queue.waiting_time).to be_within(0.02).of(seconds1) }
+
+        context "when the first scheduled timer has also been cancelled" do
+          before { timer1.cancel }
+          it { expect(instance.run_queue.waiting_time).to be nil }
+        end
+      end
+    end
+
+    context "when some timers can be triggered immediately" do
+      let(:seconds1) { 0 }
+      let(:seconds2) { 0.1 }
+      let(:seconds3) { 0 }
+      it { expect(instance.run_queue.pending).to eq [timer3, timer1] }
+
+      context "when a timer cancels a timer coming afterwards in the same triggerable batch" do
+        let(:callback1) { proc{ timer3.cancel } }
+        before { expect(callback1).to receive(:call).and_call_original }
+        before { expect(callback3).not_to receive(:call) }
+        it { expect{ instance.run_queue.pending.reverse_each{ |concurrency| concurrency.resume_with true } }.not_to raise_error }
+      end
+    end
+
+    context "when all timers can be triggered immediately" do
+      let(:seconds1) { 0 }
+      let(:seconds2) { 0 }
+      let(:seconds3) { 0 }
+      it { expect(instance.run_queue.pending).to eq [timer3, timer2, timer1] }
+    end
+  end
+
+  describe "#every" do
+    let!(:timer) { instance.every(0) {} }
+
+    it { expect(instance.run_queue.waiting_time).to be 0 }
+
+    context "when it is triggered" do
+      before { instance.run_queue.pending.first.resume_with true }
+      it { expect(instance.run_queue.pending).to eq [timer] }
+      after { expect(timer).not_to be_cancelled }
+    end
+  end
+
   describe "#attach_reader and #detach_reader" do
     subject { instance.start }
 
@@ -182,7 +264,7 @@ describe IOEventLoop do
       let(:callback1) { proc{ instance.detach_reader(reader) } }
 
       # make the reader readable
-      before { instance.run_queue.after(0.01) { writer.write 'Message!' } }
+      before { instance.after(0.01) { writer.write 'Message!' } }
 
       before { expect(callback1).to receive(:call).and_call_original }
       it { is_expected.to be nil }
@@ -214,17 +296,17 @@ describe IOEventLoop do
 
     shared_examples "for readability" do
       context "when readable after some time" do
-        before { instance.run_queue.after(0.01) { writer.write 'Wake up!' } }
+        before { instance.after(0.01) { writer.write 'Wake up!' } }
 
-        before { instance.run_queue.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
+        before { instance.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :readable }
         after { expect(instance.awaits_readable? reader).to be false }
       end
 
       context "when cancelled" do
-        before { instance.run_queue.after(0.01) { instance.cancel_awaiting_readable reader } }
+        before { instance.after(0.01) { instance.cancel_awaiting_readable reader } }
 
-        before { instance.run_queue.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
+        before { instance.after(0.005) { expect(instance.awaits_readable? reader).to be true } }
         it { is_expected.to be :cancelled }
         after { expect(instance.awaits_readable? reader).to be false }
       end
@@ -263,17 +345,17 @@ describe IOEventLoop do
 
     shared_examples "for writability" do
       context "when writable after some time" do
-        before { instance.run_queue.after(0.01) { reader.read(65536) } } # clear the pipe
+        before { instance.after(0.01) { reader.read(65536) } } # clear the pipe
 
-        before { instance.run_queue.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
+        before { instance.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :writable }
         after { expect(instance.awaits_writable? writer).to be false }
       end
 
       context "when cancelled" do
-        before { instance.run_queue.after(0.01) { instance.cancel_awaiting_writable writer } }
+        before { instance.after(0.01) { instance.cancel_awaiting_writable writer } }
 
-        before { instance.run_queue.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
+        before { instance.after(0.005) { expect(instance.awaits_writable? writer).to be true } }
         it { is_expected.to be :cancelled }
         after { expect(instance.awaits_writable? writer).to be false }
       end

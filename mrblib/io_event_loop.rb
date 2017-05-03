@@ -10,7 +10,7 @@ class IOEventLoop
     @concurrencies = {}
     @waiting_concurrencies = {}
 
-    @run_queue = RunQueue.new self
+    @run_queue = RunQueue.new
     @readers = {}
     @writers = {}
   end
@@ -62,7 +62,7 @@ class IOEventLoop
 
     timer = if timeout = opts.fetch(:within, false)
       timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
-      @run_queue.after(timeout){ resume(id, timeout_result) }
+      after(timeout){ resume(id, timeout_result) }
     else
       nil
     end
@@ -99,6 +99,17 @@ class IOEventLoop
   def cancel(id, reason = "waiting for id #{id.inspect} cancelled")
     resume id, CancelledError.new(reason)
     :cancelled
+  end
+
+
+  # Timers
+
+  def after(seconds, &on_timeout)
+    Concurrency.new(self, after: seconds, &on_timeout)
+  end
+
+  def every(seconds) # &on_timeout
+    timer = after(seconds) { yield; timer.defer seconds }
   end
 
 
