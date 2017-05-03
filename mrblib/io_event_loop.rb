@@ -26,28 +26,41 @@ class IOEventLoop
   def start
     @running = true
 
+    @timer_concurrency = Concurrency.new self do
+      while @timer_concurrency.await_result
+        @timers.triggerable.reverse_each(&:trigger)
+      end
+    end
+
+    @io_concurrency = Concurrency.new self do
+      while @io_concurrency.await_result
+        if selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
+          selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
+          selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+        end
+      end
+    end
+
     @select_concurrency = Concurrency.new self do
-      while true
+      while @select_concurrency.await_result
         if @timers.waiting_time or @readers.any? or @writers.any?
           if @timers.waiting_time == 0
-            @timers.triggerable.reverse_each(&:trigger)
-          elsif selected = IO.select(@readers.keys, @writers.keys, nil, @timers.waiting_time)
-            selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
-            selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+            @timer_concurrency.resume
+          else
+            @io_concurrency.resume
           end
         else
           @running = false # would block indefinitely otherwise
         end
-        @select_concurrency.await_result
       end
     end
 
     while @running
       if @new_concurrencies.any?
-        @new_concurrencies.each(&:start)
+        @new_concurrencies.each(&:resume)
         @new_concurrencies = []
       else
-        @select_concurrency.start
+        @select_concurrency.resume
       end
     end
 

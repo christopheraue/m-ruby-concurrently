@@ -12,8 +12,8 @@ class IOEventLoop
 
     attr_reader :fiber
 
-    def start
-      @fiber.resume
+    def resume
+      @fiber.resume true
     end
 
     def await_result
