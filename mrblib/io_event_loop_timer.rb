@@ -1,53 +1,46 @@
 class IOEventLoop
   class Timer
-    def initialize(seconds, opts = {}, &callback)
+    def initialize(seconds, callback)
       raise Error, 'no block given' unless callback
-      @seconds = seconds || @seconds
-      @repeat = opts.fetch(:repeat, @repeat) || false
-      @callback = callback || @callback
-      @timers = opts[:timers]
-      @timeout_time = opts.fetch(:start_time, WallClock.now) + @seconds
-      @timers.schedule(self) if @timers
-    end
-
-    def trigger
-      if @callback
-        @callback.call
-        if @repeat
-          @timeout_time += @seconds
-          @timers.schedule(self) if @timers
-        else
-          cancel
-        end
-        true
-      else
-        false
-      end
-    end
-
-    def cancel
-      @callback = nil
-      true
+      @seconds = seconds
+      @callback = callback
+      @timeout_time = WallClock.now + @seconds
+      @cancelled = false
     end
 
     attr_reader :seconds
-
     attr_reader :timeout_time
     alias_method :to_f, :timeout_time
 
     def waiting_time
-      if @callback
+      unless @cancelled
         waiting_time = @timeout_time - WallClock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
 
-    def repeats?
-      @repeat
+    def trigger
+      if @cancelled
+        false
+      else
+        cancel
+        @callback.call
+        true
+      end
+    end
+
+    def cancel
+      @cancelled = true
     end
 
     def cancelled?
-      not @callback
+      @cancelled
+    end
+
+    def repeat
+      @timeout_time += @seconds
+      @cancelled = false
+      true
     end
 
     def >(time_or_timer)

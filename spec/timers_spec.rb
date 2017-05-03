@@ -6,7 +6,7 @@ describe IOEventLoop::Timers do
 
   context "when it has attached timers" do
     let!(:timer1) { instance.after(seconds1, &callback1) }
-    let!(:timer2) { IOEventLoop::Timer.new(seconds2, timers: instance, &callback2) }
+    let!(:timer2) { instance.after(seconds2, &callback2) }
     let!(:timer3) { instance.after(seconds3, &callback3) }
     let(:seconds1) { 0.1 }
     let(:seconds2) { 0.3 }
@@ -80,6 +80,7 @@ describe IOEventLoop::Timers do
     context "when it is triggered" do
       before { instance.triggerable.first.trigger }
       it { expect(instance.triggerable).to eq [timer] }
+      after { expect(timer).not_to be_cancelled }
     end
   end
 end

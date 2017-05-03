@@ -14,11 +14,17 @@ class IOEventLoop
     end
 
     def after(seconds, &on_timeout)
-      Timer.new(seconds, timers: self, &on_timeout)
+      timer = Timer.new(seconds, on_timeout)
+      schedule timer
+      timer
     end
 
-    def every(seconds, &on_timeout)
-      Timer.new(seconds, timers: self, repeat: true, &on_timeout)
+    def every(seconds) # &on_timeout
+      timer = after seconds do
+        yield
+        timer.repeat
+        schedule timer
+      end
     end
 
     def schedule(timer)

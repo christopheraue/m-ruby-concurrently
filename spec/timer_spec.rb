@@ -1,25 +1,21 @@
 describe IOEventLoop::Timer do
-  subject(:instance) { described_class.new(seconds, repeat: repeat, start_time: start_time, &callback) }
+  subject(:instance) { described_class.new(seconds, callback) }
 
   let(:seconds) { 1.5 }
-  let(:repeat) { false }
-  let(:start_time) { IOEventLoop::WallClock.now }
   let(:callback) { proc{} }
 
-  shared_context "for a running timer" do |seconds:, repeat: false|
+  shared_context "for a running timer" do |seconds:, offset: 0|
     after { expect(instance.cancelled?).to be false }
     after { expect(instance.seconds).to be seconds }
-    after { expect(instance.waiting_time).to be_within(0.02).of((start_time - IOEventLoop::WallClock.now) + seconds) }
-    after { expect(instance.timeout_time).to be_within(0.02).of(start_time + seconds) }
-    after { expect(instance.repeats?).to be repeat }
+    after { expect(instance.waiting_time).to be_within(0.02).of(offset + seconds) }
+    after { expect(instance.timeout_time).to be_within(0.02).of(IOEventLoop::WallClock.now + offset + seconds) }
   end
 
-  shared_context "for a cancelled timer" do |seconds:, repeat: false|
+  shared_context "for a cancelled timer" do |seconds:|
     after { expect(instance.cancelled?).to be true }
     after { expect(instance.seconds).to be seconds }
     after { expect(instance.waiting_time).to be nil }
-    after { expect(instance.timeout_time).to be_within(0.02).of(start_time + seconds) }
-    after { expect(instance.repeats?).to be repeat }
+    after { expect(instance.timeout_time).to be_within(0.02).of(IOEventLoop::WallClock.now + seconds) }
   end
 
   describe "Initialization" do
@@ -27,18 +23,6 @@ describe IOEventLoop::Timer do
       let(:seconds) { 2.4 }
       it { is_expected.not_to raise_error }
       include_context "for a running timer", seconds: 2.4
-    end
-
-    context "when called with another repeat setting" do
-      let(:repeat) { true }
-      it { is_expected.not_to raise_error }
-      include_context "for a running timer", seconds: 1.5, repeat: true
-    end
-
-    context "when called with a custom start time" do
-      let(:start_time) { 12.24 }
-      it { is_expected.not_to raise_error }
-      include_context "for a running timer", seconds: 1.5
     end
 
     context "when given a callback" do
@@ -56,26 +40,15 @@ describe IOEventLoop::Timer do
   describe "#trigger" do
     subject { instance.trigger }
 
-    context "when cancelled" do
-      before { instance.cancel }
-      it { is_expected.to be false }
-    end
-
-    context "when one-shot" do
-      let(:repeat) { false }
+    context "when not cancelled" do
       before { expect(callback).to receive(:call) }
       it { is_expected.to be true }
       include_context "for a cancelled timer", seconds: 1.5
     end
 
-    context "when recurring" do
-      let(:repeat) { true }
-      before { expect(callback).to receive(:call) }
-      before { @start_time = IOEventLoop::WallClock.now }
-      it { is_expected.to be true }
-      before { @start_time = instance.timeout_time  }
-      def start_time; @start_time end
-      include_context "for a running timer", seconds: 1.5, repeat: true
+    context "when cancelled" do
+      before { instance.cancel }
+      it { is_expected.to be false }
     end
   end
 
@@ -84,6 +57,13 @@ describe IOEventLoop::Timer do
 
     it { is_expected.to be true }
     include_context "for a cancelled timer", seconds: 1.5
+  end
+
+  describe "#repeat" do
+    subject { instance.repeat }
+
+    it { is_expected.to be true }
+    include_context "for a running timer", seconds: 1.5, offset: 1.5
   end
 
   describe "#inspect" do
