@@ -2,8 +2,9 @@ class IOEventLoop
   class Concurrency
     include Comparable
 
-    def initialize(loop, opts = {}) #&block
+    def initialize(loop, after = 0) #&block
       @loop = loop
+      @cancelled = false
       @fiber = Fiber.new do
         begin
           yield
@@ -11,14 +12,20 @@ class IOEventLoop
           loop.trigger :error, e
         end
       end
-      @resume_time = WallClock.now + opts.fetch(:after, 0)
-      @cancelled = false
+      @resume_time = WallClock.now + after
       @loop.concurrencies[@fiber] = self
-      @loop.run_queue.schedule self
     end
 
     attr_reader :resume_time
     alias_method :to_f, :resume_time
+
+    def defer(seconds)
+      @resume_time += seconds
+    end
+
+    def <=>(other)
+      @resume_time <=> other.to_f
+    end
 
     def resume_with(result)
       @fiber.resume result unless @cancelled
@@ -30,21 +37,12 @@ class IOEventLoop
       (CancelledError === result) ? raise(result) : result
     end
 
-    def defer(seconds)
-      @resume_time += seconds
-      @loop.run_queue.schedule self
-    end
-
     def cancel
       @cancelled = true
     end
 
     def cancelled?
       @cancelled
-    end
-
-    def <=>(other)
-      @resume_time <=> other.to_f
     end
   end
 end

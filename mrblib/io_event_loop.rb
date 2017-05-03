@@ -22,7 +22,7 @@ class IOEventLoop
 
   # Flow control
 
-  attr_reader :concurrencies, :run_queue
+  attr_reader :concurrencies
 
   def start
     @running = true
@@ -53,7 +53,8 @@ class IOEventLoop
   end
 
   def once(&block)
-    Concurrency.new(self, &block)
+    concurrency = Concurrency.new(self, &block)
+    @run_queue.schedule concurrency
     start unless @running
   end
 
@@ -105,15 +106,18 @@ class IOEventLoop
   # Timers
 
   def after(seconds, &on_timeout)
-    Concurrency.new(self, after: seconds, &on_timeout)
+    concurrency = Concurrency.new(self, seconds, &on_timeout)
+    @run_queue.schedule concurrency
+    concurrency
   end
 
   def every(seconds) # &on_timeout
-    timer = after(seconds) do
+    concurrency = after(seconds) do
       while true
         yield
-        timer.defer seconds
-        timer.await_result
+        concurrency.defer seconds
+        @run_queue.schedule concurrency
+        concurrency.await_result
       end
     end
   end

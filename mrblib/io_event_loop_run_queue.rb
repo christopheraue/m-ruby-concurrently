@@ -4,10 +4,6 @@ class IOEventLoop
       @items = []
     end
 
-    def items
-      @items.dup
-    end
-
     def schedule(timer)
       index = bisect_left(@items, timer)
       @items.insert(index, timer)
