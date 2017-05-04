@@ -5,6 +5,7 @@ class IOEventLoop
     def initialize(loop, run_queue) #&block
       @loop = loop
       @run_queue = run_queue
+      @future = Future.new self
       @fiber = Fiber.new do
         begin
           yield
@@ -13,6 +14,8 @@ class IOEventLoop
         end
       end
     end
+
+    attr_reader :loop, :future
 
     def schedule_at(schedule_time, schedule_result = nil)
       @schedule_time = schedule_time
@@ -46,50 +49,11 @@ class IOEventLoop
     end
 
     def resume_with(result)
-      @waits = false
+      @waiting = false
       cancel_schedule
       @fiber.resume result
     end
 
-    def await_result(opts = {})
-      @waits = true
-
-      if seconds = opts[:within]
-        timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-        schedule_in seconds, timeout_result
-      end
-
-      result = Fiber.yield
-      (CancelledError === result) ? raise(result) : result
-    end
-
-    attr_reader :waits
-    alias waits? waits
-    undef waits
-
-    def cancel(reason = "waiting cancelled")
-      resume_with CancelledError.new(reason)
-      :cancelled
-    end
-
-    def await_readable(io, *args)
-      @loop.attach_reader(io) { @loop.detach_reader(io); resume_with :readable }
-      await_result *args
-    end
-
-    def cancel_awaiting_readable(io)
-      @loop.detach_reader io
-      resume_with :cancelled
-    end
-
-    def await_writable(io, *args)
-      @loop.attach_writer(io) { @loop.detach_writer(io); resume_with :writable }
-      await_result *args
-    end
-
-    def cancel_awaiting_writable(io)
-      @loop.detach_writer io
-      resume_with :cancelled
-    end
+    attr_accessor :waiting
   end
 end

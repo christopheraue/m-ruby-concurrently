@@ -57,7 +57,7 @@ class IOEventLoop
         while true
           concurrency.schedule_at concurrency.schedule_time+every
           yield
-          concurrency.await_result
+          concurrency.future.result
         end
       end
     else
@@ -65,7 +65,7 @@ class IOEventLoop
     end
 
     concurrency.schedule_in opts.fetch(:after, 0)
-    concurrency
+    concurrency.future
   end
 
 

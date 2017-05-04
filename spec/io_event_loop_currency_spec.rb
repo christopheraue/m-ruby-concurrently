@@ -6,7 +6,7 @@ describe IOEventLoop::Concurrency do
 
     let!(:instance) { loop.concurrently do
       begin
-        @result = instance.await_result(within: 0.0002, timeout_result: timeout_result)
+        @result = instance.result(within: 0.0002, timeout_result: timeout_result)
       rescue => e
         @result = e
       end
@@ -39,12 +39,12 @@ describe IOEventLoop::Concurrency do
     subject { instance.resume_with :result }
 
     context "when waiting originates from a fiber" do
-      let!(:instance) { loop.concurrently{ @result = instance.await_result } }
-      before { loop.concurrently{ expect(instance.waits?).to be true }}
+      let!(:instance) { loop.concurrently{ @result = instance.result } }
+      before { loop.concurrently{ expect(instance.waiting?).to be true }}
       before { loop.start }
 
       it { is_expected.not_to raise_error }
-      after { expect(instance.waits?).to be false }
+      after { expect(instance.waiting?).to be false }
       after { expect(@result).to be :result }
     end
 
@@ -52,7 +52,7 @@ describe IOEventLoop::Concurrency do
       # e.g. resuming the fiber raises a FiberError
       let!(:instance) { loop.concurrently do
         allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
-        instance.await_result
+        instance.result
       end }
       before { loop.start }
 
@@ -63,7 +63,7 @@ describe IOEventLoop::Concurrency do
   describe "#cancel" do
     let!(:instance) { loop.concurrently do
       begin
-        instance.await_result
+        instance.result
       rescue IOEventLoop::CancelledError => e
         @result = e
       end
