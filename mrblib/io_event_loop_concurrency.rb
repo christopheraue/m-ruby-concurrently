@@ -5,7 +5,7 @@ class IOEventLoop
     def initialize(loop, run_queue, opts = {}, &body)
       @loop = loop
       @run_queue = run_queue
-      @repeat = opts.fetch(:every, false)
+      @interval = opts.fetch(:every, false)
       @body = body
       schedule_in opts.fetch(:after, 0)
     end
@@ -16,10 +16,14 @@ class IOEventLoop
       @fiber ||= Fiber.new do
         begin
           while true
-            schedule_at @schedule_time+@repeat if @repeat
             @body.call
-            Fiber.yield # go back to the main loop
-            break unless @repeat
+
+            if @interval
+              schedule_at @schedule_time+@interval if @scheduled
+              Fiber.yield # go back to the main loop
+            else
+              break
+            end
           end
         rescue Exception => e
           @loop.trigger :error, e
