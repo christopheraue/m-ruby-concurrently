@@ -9,9 +9,6 @@ class IOEventLoop
     @running = false
     @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
-    @concurrencies = {}
-    @waiting_concurrencies = {}
-
     @run_queue = RunQueue.new self
     @readers = {}
     @writers = {}
@@ -25,8 +22,6 @@ class IOEventLoop
 
 
   # Flow control
-
-  attr_reader :concurrencies, :waiting_concurrencies
 
   def start
     @running = true
@@ -59,33 +54,7 @@ class IOEventLoop
   def once(&block)
     concurrency = Concurrency.new(self, @run_queue, &block)
     concurrency.schedule_at @wall_clock.now
-  end
-
-  def await(id, opts = {})
-    if concurrency = @concurrencies[Fiber.current]
-      @waiting_concurrencies[id] = concurrency
-      concurrency.wait_id = id
-      concurrency.await_result opts
-    else
-      raise Error, "cannot await on root fiber"
-    end
-  end
-
-  def resume(id, result)
-    if concurrency = @waiting_concurrencies.delete(id)
-      concurrency.resume_with result
-    else
-      raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
-    end
-  end
-
-  def awaits?(id)
-    @waiting_concurrencies.key? id
-  end
-
-  def cancel(id, reason = "waiting for id #{id.inspect} cancelled")
-    resume id, CancelledError.new(reason)
-    :cancelled
+    concurrency
   end
 
 
@@ -118,22 +87,6 @@ class IOEventLoop
     @readers.delete(io)
   end
 
-  def await_readable(io, *args, &block)
-    attach_reader(io) { detach_reader(io); resume(io, :readable) }
-    await io, *args, &block
-  end
-
-  def awaits_readable?(io)
-    @readers.key? io and awaits? io
-  end
-
-  def cancel_awaiting_readable(io)
-    if awaits_readable? io
-      detach_reader(io)
-      resume(io, :cancelled)
-    end
-  end
-
 
   # Writable IO
 
@@ -143,22 +96,6 @@ class IOEventLoop
 
   def detach_writer(io)
     @writers.delete(io)
-  end
-
-  def await_writable(io, *args, &block)
-    attach_writer(io) { detach_writer(io); resume(io, :writable) }
-    await io, *args, &block
-  end
-
-  def awaits_writable?(io)
-    @writers.key? io and awaits? io
-  end
-
-  def cancel_awaiting_writable(io)
-    if awaits_writable? io
-      detach_writer(io)
-      resume(io, :cancelled)
-    end
   end
 
 
