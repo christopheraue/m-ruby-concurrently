@@ -6,7 +6,6 @@ class IOEventLoop
       end
   
       def result(opts = {})
-        @concurrency.waiting = true
   
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
@@ -32,9 +31,6 @@ class IOEventLoop
         @concurrency.cancel_schedule
       end
 
-      def waiting?
-        @concurrency.waiting
-      end
     end
   end
 end

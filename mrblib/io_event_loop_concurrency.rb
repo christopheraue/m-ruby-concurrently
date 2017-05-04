@@ -59,11 +59,8 @@ class IOEventLoop
     end
 
     def resume_with(result)
-      @waiting = false
       cancel_schedule
       fiber.resume result
     end
-
-    attr_accessor :waiting
   end
 end

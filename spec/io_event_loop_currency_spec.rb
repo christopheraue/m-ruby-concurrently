@@ -40,11 +40,9 @@ describe IOEventLoop::Concurrency do
 
     context "when waiting originates from a fiber" do
       let!(:instance) { loop.concurrently{ @result = instance.result } }
-      before { loop.concurrently{ expect(instance.waiting?).to be true }}
       before { loop.start }
 
       it { is_expected.not_to raise_error }
-      after { expect(instance.waiting?).to be false }
       after { expect(@result).to be :result }
     end
 
