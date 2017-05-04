@@ -1,5 +1,13 @@
 class IOEventLoop
   class Concurrency
+    REGISTRY = {}
+
+    class << self
+      def current
+        REGISTRY[Fiber.current]
+      end
+    end
+
     include Comparable
 
     def initialize(loop, run_queue, opts = {}, &body)
@@ -15,6 +23,8 @@ class IOEventLoop
     private def fiber
       @fiber ||= Fiber.new do
         begin
+          REGISTRY[@fiber] = self
+
           while true
             @body.call
 
@@ -27,6 +37,8 @@ class IOEventLoop
           end
         rescue Exception => e
           @loop.trigger :error, e
+        ensure
+          REGISTRY.delete @fiber
         end
       end
     end
