@@ -33,7 +33,7 @@ describe IOEventLoop do
       end
 
       context "when its waiting to be writable" do
-        let!(:concurrency) { instance.concurrently{ concurrency.await_writable(writer) } }
+        let!(:concurrency) { instance.concurrently_writable(writer){ concurrency.result } }
 
         it { is_expected.to be nil }
 

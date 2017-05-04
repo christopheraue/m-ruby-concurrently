@@ -35,16 +35,6 @@ class IOEventLoop
       def waiting?
         @concurrency.waiting
       end
-
-      def await_writable(io, *args)
-        @concurrency.loop.attach_writer(io) { @concurrency.loop.detach_writer(io); @concurrency.resume_with :writable }
-        result *args
-      end
-
-      def cancel_awaiting_writable(io)
-        @concurrency.loop.detach_writer io
-        @concurrency.resume_with :cancelled
-      end
     end
   end
 end

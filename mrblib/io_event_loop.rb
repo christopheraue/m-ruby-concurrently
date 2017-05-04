@@ -81,6 +81,10 @@ class IOEventLoop
     @writers.delete(io)
   end
 
+  def concurrently_writable(io, opts = {}) # &block
+    Concurrency::WritabilityFuture.new Concurrency.new(self, @run_queue, opts){ yield }, io
+  end
+
 
   # Watching events
 
