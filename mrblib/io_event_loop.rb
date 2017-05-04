@@ -84,7 +84,7 @@ class IOEventLoop
   def resume(id, result)
     if waiting = @waiting_concurrencies.delete(id)
       if timer = waiting[:timer]
-        timer.cancel
+        timer.cancel_schedule
       end
 
       if concurrency = waiting[:concurrency]
@@ -118,8 +118,8 @@ class IOEventLoop
   def every(seconds) # &on_timeout
     concurrency = after(seconds) do
       while true
-        yield
         concurrency.schedule_at concurrency.schedule_time+seconds
+        yield
         concurrency.await_result
       end
     end

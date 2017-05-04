@@ -5,7 +5,6 @@ class IOEventLoop
     def initialize(loop, run_queue) #&block
       @loop = loop
       @run_queue = run_queue
-      @cancelled = false
       @fiber = Fiber.new do
         begin
           yield
@@ -16,28 +15,28 @@ class IOEventLoop
       @loop.concurrencies[@fiber] = self
     end
 
-    attr_reader :schedule_time
-    alias_method :to_f, :schedule_time
-
-    def <=>(other)
-      @schedule_time <=> other.to_f
-    end
-
     def schedule_at(schedule_time)
       @schedule_time = schedule_time
+      @scheduled = true
       @run_queue.schedule self
     end
 
+    attr_reader :schedule_time
+    alias_method :to_f, :schedule_time
+
     def scheduled_resume
-      @fiber.resume unless @cancelled
+      @fiber.resume if @scheduled
     end
 
-    def cancel
-      @cancelled = true
+    def cancel_schedule
+      @scheduled = false
     end
 
-    def cancelled?
-      @cancelled
+    attr_reader :scheduled
+    alias_method :scheduled?, :scheduled
+
+    def <=>(other)
+      @schedule_time <=> other.to_f
     end
 
     def resume_with(result)

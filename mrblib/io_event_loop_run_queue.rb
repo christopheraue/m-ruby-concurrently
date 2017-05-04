@@ -11,8 +11,8 @@ class IOEventLoop
     end
 
     def waiting_time
-      if last = @items.delete_if(&:cancelled?).last
-        waiting_time = last.schedule_time - @loop.wall_clock.now
+      if next_scheduled = @items.reverse_each.find(&:scheduled?)
+        waiting_time = next_scheduled.schedule_time - @loop.wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
