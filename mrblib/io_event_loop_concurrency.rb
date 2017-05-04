@@ -2,13 +2,22 @@ class IOEventLoop
   class Concurrency
     include Comparable
 
-    def initialize(loop, run_queue) #&block
+    def initialize(loop, run_queue, opts = {}) #&block
       @loop = loop
       @run_queue = run_queue
       @future = Future.new self
+
+      schedule_in opts.fetch(:after, 0)
+      interval = opts.fetch(:every, false)
+
       @fiber = Fiber.new do
         begin
-          yield
+          while true
+            schedule_at schedule_time+interval if interval
+            yield
+            Fiber.yield # go back to the main loop
+            break unless interval
+          end
         rescue Exception => e
           loop.trigger :error, e
         end

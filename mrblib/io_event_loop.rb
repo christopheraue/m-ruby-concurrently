@@ -52,20 +52,7 @@ class IOEventLoop
   end
 
   def concurrently(opts = {}) # &block
-    concurrency = if every = opts[:every]
-      Concurrency.new(self, @run_queue) do
-        while true
-          concurrency.schedule_at concurrency.schedule_time+every
-          yield
-          concurrency.future.result
-        end
-      end
-    else
-      Concurrency.new(self, @run_queue) { yield }
-    end
-
-    concurrency.schedule_in opts.fetch(:after, 0)
-    concurrency.future
+    Concurrency.new(self, @run_queue, opts){ yield }.future
   end
 
 
