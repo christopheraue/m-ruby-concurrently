@@ -26,16 +26,16 @@ describe IOEventLoop do
 
       context "when its waiting to be readable" do
         before { instance.after(0.0001) { writer.write 'Wake up!'; writer.close } }
-        before { instance.await_readable(reader) }
+        before { instance.once{ instance.await_readable(reader) } }
 
-        it { is_expected.to be :readable }
+        it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
 
       context "when its waiting to be writable" do
-        before { instance.await_writable(writer) }
+        before { instance.once{ instance.await_writable(writer) } }
 
-        it { is_expected.to be :writable }
+        it { is_expected.to be nil }
 
         after do
           writer.write 'Hello!'; writer.close
@@ -63,9 +63,8 @@ describe IOEventLoop do
 
   describe "#await, #awaits? and #resume" do
     context "when waiting originates from the root fiber" do
-      subject { instance.resume(:request, :result) }
-      before { instance.await(:request) }
-      it { is_expected.to be :result }
+      subject { instance.await(:request) }
+      it { is_expected.to raise_error IOEventLoop::Error, "cannot await on root fiber" }
     end
 
     context "when waiting originates from a fiber" do
@@ -98,24 +97,33 @@ describe IOEventLoop do
     end
 
     context "when #await is given a timeout" do
-      subject { instance.await(:id, within: 0.0002, timeout_result: timeout_result) }
+      subject { instance.once do
+        begin
+          @result = instance.await(:id, within: 0.0002, timeout_result: timeout_result)
+        rescue => e
+          @result = e
+        end
+      end }
 
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
         before { instance.after(0.0001) { instance.resume(:id, :result) } }
-        it { is_expected.to be :result }
+        it { is_expected.not_to raise_error }
+        after { expect(@result).to be :result }
       end
 
       context "when evaluation of result is too slow" do
         context "when the timeout result is a timeout error" do
           let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
-          it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+          it { is_expected.not_to raise_error }
+          after { expect(@result).to be_a(IOEventLoop::TimeoutError).and have_attributes(message: "Time's up!") }
         end
 
         context "when the timeout result is not an timeout error" do
           let(:timeout_result) { :timeout_result }
-          it { is_expected.to be :timeout_result }
+          it { is_expected.not_to raise_error }
+          after { expect(@result).to be :timeout_result }
         end
       end
     end
@@ -124,7 +132,7 @@ describe IOEventLoop do
   describe "#cancel" do
     context "when cancelling the root fiber" do
       subject { instance.once{ instance.cancel(:request, *reason) } }
-      before { instance.await(:request) }
+      before { instance.once{ instance.await(:request) } }
       let(:reason) { nil }
       it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting for id :request cancelled" }
 
@@ -315,7 +323,14 @@ describe IOEventLoop do
   end
 
   describe "#await_readable" do
-    subject { instance.await_readable(reader, opts) }
+    subject { instance.once do
+      begin
+        @result = instance.await_readable(reader, opts)
+      rescue => e
+        @result = e
+        raise e
+      end
+    end }
 
     let(:pipe) { IO.pipe }
     let(:reader) { pipe[0] }
@@ -326,7 +341,8 @@ describe IOEventLoop do
         before { instance.after(0.0001) { writer.write 'Wake up!' } }
 
         before { instance.after(0.00005) { expect(instance.awaits_readable? reader).to be true } }
-        it { is_expected.to be :readable }
+        it { is_expected.not_to raise_error }
+        after { expect(@result).to be :readable }
         after { expect(instance.awaits_readable? reader).to be false }
       end
 
@@ -334,7 +350,8 @@ describe IOEventLoop do
         before { instance.after(0.0001) { instance.cancel_awaiting_readable reader } }
 
         before { instance.after(0.00005) { expect(instance.awaits_readable? reader).to be true } }
-        it { is_expected.to be :cancelled }
+        it { is_expected.not_to raise_error }
+        after { expect(@result).to be :cancelled }
         after { expect(instance.awaits_readable? reader).to be false }
       end
     end
@@ -355,13 +372,21 @@ describe IOEventLoop do
       include_examples "for readability"
 
       context "when not readable in time" do
-        it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+        it { is_expected.to raise_error IOEventLoop::CancelledError, "Time's up!" }
+        after { expect(@result).to be_a(IOEventLoop::TimeoutError).and have_attributes(message: "Time's up!") }
       end
     end
   end
 
   describe "#await_writable" do
-    subject { instance.await_writable(writer, opts) }
+    subject { instance.once do
+      begin
+        @result = instance.await_writable(writer, opts)
+      rescue => e
+        @result = e
+        raise e
+      end
+    end }
 
     let(:pipe) { IO.pipe }
     let(:reader) { pipe[0] }
@@ -375,7 +400,8 @@ describe IOEventLoop do
         before { instance.after(0.0001) { reader.read(65536) } } # clear the pipe
 
         before { instance.after(0.00005) { expect(instance.awaits_writable? writer).to be true } }
-        it { is_expected.to be :writable }
+        it { is_expected.not_to raise_error }
+        after { expect(@result).to be :writable }
         after { expect(instance.awaits_writable? writer).to be false }
       end
 
@@ -383,7 +409,8 @@ describe IOEventLoop do
         before { instance.after(0.0001) { instance.cancel_awaiting_writable writer } }
 
         before { instance.after(0.00005) { expect(instance.awaits_writable? writer).to be true } }
-        it { is_expected.to be :cancelled }
+        it { is_expected.not_to raise_error }
+        after { expect(@result).to be :cancelled }
         after { expect(instance.awaits_writable? writer).to be false }
       end
     end
@@ -404,7 +431,8 @@ describe IOEventLoop do
       include_examples "for writability"
 
       context "when not writable in time" do
-        it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+        it { is_expected.to raise_error IOEventLoop::CancelledError, "Time's up!" }
+        after { expect(@result).to be_a(IOEventLoop::TimeoutError).and have_attributes(message: "Time's up!") }
       end
     end
   end

@@ -63,21 +63,19 @@ class IOEventLoop
   end
 
   def await(id, opts = {})
-    concurrency = @concurrencies[Fiber.current]
+    if concurrency = @concurrencies[Fiber.current]
+      timer = if timeout = opts.fetch(:within, false)
+        timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
+        after(timeout){ resume(id, timeout_result) }
+      else
+        nil
+      end
 
-    timer = if timeout = opts.fetch(:within, false)
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
-      after(timeout){ resume(id, timeout_result) }
-    else
-      nil
-    end
+      @waiting_concurrencies[id] = { concurrency: concurrency, timer: timer }
 
-    @waiting_concurrencies[id] = { concurrency: concurrency, timer: timer }
-
-    if concurrency
       concurrency.await_result
     else
-      start
+      raise Error, "cannot await on root fiber"
     end
   end
 
@@ -87,11 +85,7 @@ class IOEventLoop
         timer.cancel_schedule
       end
 
-      if concurrency = waiting[:concurrency]
-        concurrency.resume_with result
-      else
-        stop result
-      end
+      waiting[:concurrency].resume_with result
     else
       raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
     end
