@@ -21,6 +21,10 @@ class IOEventLoop
       @run_queue.schedule self
     end
 
+    def schedule_in(seconds, schedule_result = nil)
+      schedule_at @loop.wall_clock.now+seconds, schedule_result
+    end
+
     attr_reader :schedule_time
     alias to_f schedule_time
 
@@ -52,7 +56,7 @@ class IOEventLoop
 
       if seconds = opts[:within]
         timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-        schedule_at @loop.wall_clock.now+seconds, timeout_result
+        schedule_in seconds, timeout_result
       end
 
       result = Fiber.yield

@@ -64,7 +64,7 @@ class IOEventLoop
       Concurrency.new(self, @run_queue) { yield }
     end
 
-    concurrency.schedule_at @wall_clock.now+opts.fetch(:after, 0)
+    concurrency.schedule_in opts.fetch(:after, 0)
     concurrency
   end
 
