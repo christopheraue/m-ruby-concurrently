@@ -57,8 +57,8 @@ class IOEventLoop
   end
 
   def once(&block)
-    concurrency = Concurrency.new(self, &block)
-    @run_queue.schedule concurrency
+    concurrency = Concurrency.new(self, @run_queue, &block)
+    concurrency.schedule_at @wall_clock.now
     start unless @running
   end
 
@@ -110,8 +110,8 @@ class IOEventLoop
   # Timers
 
   def after(seconds, &on_timeout)
-    concurrency = Concurrency.new(self, @wall_clock.now+seconds, &on_timeout)
-    @run_queue.schedule concurrency
+    concurrency = Concurrency.new(self, @run_queue, &on_timeout)
+    concurrency.schedule_at @wall_clock.now+seconds
     concurrency
   end
 
@@ -119,8 +119,7 @@ class IOEventLoop
     concurrency = after(seconds) do
       while true
         yield
-        concurrency.defer seconds
-        @run_queue.schedule concurrency
+        concurrency.schedule_at concurrency.schedule_time+seconds
         concurrency.await_result
       end
     end

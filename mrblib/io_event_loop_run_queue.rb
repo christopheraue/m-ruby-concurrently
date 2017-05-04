@@ -12,14 +12,14 @@ class IOEventLoop
 
     def waiting_time
       if last = @items.delete_if(&:cancelled?).last
-        waiting_time = last.start_time - @loop.wall_clock.now
+        waiting_time = last.schedule_time - @loop.wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
 
     def run_pending
       index = bisect_left(@items, @loop.wall_clock.now)
-      @items.pop(@items.length-index).reverse_each(&:start)
+      @items.pop(@items.length-index).reverse_each(&:scheduled_resume)
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order
