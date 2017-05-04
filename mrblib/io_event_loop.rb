@@ -65,13 +65,7 @@ class IOEventLoop
     if concurrency = @concurrencies[Fiber.current]
       @waiting_concurrencies[id] = concurrency
       concurrency.wait_id = id
-
-      if seconds = opts[:within]
-        timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-        concurrency.schedule_at @wall_clock.now+seconds, timeout_result
-      end
-
-      concurrency.await_result
+      concurrency.await_result opts
     else
       raise Error, "cannot await on root fiber"
     end
@@ -79,7 +73,6 @@ class IOEventLoop
 
   def resume(id, result)
     if concurrency = @waiting_concurrencies.delete(id)
-      concurrency.cancel_schedule
       concurrency.resume_with result
     else
       raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
