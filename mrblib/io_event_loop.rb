@@ -59,7 +59,6 @@ class IOEventLoop
   def once(&block)
     concurrency = Concurrency.new(self, @run_queue, &block)
     concurrency.schedule_at @wall_clock.now
-    start unless @running
   end
 
   def await(id, opts = {})

@@ -46,7 +46,8 @@ describe IOEventLoop do
   end
 
   describe "an iteration causing an error" do
-    subject { instance.once{ raise 'evil error' }  }
+    subject { instance.start }
+    before { instance.once{ raise 'evil error' }  }
 
     before { expect(instance).to receive(:trigger).with(:error,
       (be_a(RuntimeError).and have_attributes message: 'evil error')).and_call_original }
@@ -62,16 +63,17 @@ describe IOEventLoop do
   end
 
   describe "#await, #awaits? and #resume" do
+    subject { instance.start }
+
     context "when waiting originates from the root fiber" do
       subject { instance.await(:request) }
       it { is_expected.to raise_error IOEventLoop::Error, "cannot await on root fiber" }
     end
 
     context "when waiting originates from a fiber" do
-      subject { instance.once{ @resume_result = instance.resume(:request, :result) } }
-
       before { instance.once{ @result = instance.await(:request) } }
       before { instance.once{ instance.await(:another_request) } }
+      before { instance.once{ @resume_result = instance.resume(:request, :result) } }
 
       it { is_expected.to be nil }
       after { expect(@result).to be :result }
@@ -85,19 +87,18 @@ describe IOEventLoop do
     end
 
     context "when resuming a fiber raises an error" do
-      subject { instance.once{ instance.resume(:request, :result) } }
-
       # e.g. resuming the fiber raises a FiberError
       before { instance.once do
         allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
         instance.await(:request)
       end }
+      before { instance.once{ instance.resume(:request, :result) } }
 
       it { is_expected.to raise_error IOEventLoop::CancelledError, 'resume error' }
     end
 
     context "when #await is given a timeout" do
-      subject { instance.once do
+      before { instance.once do
         begin
           @result = instance.await(:id, within: 0.0002, timeout_result: timeout_result)
         rescue => e
@@ -130,21 +131,8 @@ describe IOEventLoop do
   end
 
   describe "#cancel" do
-    context "when cancelling the root fiber" do
-      subject { instance.once{ instance.cancel(:request, *reason) } }
-      before { instance.once{ instance.await(:request) } }
-      let(:reason) { nil }
-      it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting for id :request cancelled" }
-
-      context "when giving a reason" do
-        let(:reason) { 'cancel reason' }
-        it { is_expected.to raise_error IOEventLoop::CancelledError, "cancel reason" }
-      end
-    end
-
     context "when cancelling an iteration fiber" do
-      subject { instance.once{ @cancel_result = instance.cancel(:request, *reason) } }
-
+      subject { instance.cancel(:request, *reason) }
       before { instance.once do
         begin
           instance.await(:request)
@@ -152,22 +140,21 @@ describe IOEventLoop do
           @result = e
         end
       end }
+      before { instance.start }
       let(:reason) { nil }
 
       context "when giving no explicit reason" do
-        it { is_expected.to be nil }
+        it { is_expected.to be :cancelled }
         after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
           message: "waiting for id :request cancelled") }
-        after { expect(@cancel_result).to be :cancelled }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
 
-        it { is_expected.to be nil }
+        it { is_expected.to be :cancelled }
         after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
           message: "cancel reason") }
-        after { expect(@cancel_result).to be :cancelled }
       end
     end
 
@@ -323,7 +310,9 @@ describe IOEventLoop do
   end
 
   describe "#await_readable" do
-    subject { instance.once do
+    subject { instance.start }
+
+    before { instance.once do
       begin
         @result = instance.await_readable(reader, opts)
       rescue => e
@@ -379,7 +368,9 @@ describe IOEventLoop do
   end
 
   describe "#await_writable" do
-    subject { instance.once do
+    subject { instance.start }
+
+    before { instance.once do
       begin
         @result = instance.await_writable(writer, opts)
       rescue => e

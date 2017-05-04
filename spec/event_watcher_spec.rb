@@ -40,6 +40,7 @@ describe IOEventLoop::EventWatcher do
 
     context "when the event happens later" do
       before { loop.once{ object.trigger(event, event_result) } }
+      before { loop.start }
       it { is_expected.to be event_result }
       after { expect(instance.received).to be 1 }
     end
@@ -64,6 +65,7 @@ describe IOEventLoop::EventWatcher do
 
     context "when the watcher is cancelled after starting to wait" do
       before { loop.once{ subject } }
+      before { loop.start }
       it { expect{ instance.await }.to raise_error IOEventLoop::CancelledError, 'cancel reason' }
     end
 
