@@ -52,7 +52,7 @@ class IOEventLoop
   end
 
   def concurrently(opts = {}) # &block
-    Concurrency.new(self, @run_queue, opts){ yield }.future
+    Concurrency::Future.new Concurrency.new(self, @run_queue, opts){ yield }
   end
 
 
@@ -64,6 +64,10 @@ class IOEventLoop
 
   def detach_reader(io)
     @readers.delete(io)
+  end
+
+  def concurrently_readable(io, opts = {}) # &block
+    Concurrency::ReadabilityFuture.new Concurrency.new(self, @run_queue, opts){ yield }, io
   end
 
 

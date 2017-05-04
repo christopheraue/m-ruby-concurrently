@@ -36,16 +36,6 @@ class IOEventLoop
         @concurrency.waiting
       end
 
-      def await_readable(io, *args)
-        @concurrency.loop.attach_reader(io) { @concurrency.loop.detach_reader(io); @concurrency.resume_with :readable }
-        result *args
-      end
-
-      def cancel_awaiting_readable(io)
-        @concurrency.loop.detach_reader io
-        @concurrency.resume_with :cancelled
-      end
-
       def await_writable(io, *args)
         @concurrency.loop.attach_writer(io) { @concurrency.loop.detach_writer(io); @concurrency.resume_with :writable }
         result *args

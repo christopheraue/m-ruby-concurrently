@@ -87,60 +87,6 @@ describe IOEventLoop::Concurrency do
     end
   end
 
-  describe "#await_readable" do
-    subject { loop.start }
-
-    let!(:instance) { loop.concurrently do
-      begin
-        @result = instance.await_readable(reader, opts)
-      rescue => e
-        @result = e
-        raise e
-      end
-    end }
-
-    let(:pipe) { IO.pipe }
-    let(:reader) { pipe[0] }
-    let(:writer) { pipe[1] }
-
-    shared_examples "for readability" do
-      context "when readable after some time" do
-        before { loop.concurrently(after: 0.0001) { writer.write 'Wake up!' } }
-
-        it { is_expected.not_to raise_error }
-        after { expect(@result).to be :readable }
-      end
-
-      context "when cancelled" do
-        before { loop.concurrently(after: 0.0001) { instance.cancel_awaiting_readable reader } }
-
-        it { is_expected.not_to raise_error }
-        after { expect(@result).to be :cancelled }
-      end
-    end
-
-    context "when it waits indefinitely" do
-      let(:opts) { { within: nil, timeout_result: nil } }
-
-      include_examples "for readability"
-
-      context "when never readable" do
-        # we do not have enough time to test that
-      end
-    end
-
-    context "when it has a timeout" do
-      let(:opts) { { within: 0.0002, timeout_result: IOEventLoop::TimeoutError.new("Time's up!") } }
-
-      include_examples "for readability"
-
-      context "when not readable in time" do
-        it { is_expected.to raise_error IOEventLoop::CancelledError, "Time's up!" }
-        after { expect(@result).to be_a(IOEventLoop::TimeoutError).and have_attributes(message: "Time's up!") }
-      end
-    end
-  end
-
   describe "#await_writable" do
     subject { loop.start }
 

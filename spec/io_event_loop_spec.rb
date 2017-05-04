@@ -26,7 +26,7 @@ describe IOEventLoop do
 
       context "when its waiting to be readable" do
         before { instance.concurrently(after: 0.0001) { writer.write 'Wake up!'; writer.close } }
-        let!(:concurrency) { instance.concurrently{ concurrency.await_readable(reader) } }
+        let!(:concurrency) { instance.concurrently_readable(reader){ concurrency.result } }
 
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }

@@ -5,7 +5,6 @@ class IOEventLoop
     def initialize(loop, run_queue, opts = {}) #&block
       @loop = loop
       @run_queue = run_queue
-      @future = Future.new self
 
       schedule_in opts.fetch(:after, 0)
       interval = opts.fetch(:every, false)
@@ -24,7 +23,7 @@ class IOEventLoop
       end
     end
 
-    attr_reader :loop, :future
+    attr_reader :loop
 
     def schedule_at(schedule_time, schedule_result = nil)
       @schedule_time = schedule_time
