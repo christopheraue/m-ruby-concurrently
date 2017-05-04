@@ -2,28 +2,30 @@ class IOEventLoop
   class Concurrency
     include Comparable
 
-    def initialize(loop, run_queue, opts = {}) #&block
+    def initialize(loop, run_queue, opts = {}, &body)
       @loop = loop
       @run_queue = run_queue
-
+      @repeat = opts.fetch(:every, false)
+      @body = body
       schedule_in opts.fetch(:after, 0)
-      interval = opts.fetch(:every, false)
-
-      @fiber = Fiber.new do
-        begin
-          while true
-            schedule_at schedule_time+interval if interval
-            yield
-            Fiber.yield # go back to the main loop
-            break unless interval
-          end
-        rescue Exception => e
-          loop.trigger :error, e
-        end
-      end
     end
 
     attr_reader :loop
+
+    private def fiber
+      @fiber ||= Fiber.new do
+        begin
+          while true
+            schedule_at @schedule_time+@repeat if @repeat
+            @body.call
+            Fiber.yield # go back to the main loop
+            break unless @repeat
+          end
+        rescue Exception => e
+          @loop.trigger :error, e
+        end
+      end
+    end
 
     def schedule_at(schedule_time, schedule_result = nil)
       @schedule_time = schedule_time
@@ -40,7 +42,7 @@ class IOEventLoop
     alias to_f schedule_time
 
     def scheduled_resume
-      @fiber.resume @schedule_result if @scheduled
+      fiber.resume @schedule_result if @scheduled
     end
 
     def cancel_schedule
@@ -59,7 +61,7 @@ class IOEventLoop
     def resume_with(result)
       @waiting = false
       cancel_schedule
-      @fiber.resume result
+      fiber.resume result
     end
 
     attr_accessor :waiting
