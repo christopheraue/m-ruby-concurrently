@@ -4,7 +4,7 @@ describe IOEventLoop::Concurrency do
   describe "#await with a timeout" do
     subject { loop.start }
 
-    let!(:instance) { loop.once do
+    let!(:instance) { loop.concurrently do
       begin
         @result = instance.await_result(within: 0.0002, timeout_result: timeout_result)
       rescue => e
@@ -15,7 +15,7 @@ describe IOEventLoop::Concurrency do
     let(:timeout_result) { :timeout_result }
 
     context "when the result arrives in time" do
-      before { loop.once{ instance.resume_with :result } }
+      before { loop.concurrently{ instance.resume_with :result } }
       it { is_expected.not_to raise_error }
       after { expect(@result).to be :result }
     end
@@ -39,8 +39,8 @@ describe IOEventLoop::Concurrency do
     subject { instance.resume_with :result }
 
     context "when waiting originates from a fiber" do
-      let!(:instance) { loop.once{ @result = instance.await_result } }
-      before { loop.once{ expect(instance.waits?).to be true }}
+      let!(:instance) { loop.concurrently{ @result = instance.await_result } }
+      before { loop.concurrently{ expect(instance.waits?).to be true }}
       before { loop.start }
 
       it { is_expected.not_to raise_error }
@@ -50,7 +50,7 @@ describe IOEventLoop::Concurrency do
 
     context "when resuming a fiber raises an error" do
       # e.g. resuming the fiber raises a FiberError
-      let!(:instance) { loop.once do
+      let!(:instance) { loop.concurrently do
         allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
         instance.await_result
       end }
@@ -61,7 +61,7 @@ describe IOEventLoop::Concurrency do
   end
 
   describe "#cancel" do
-    let!(:instance) { loop.once do
+    let!(:instance) { loop.concurrently do
       begin
         instance.await_result
       rescue IOEventLoop::CancelledError => e
@@ -90,7 +90,7 @@ describe IOEventLoop::Concurrency do
   describe "#await_readable" do
     subject { loop.start }
 
-    let!(:instance) { loop.once do
+    let!(:instance) { loop.concurrently do
       begin
         @result = instance.await_readable(reader, opts)
       rescue => e
@@ -105,14 +105,14 @@ describe IOEventLoop::Concurrency do
 
     shared_examples "for readability" do
       context "when readable after some time" do
-        before { loop.after(0.0001) { writer.write 'Wake up!' } }
+        before { loop.concurrently(after: 0.0001) { writer.write 'Wake up!' } }
 
         it { is_expected.not_to raise_error }
         after { expect(@result).to be :readable }
       end
 
       context "when cancelled" do
-        before { loop.after(0.0001) { instance.cancel_awaiting_readable reader } }
+        before { loop.concurrently(after: 0.0001) { instance.cancel_awaiting_readable reader } }
 
         it { is_expected.not_to raise_error }
         after { expect(@result).to be :cancelled }
@@ -144,7 +144,7 @@ describe IOEventLoop::Concurrency do
   describe "#await_writable" do
     subject { loop.start }
 
-    let!(:instance) { loop.once do
+    let!(:instance) { loop.concurrently do
       begin
         @result = instance.await_writable(writer, opts)
       rescue => e
@@ -162,14 +162,14 @@ describe IOEventLoop::Concurrency do
 
     shared_examples "for writability" do
       context "when writable after some time" do
-        before { loop.after(0.0001) { reader.read(65536) } } # clear the pipe
+        before { loop.concurrently(after: 0.0001) { reader.read(65536) } } # clear the pipe
 
         it { is_expected.not_to raise_error }
         after { expect(@result).to be :writable }
       end
 
       context "when cancelled" do
-        before { loop.after(0.0001) { instance.cancel_awaiting_writable writer } }
+        before { loop.concurrently(after: 0.0001) { instance.cancel_awaiting_writable writer } }
 
         it { is_expected.not_to raise_error }
         after { expect(@result).to be :cancelled }

@@ -51,29 +51,21 @@ class IOEventLoop
     @running
   end
 
-  def once(&block)
-    concurrency = Concurrency.new(self, @run_queue, &block)
-    concurrency.schedule_at @wall_clock.now
-    concurrency
-  end
-
-
-  # Timers
-
-  def after(seconds, &on_timeout)
-    concurrency = Concurrency.new(self, @run_queue, &on_timeout)
-    concurrency.schedule_at @wall_clock.now+seconds
-    concurrency
-  end
-
-  def every(seconds) # &on_timeout
-    concurrency = after(seconds) do
-      while true
-        concurrency.schedule_at concurrency.schedule_time+seconds
-        yield
-        concurrency.await_result
+  def concurrently(opts = {}) # &block
+    concurrency = if every = opts[:every]
+      Concurrency.new(self, @run_queue) do
+        while true
+          concurrency.schedule_at concurrency.schedule_time+every
+          yield
+          concurrency.await_result
+        end
       end
+    else
+      Concurrency.new(self, @run_queue) { yield }
     end
+
+    concurrency.schedule_at @wall_clock.now+opts.fetch(:after, 0)
+    concurrency
   end
 
 

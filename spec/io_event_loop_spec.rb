@@ -4,7 +4,7 @@ describe IOEventLoop do
   describe "#start" do
     subject { instance.start }
 
-    before { instance.once{ expect(instance).to be_running } }
+    before { instance.concurrently{ expect(instance).to be_running } }
     after { expect(instance).not_to be_running }
 
     context "when it has no timers and nothing to watch" do
@@ -12,7 +12,7 @@ describe IOEventLoop do
     end
 
     context "when it has nothing to watch but a timer to wait for" do
-      before { instance.after(0.0001) { callback.call } }
+      before { instance.concurrently(after: 0.0001) { callback.call } }
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
@@ -25,15 +25,15 @@ describe IOEventLoop do
       let(:writer) { pipe[1] }
 
       context "when its waiting to be readable" do
-        before { instance.after(0.0001) { writer.write 'Wake up!'; writer.close } }
-        let!(:concurrency) { instance.once{ concurrency.await_readable(reader) } }
+        before { instance.concurrently(after: 0.0001) { writer.write 'Wake up!'; writer.close } }
+        let!(:concurrency) { instance.concurrently{ concurrency.await_readable(reader) } }
 
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
 
       context "when its waiting to be writable" do
-        let!(:concurrency) { instance.once{ concurrency.await_writable(writer) } }
+        let!(:concurrency) { instance.concurrently{ concurrency.await_writable(writer) } }
 
         it { is_expected.to be nil }
 
@@ -47,7 +47,7 @@ describe IOEventLoop do
 
   describe "an iteration causing an error" do
     subject { instance.start }
-    before { instance.once{ raise 'evil error' }  }
+    before { instance.concurrently{ raise 'evil error' }  }
 
     before { expect(instance).to receive(:trigger).with(:error,
       (be_a(RuntimeError).and have_attributes message: 'evil error')).and_call_original }
@@ -65,9 +65,9 @@ describe IOEventLoop do
   describe "#after" do
     subject { instance.start }
 
-    let!(:timer1) { instance.after(seconds1) { callback1.call } }
-    let!(:timer2) { instance.after(seconds2) { callback2.call } }
-    let!(:timer3) { instance.after(seconds3) { callback3.call } }
+    let!(:timer1) { instance.concurrently(after: seconds1) { callback1.call } }
+    let!(:timer2) { instance.concurrently(after: seconds2) { callback2.call } }
+    let!(:timer3) { instance.concurrently(after: seconds3) { callback3.call } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0003 }
     let(:seconds3) { 0.0002 }
@@ -159,7 +159,7 @@ describe IOEventLoop do
     subject { instance.start }
 
     before { @count = 0 }
-    let!(:timer) { instance.every(0.0001) do
+    let!(:timer) { instance.concurrently(every: 0.0001) do
       if (@count += 1) > 3
         timer.cancel_schedule
       else
@@ -184,7 +184,7 @@ describe IOEventLoop do
       let(:callback1) { proc{ instance.detach_reader(reader) } }
 
       # make the reader readable
-      before { instance.after(0.0001) { writer.write 'Message!' } }
+      before { instance.concurrently(after: 0.0001) { writer.write 'Message!' } }
 
       before { expect(callback1).to receive(:call).and_call_original }
       it { is_expected.to be nil }
