@@ -15,9 +15,10 @@ class IOEventLoop
       @loop.concurrencies[@fiber] = self
     end
 
-    def schedule_at(schedule_time)
+    def schedule_at(schedule_time, schedule_result = nil)
       @schedule_time = schedule_time
       @scheduled = true
+      @schedule_result = schedule_result
       @run_queue.schedule self
     end
 
@@ -25,11 +26,12 @@ class IOEventLoop
     alias_method :to_f, :schedule_time
 
     def scheduled_resume
-      @fiber.resume if @scheduled
+      @fiber.resume @schedule_result if @scheduled
     end
 
     def cancel_schedule
       @scheduled = false
+      @schedule_result = nil
     end
 
     attr_reader :scheduled
@@ -39,7 +41,10 @@ class IOEventLoop
       @schedule_time <=> other.to_f
     end
 
+    attr_writer :wait_id
+
     def resume_with(result)
+      @loop.waiting_concurrencies.delete @wait_id
       @fiber.resume result
     end
 

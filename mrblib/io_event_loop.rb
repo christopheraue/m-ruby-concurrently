@@ -26,7 +26,7 @@ class IOEventLoop
 
   # Flow control
 
-  attr_reader :concurrencies
+  attr_reader :concurrencies, :waiting_concurrencies
 
   def start
     @running = true
@@ -64,14 +64,13 @@ class IOEventLoop
 
   def await(id, opts = {})
     if concurrency = @concurrencies[Fiber.current]
-      timer = if timeout = opts.fetch(:within, false)
-        timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{timeout} second(s)"))
-        after(timeout){ resume(id, timeout_result) }
-      else
-        nil
-      end
+      @waiting_concurrencies[id] = concurrency
+      concurrency.wait_id = id
 
-      @waiting_concurrencies[id] = { concurrency: concurrency, timer: timer }
+      if seconds = opts[:within]
+        timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
+        concurrency.schedule_at @wall_clock.now+seconds, timeout_result
+      end
 
       concurrency.await_result
     else
@@ -80,12 +79,9 @@ class IOEventLoop
   end
 
   def resume(id, result)
-    if waiting = @waiting_concurrencies.delete(id)
-      if timer = waiting[:timer]
-        timer.cancel_schedule
-      end
-
-      waiting[:concurrency].resume_with result
+    if concurrency = @waiting_concurrencies.delete(id)
+      concurrency.cancel_schedule
+      concurrency.resume_with result
     else
       raise UnknownWaitingIdError, "unknown waiting id #{id.inspect}"
     end
