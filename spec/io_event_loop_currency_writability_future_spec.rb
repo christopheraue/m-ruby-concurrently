@@ -8,7 +8,7 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
   # jam pipe: default pipe buffer size on linux is 65536
   before { writer.write('a' * 65536) }
 
-  describe "#await with a timeout" do
+  describe "#result with a timeout" do
     subject { loop.start }
 
     let!(:instance) { loop.concurrently_writable(writer) do

@@ -1,7 +1,7 @@
-describe IOEventLoop::Concurrency do
+describe IOEventLoop::Concurrency::Future do
   let(:loop) { IOEventLoop.new }
 
-  describe "#await with a timeout" do
+  describe "#result with a timeout" do
     subject { loop.start }
 
     let!(:instance) { loop.concurrently do
@@ -35,29 +35,6 @@ describe IOEventLoop::Concurrency do
     end
   end
 
-  describe "#resume" do
-    subject { instance.resume_with :result }
-
-    context "when waiting originates from a fiber" do
-      let!(:instance) { loop.concurrently{ @result = instance.result } }
-      before { loop.start }
-
-      it { is_expected.not_to raise_error }
-      after { expect(@result).to be :result }
-    end
-
-    context "when resuming a fiber raises an error" do
-      # e.g. resuming the fiber raises a FiberError
-      let!(:instance) { loop.concurrently do
-        allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
-        instance.result
-      end }
-      before { loop.start }
-
-      it { is_expected.to raise_error FiberError, 'resume error' }
-    end
-  end
-
   describe "#cancel" do
     let!(:instance) { loop.concurrently do
       begin
@@ -82,6 +59,29 @@ describe IOEventLoop::Concurrency do
       it { is_expected.to be :cancelled }
       after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
         message: "cancel reason") }
+    end
+  end
+
+  describe "#resume" do
+    subject { instance.resume_with :result }
+
+    context "when everything goes fine" do
+      let!(:instance) { loop.concurrently{ @result = instance.result } }
+      before { loop.start }
+
+      it { is_expected.not_to raise_error }
+      after { expect(@result).to be :result }
+    end
+
+    context "when resuming a fiber raises an error" do
+      # e.g. resuming the fiber raises a FiberError
+      let!(:instance) { loop.concurrently do
+        allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
+        instance.result
+      end }
+      before { loop.start }
+
+      it { is_expected.to raise_error FiberError, 'resume error' }
     end
   end
 end

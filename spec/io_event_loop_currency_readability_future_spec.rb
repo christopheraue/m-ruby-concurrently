@@ -5,7 +5,7 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
   let(:reader) { pipe[0] }
   let(:writer) { pipe[1] }
 
-  describe "#await with a timeout" do
+  describe "#result with a timeout" do
     subject { loop.start }
 
     let!(:instance) { loop.concurrently_readable(reader) do
