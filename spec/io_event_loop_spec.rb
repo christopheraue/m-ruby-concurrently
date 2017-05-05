@@ -44,14 +44,21 @@ describe IOEventLoop do
       end
 
       context "when its waiting to be writable" do
-        before { instance.concurrently_writable(writer){ :result } }
+        # jam pipe: default pipe buffer size on linux is 65536
+        before { writer.write('a' * 65536) }
+
+        before { instance.concurrently do
+          instance.writable(writer).await
+          @result = writer.write 'Hello!'
+        end }
+
+        before { instance.concurrently do
+          instance.now_in(0.0001).await
+          reader.read(65536) # clears the pipe
+        end }
 
         it { is_expected.to be nil }
-
-        after do
-          writer.write 'Hello!'; writer.close
-          expect(reader.read).to eq 'Hello!'
-        end
+        after { expect(@result).to eq 6 }
       end
     end
   end

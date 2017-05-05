@@ -1,4 +1,4 @@
-describe IOEventLoop::Concurrency::WritabilityFuture do
+describe IOEventLoop::WritabilityFuture do
   let(:loop) { IOEventLoop.new }
 
   let(:pipe) { IO.pipe }
@@ -8,18 +8,37 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
   # jam pipe: default pipe buffer size on linux is 65536
   before { writer.write('a' * 65536) }
 
-  describe "#result with a timeout" do
+  describe "#await" do
+    subject { loop.start }
+
+    before { loop.concurrently do
+      loop.writable(writer).await
+      @result = writer.write 'test'
+    end }
+
+    context "when readable after some time" do
+      before { loop.concurrently do
+        loop.now_in(0.0001).await
+        reader.read(65536) # clears the pipe
+      end }
+
+      it { is_expected.not_to raise_error }
+      after { expect(@result).to be 4 }
+    end
+  end
+
+  describe "#await with a timeout" do
     subject { loop.start }
 
     before { loop.concurrently do
       begin
-        @result = future.result within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        loop.writable(writer).await within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        @result = writer.write 'test'
       rescue => e
         @result = e
         raise e
       end
     end }
-    let(:future) { loop.concurrently_writable(writer) { writer.write 'test' } }
 
     context "when writable after some time" do
       before { loop.concurrently do
@@ -46,12 +65,12 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
 
     before { loop.concurrently do
       begin
-        future.result
+        future.await
       rescue => e
         @result = e
       end
     end }
-    let(:future) { loop.concurrently_writable(writer){ :writable } }
+    let(:future) { loop.writable(writer) }
 
     it { is_expected.not_to raise_error }
     after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
