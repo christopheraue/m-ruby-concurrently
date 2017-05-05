@@ -8,15 +8,13 @@ class IOEventLoop
 
     attr_reader :loop
 
-    attr_writer :requesting_fiber
-
     def fiber
-      @fiber ||= Fiber.new do
+      @fiber ||= Fiber.new do |parent_fiber_getter|
         begin
           result = @body.call
 
-          if @requesting_fiber
-            @requesting_fiber.transfer result
+          if parent_fiber = parent_fiber_getter.call
+            parent_fiber.transfer result
           else
             @loop.io_event_loop.transfer
           end

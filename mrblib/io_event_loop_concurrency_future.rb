@@ -4,6 +4,7 @@ class IOEventLoop
       def initialize(concurrency, run_queue)
         @concurrency = concurrency
         @run_queue = run_queue
+        @run_queue.schedule_in concurrency.fiber, 0, proc{ @fiber }
       end
   
       def result(opts = {})
@@ -14,12 +15,10 @@ class IOEventLoop
           @timeout = @run_queue.schedule_in @fiber, seconds, timeout_result
         end
 
-        @concurrency.requesting_fiber = @fiber
-
         # yields back to the loop from the current Concurrency
         result = @concurrency.loop.io_event_loop.transfer
 
-        @concurrency.requesting_fiber = nil
+        @fiber = nil
 
         if seconds
           @timeout.cancel
