@@ -12,33 +12,35 @@ class IOEventLoop
     @run_queue = RunQueue.new self
     @readers = {}
     @writers = {}
+
+    @io_event_loop = Fiber.new do
+      while @running
+        if (waiting_time = @run_queue.waiting_time) == 0
+          @run_queue.run_pending
+        elsif @readers.any? or @writers.any? or waiting_time
+          if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
+            selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
+            selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+          end
+        else
+          @running = false # would block indefinitely otherwise
+        end
+      end
+    end
   end
+
+  attr_reader :wall_clock, :io_event_loop
 
   def forgive_iteration_errors!
     @stop_and_raise_error.cancel
   end
-
-  attr_reader :wall_clock
 
 
   # Flow control
 
   def start
     @running = true
-
-    while @running
-      if (waiting_time = @run_queue.waiting_time) == 0
-        @run_queue.run_pending
-      elsif @readers.any? or @writers.any? or waiting_time
-        if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-          selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
-          selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
-        end
-      else
-        @running = false # would block indefinitely otherwise
-      end
-    end
-
+    @io_event_loop.resume
     (CancelledError === @result) ? raise(@result) : @result
   end
 
