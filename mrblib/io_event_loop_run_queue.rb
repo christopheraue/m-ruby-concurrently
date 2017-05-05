@@ -5,10 +5,11 @@ class IOEventLoop
       @items = []
     end
 
-    def schedule(entry, time, result = nil)
-      entry.schedule time, result
+    def schedule(fiber, time, result = nil)
+      entry = RunQueueEntry.new(fiber, time, result)
       index = bisect_left(@items, entry)
       @items.insert(index, entry)
+      entry
     end
 
     def waiting_time

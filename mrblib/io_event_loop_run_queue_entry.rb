@@ -2,20 +2,17 @@ class IOEventLoop
   class RunQueueEntry
     include Comparable
 
-    def initialize(fiber)
+    def initialize(fiber, time, result)
       @fiber = fiber
+      @scheduled = true
+      @schedule_time = time
+      @schedule_result = result
     end
 
     attr_reader :fiber
 
     attr_reader :schedule_time
     alias to_f schedule_time
-
-    def schedule(time, result)
-      @scheduled = true
-      @schedule_time = time
-      @schedule_result = result
-    end
 
     def scheduled_resume
       fiber.resume @schedule_result if @scheduled

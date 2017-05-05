@@ -10,7 +10,7 @@ class IOEventLoop
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          Concurrency.current.schedule_in seconds, timeout_result
+          @timeout = Concurrency.current.schedule_in seconds, timeout_result
         end
 
         @concurrency.requesting_fiber = @requesting_fiber
@@ -19,6 +19,10 @@ class IOEventLoop
         result = Fiber.yield
 
         @concurrency.requesting_fiber = nil
+
+        if seconds
+          @timeout.cancel_schedule
+        end
 
         (CancelledError === result) ? raise(result) : result
       end

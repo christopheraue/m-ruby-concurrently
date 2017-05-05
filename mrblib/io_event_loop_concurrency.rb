@@ -1,7 +1,5 @@
 class IOEventLoop
-  class RunQueueEntry; end
-
-  class Concurrency < RunQueueEntry
+  class Concurrency
     REGISTRY = {}
 
     class << self
@@ -31,7 +29,7 @@ class IOEventLoop
             result = @body.call
 
             if @interval
-              @run_queue.schedule self, @schedule_time+@interval if @scheduled
+              @run_queue_entry = @run_queue.schedule @fiber, @run_queue_entry.schedule_time+@interval if @run_queue_entry.scheduled?
               Fiber.yield # go back to the main loop
             else
               cancel_schedule
@@ -48,7 +46,11 @@ class IOEventLoop
     end
 
     def schedule_in(seconds, result = nil)
-      @run_queue.schedule self, @loop.wall_clock.now+seconds, result
+      @run_queue_entry = @run_queue.schedule fiber, @loop.wall_clock.now+seconds, result
+    end
+
+    def cancel_schedule
+      @run_queue_entry.cancel_schedule if @run_queue_entry
     end
   end
 end
