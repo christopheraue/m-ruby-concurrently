@@ -1,22 +1,42 @@
-describe IOEventLoop::Concurrency::ReadabilityFuture do
+describe IOEventLoop::ReadabilityFuture do
   let(:loop) { IOEventLoop.new }
 
   let(:pipe) { IO.pipe }
   let(:reader) { pipe[0] }
   let(:writer) { pipe[1] }
 
-  describe "#result with a timeout" do
+  describe "#await" do
+    subject { loop.start }
+
+    before { loop.concurrently do
+      loop.readable(reader).await
+      @result = reader.read
+    end }
+
+    context "when readable after some time" do
+      before { loop.concurrently do
+        loop.now_in(0.0001).await
+        writer.write 'Wake up!'
+        writer.close
+      end }
+
+      it { is_expected.not_to raise_error }
+      after { expect(@result).to eq 'Wake up!' }
+    end
+  end
+
+  describe "#await with a timeout" do
     subject { loop.start }
 
     before { loop.concurrently do
       begin
-        @result = future.result within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        loop.readable(reader).await within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        @result = reader.read
       rescue => e
         @result = e
         raise e
       end
     end }
-    let(:future) { loop.concurrently_readable(reader) { reader.read } }
 
     context "when readable after some time" do
       before { loop.concurrently do
@@ -44,12 +64,12 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
 
     before { loop.concurrently do
       begin
-        future.result
+        future.await
       rescue => e
         @result = e
       end
     end }
-    let(:future) { loop.concurrently_readable(reader){ :readable } }
+    let(:future) { loop.readable(reader) }
 
     it { is_expected.not_to raise_error }
     after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
