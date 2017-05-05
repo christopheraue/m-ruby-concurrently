@@ -155,14 +155,13 @@ describe IOEventLoop do
     end
   end
 
-  describe "#every" do
+  describe "repeated execution in a fixed interval" do
     subject { instance.start }
 
     before { @count = 0 }
-    let!(:timer) { instance.concurrently(every: 0.0001) do
-      if (@count += 1) > 3
-        timer.cancel
-      else
+    before { instance.concurrently do
+      while (@count += 1) < 4
+        instance.concurrently_wait 0.0001
         callback.call
       end
     end }

@@ -57,6 +57,11 @@ class IOEventLoop
     Concurrency::Future.new concurrency, @run_queue
   end
 
+  def concurrently_wait(seconds)
+    @run_queue.schedule_in Fiber.current, seconds
+    Fiber.yield
+  end
+
 
   # Readable IO
 
