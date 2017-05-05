@@ -7,13 +7,16 @@ class IOEventLoop
       end
 
       def result(*args)
-        @concurrency.loop.attach_writer(@io) { @concurrency.loop.detach_writer(@io); @concurrency.resume_with :writable }
+        @concurrency.loop.attach_writer(@io) do
+          @concurrency.loop.detach_writer(@io)
+          @concurrency.resume_with :writable
+        end
         super
       end
 
       def cancel
         @concurrency.loop.detach_writer @io
-        @concurrency.resume_with :cancelled
+        super
       end
     end
   end
