@@ -84,7 +84,7 @@ describe IOEventLoop do
     end
 
     context "when the first timer has been cancelled" do
-      before { timer1.cancel_schedule }
+      before { timer1.cancel }
 
       before { expect(callback1).not_to receive(:call) }
       before { expect(callback3).to receive(:call).ordered }
@@ -93,8 +93,8 @@ describe IOEventLoop do
     end
 
     context "when the first and second timer have been cancelled" do
-      before { timer1.cancel_schedule }
-      before { timer3.cancel_schedule }
+      before { timer1.cancel }
+      before { timer3.cancel }
 
       before { expect(callback1).not_to receive(:call) }
       before { expect(callback3).not_to receive(:call) }
@@ -103,9 +103,9 @@ describe IOEventLoop do
     end
 
     context "when all timers have been cancelled" do
-      before { timer1.cancel_schedule }
-      before { timer3.cancel_schedule }
-      before { timer2.cancel_schedule }
+      before { timer1.cancel }
+      before { timer3.cancel }
+      before { timer2.cancel }
 
       before { expect(callback1).not_to receive(:call) }
       before { expect(callback3).not_to receive(:call) }
@@ -114,7 +114,7 @@ describe IOEventLoop do
     end
 
     context "when the second timer has been cancelled" do
-      before { timer3.cancel_schedule }
+      before { timer3.cancel }
 
       before { expect(callback1).to receive(:call).ordered }
       before { expect(callback3).not_to receive(:call) }
@@ -123,8 +123,8 @@ describe IOEventLoop do
     end
 
     context "when the second and last timer have been cancelled" do
-      before { timer3.cancel_schedule }
-      before { timer2.cancel_schedule }
+      before { timer3.cancel }
+      before { timer2.cancel }
 
       before { expect(callback1).to receive(:call).ordered }
       before { expect(callback3).not_to receive(:call) }
@@ -136,7 +136,7 @@ describe IOEventLoop do
       let(:seconds1) { 0 }
       let(:seconds2) { 0.0001 }
       let(:seconds3) { 0 }
-      let(:callback1) { proc{ timer3.cancel_schedule } }
+      let(:callback1) { proc{ timer3.cancel } }
 
       before { expect(callback1).to receive(:call).and_call_original }
       before { expect(callback3).not_to receive(:call) }
@@ -161,7 +161,7 @@ describe IOEventLoop do
     before { @count = 0 }
     let!(:timer) { instance.concurrently(every: 0.0001) do
       if (@count += 1) > 3
-        timer.cancel_schedule
+        timer.cancel
       else
         callback.call
       end

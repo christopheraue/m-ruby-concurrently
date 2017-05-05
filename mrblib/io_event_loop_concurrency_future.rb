@@ -24,12 +24,12 @@ class IOEventLoop
       end
 
       def cancel(reason = "waiting cancelled")
-        @requesting_fiber.resume CancelledError.new(reason)
+        if @requesting_fiber
+          @requesting_fiber.resume CancelledError.new(reason)
+        else
+          @concurrency.cancel_schedule
+        end
         :cancelled
-      end
-
-      def cancel_schedule
-        @concurrency.cancel_schedule
       end
     end
   end
