@@ -26,14 +26,14 @@ describe IOEventLoop do
 
       context "when its waiting to be readable" do
         before { instance.concurrently(after: 0.0001) { writer.write 'Wake up!'; writer.close } }
-        let!(:concurrency) { instance.concurrently_readable(reader){ concurrency.result } }
+        before { instance.concurrently_readable(reader){ :result } }
 
         it { is_expected.to be nil }
         after { expect(reader.read).to eq 'Wake up!' }
       end
 
       context "when its waiting to be writable" do
-        let!(:concurrency) { instance.concurrently_writable(writer){ concurrency.result } }
+        before { instance.concurrently_writable(writer){ :result } }
 
         it { is_expected.to be nil }
 

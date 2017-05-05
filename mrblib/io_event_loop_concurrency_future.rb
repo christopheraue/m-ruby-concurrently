@@ -23,10 +23,6 @@ class IOEventLoop
         (CancelledError === result) ? raise(result) : result
       end
 
-      def resume_with(result)
-        @requesting_concurrency.resume_with result
-      end
-
       def cancel(reason = "waiting cancelled")
         @requesting_concurrency.resume_with CancelledError.new(reason)
         :cancelled
