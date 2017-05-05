@@ -54,8 +54,21 @@ class IOEventLoop
   end
 
   def concurrently # &block
-    concurrency = Concurrency.new(self, @run_queue){ yield }
-    Concurrency::Future.new(concurrency, @run_queue)
+    fiber = Fiber.new do |parent_fiber_getter|
+      begin
+        result = yield
+
+        if parent_fiber = parent_fiber_getter.call
+          parent_fiber.transfer result
+        else
+          @io_event_loop.transfer
+        end
+      rescue Exception => e
+        trigger :error, e
+      end
+    end
+
+    Future.new(self, @run_queue, fiber)
   end
 
   def now_in(seconds)

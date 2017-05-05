@@ -1,4 +1,4 @@
-describe IOEventLoop::Concurrency::Future do
+describe IOEventLoop::Future do
   let(:loop) { IOEventLoop.new }
 
   describe "#result" do
