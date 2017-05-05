@@ -1,9 +1,8 @@
 class IOEventLoop
   class Concurrency
-    def initialize(loop, run_queue, opts = {}, &body)
+    def initialize(loop, run_queue, &body)
       @loop = loop
       @run_queue = run_queue
-      @interval = opts.fetch(:every, false)
       @body = body
     end
 
@@ -14,18 +13,9 @@ class IOEventLoop
     def fiber
       @fiber ||= Fiber.new do
         begin
-          while true
-            result = @body.call
-
-            if @interval
-              @run_queue_cart = @run_queue.schedule @fiber, @run_queue_cart.time+@interval if @run_queue_cart.active?
-              Fiber.yield # go back to the main loop
-            else
-              cancel
-              @requesting_fiber.resume result if @requesting_fiber
-              break
-            end
-          end
+          result = @body.call
+          cancel
+          @requesting_fiber.resume result if @requesting_fiber
         rescue Exception => e
           @loop.trigger :error, e
         end
