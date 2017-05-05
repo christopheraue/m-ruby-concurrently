@@ -8,19 +8,14 @@ class IOEventLoop
 
     attr_reader :fiber
 
-    def schedule_at(schedule_time, schedule_result = nil)
-      @schedule_time = schedule_time
-      @scheduled = true
-      @schedule_result = schedule_result
-      @run_queue.schedule self
-    end
-
-    def schedule_in(seconds, schedule_result = nil)
-      schedule_at @loop.wall_clock.now+seconds, schedule_result
-    end
-
     attr_reader :schedule_time
     alias to_f schedule_time
+
+    def schedule(time, result)
+      @scheduled = true
+      @schedule_time = time
+      @schedule_result = result
+    end
 
     def scheduled_resume
       fiber.resume @schedule_result if @scheduled

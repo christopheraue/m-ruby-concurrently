@@ -31,7 +31,7 @@ class IOEventLoop
             result = @body.call
 
             if @interval
-              schedule_at @schedule_time+@interval if @scheduled
+              @run_queue.schedule self, @schedule_time+@interval if @scheduled
               Fiber.yield # go back to the main loop
             else
               cancel_schedule
@@ -45,6 +45,10 @@ class IOEventLoop
           REGISTRY.delete @fiber
         end
       end
+    end
+
+    def schedule_in(seconds, result = nil)
+      @run_queue.schedule self, @loop.wall_clock.now+seconds, result
     end
   end
 end
