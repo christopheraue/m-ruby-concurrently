@@ -31,7 +31,7 @@ class IOEventLoop
     def cancel(reason = "waiting cancelled")
       @loop.detach_reader @io
       @result = CancelledError.new(reason)
-      @fiber.transfer @result
+      @fiber.transfer @result if @fiber
     end
   end
 end

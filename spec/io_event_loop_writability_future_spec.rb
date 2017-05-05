@@ -58,10 +58,6 @@ describe IOEventLoop::WritabilityFuture do
 
   describe "#cancel" do
     subject { loop.start }
-    before { loop.concurrently do
-      loop.now_in(0.0001).await
-      future.cancel
-    end }
 
     before { loop.concurrently do
       begin
@@ -72,8 +68,23 @@ describe IOEventLoop::WritabilityFuture do
     end }
     let(:future) { loop.writable(writer) }
 
-    it { is_expected.not_to raise_error }
-    after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
-      message: "waiting cancelled") }
+    context "when doing it before awaiting it" do
+      before { future.cancel }
+
+      it { is_expected.not_to raise_error }
+      after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
+        message: "waiting cancelled") }
+    end
+
+    context "when doing it after awaiting it" do
+      before { loop.concurrently do
+        loop.now_in(0.0001).await
+        future.cancel
+      end }
+
+      it { is_expected.not_to raise_error }
+      after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
+        message: "waiting cancelled") }
+    end
   end
 end
