@@ -46,7 +46,7 @@ class IOEventLoop
     end
 
     def schedule_in(seconds, result = nil)
-      @run_queue_entry = @run_queue.schedule fiber, @loop.wall_clock.now+seconds, result
+      @run_queue_entry = @run_queue.schedule_in fiber, seconds, result
     end
 
     def cancel_schedule

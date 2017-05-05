@@ -12,6 +12,10 @@ class IOEventLoop
       entry
     end
 
+    def schedule_in(fiber, seconds, result = nil)
+      schedule fiber, @loop.wall_clock.now+seconds, result
+    end
+
     def waiting_time
       if next_scheduled = @items.reverse_each.find(&:scheduled?)
         waiting_time = next_scheduled.schedule_time - @loop.wall_clock.now

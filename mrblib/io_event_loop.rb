@@ -54,7 +54,7 @@ class IOEventLoop
   def concurrently(opts = {}) # &block
     concurrency = Concurrency.new(self, @run_queue, opts){ yield }
     concurrency.schedule_in opts.fetch(:after, 0)
-    Concurrency::Future.new concurrency
+    Concurrency::Future.new concurrency, @run_queue
   end
 
 
@@ -69,7 +69,8 @@ class IOEventLoop
   end
 
   def concurrently_readable(io, opts = {}) # &block
-    Concurrency::ReadabilityFuture.new Concurrency.new(self, @run_queue, opts){ yield }, io
+    concurrency = Concurrency.new(self, @run_queue, opts){ yield }
+    Concurrency::ReadabilityFuture.new concurrency, @run_queue, io
   end
 
 
@@ -84,7 +85,8 @@ class IOEventLoop
   end
 
   def concurrently_writable(io, opts = {}) # &block
-    Concurrency::WritabilityFuture.new Concurrency.new(self, @run_queue, opts){ yield }, io
+    concurrency = Concurrency.new(self, @run_queue, opts){ yield }
+    Concurrency::WritabilityFuture.new concurrency, @run_queue, io
   end
 
 

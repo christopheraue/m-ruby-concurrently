@@ -1,8 +1,8 @@
 class IOEventLoop
   class Concurrency
     class ReadabilityFuture < Future
-      def initialize(concurrency, io)
-        super concurrency
+      def initialize(concurrency, run_queue, io)
+        super concurrency, run_queue
         @io = io
       end
 
