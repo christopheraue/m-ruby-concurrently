@@ -15,7 +15,6 @@ class IOEventLoop
       @run_queue = run_queue
       @interval = opts.fetch(:every, false)
       @body = body
-      schedule_in opts.fetch(:after, 0)
     end
 
     attr_reader :loop

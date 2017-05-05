@@ -7,13 +7,16 @@ class IOEventLoop
       end
 
       def result(*args)
-        @concurrency.loop.attach_reader(@io) { @concurrency.loop.detach_reader(@io); @concurrency.resume_with :readable }
+        @concurrency.loop.attach_reader(@io) do
+          @concurrency.loop.detach_reader(@io)
+          @concurrency.resume_with :readable
+        end
         super
       end
 
       def cancel
         @concurrency.loop.detach_reader @io
-        @concurrency.resume_with :cancelled
+        super
       end
     end
   end

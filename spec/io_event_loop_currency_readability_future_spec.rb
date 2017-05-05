@@ -8,20 +8,21 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
   describe "#result with a timeout" do
     subject { loop.start }
 
-    let!(:instance) { loop.concurrently_readable(reader) do
+    before { loop.concurrently do
       begin
-        @result = instance.result within: 0.0002, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        @result = future.result within: 0.0002, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
       rescue => e
         @result = e
         raise e
       end
     end }
+    let(:future) { loop.concurrently_readable(reader) { reader.read } }
 
     context "when readable after some time" do
-      before { loop.concurrently(after: 0.0001) { writer.write 'Wake up!' } }
+      before { loop.concurrently(after: 0.0001) { writer.write 'Wake up!'; writer.close } }
 
       it { is_expected.not_to raise_error }
-      after { expect(@result).to be :readable }
+      after { expect(@result).to eq 'Wake up!' }
     end
 
     context "when not readable in time" do
@@ -32,19 +33,20 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
 
   describe "#cancel" do
     subject { loop.start }
+    before { loop.concurrently(after: 0.0001) { @cancel_result = future.cancel } }
 
-    let!(:instance) { loop.concurrently_readable(reader) do
+    before { loop.concurrently do
       begin
-        @result = instance.result
+        future.result
       rescue => e
         @result = e
-        raise e
       end
     end }
-
-    before { loop.concurrently(after: 0.0001) { instance.cancel } }
+    let(:future) { loop.concurrently_readable(reader){ :readable } }
 
     it { is_expected.not_to raise_error }
-    after { expect(@result).to be :cancelled }
+    after { expect(@cancel_result).to be :cancelled }
+    after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
+      message: "waiting cancelled") }
   end
 end
