@@ -7,14 +7,14 @@ class IOEventLoop
       end
   
       def result(opts = {})
-        @requesting_fiber = Fiber.current
+        @fiber = Fiber.current
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          @timeout = @run_queue.schedule_in @requesting_fiber, seconds, timeout_result
+          @timeout = @run_queue.schedule_in @fiber, seconds, timeout_result
         end
 
-        @concurrency.requesting_fiber = @requesting_fiber
+        @concurrency.requesting_fiber = @fiber
 
         # yields back to the loop from the current Concurrency
         result = @concurrency.loop.io_event_loop.transfer
@@ -29,11 +29,7 @@ class IOEventLoop
       end
 
       def cancel(reason = "waiting cancelled")
-        if @requesting_fiber
-          @requesting_fiber.transfer CancelledError.new(reason)
-        else
-          @concurrency.cancel
-        end
+        @fiber.transfer CancelledError.new(reason)
         :cancelled
       end
     end

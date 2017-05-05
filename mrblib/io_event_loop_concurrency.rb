@@ -14,7 +14,9 @@ class IOEventLoop
       @fiber ||= Fiber.new do
         begin
           result = @body.call
-          cancel
+
+          @run_queue_cart.cancel if @run_queue_cart
+
           if @requesting_fiber
             @requesting_fiber.transfer result
           else
@@ -28,10 +30,6 @@ class IOEventLoop
 
     def schedule_in(seconds, result = nil)
       @run_queue_cart = @run_queue.schedule_in fiber, seconds, result
-    end
-
-    def cancel
-      @run_queue_cart.cancel if @run_queue_cart
     end
   end
 end
