@@ -22,7 +22,7 @@ class IOEventLoop
         @concurrency.requesting_fiber = nil
 
         if seconds
-          @timeout.cancel_schedule
+          @timeout.cancel
         end
 
         (CancelledError === result) ? raise(result) : result
@@ -32,7 +32,7 @@ class IOEventLoop
         if @requesting_fiber
           @requesting_fiber.resume CancelledError.new(reason)
         else
-          @concurrency.cancel_schedule
+          @concurrency.cancel
         end
         :cancelled
       end

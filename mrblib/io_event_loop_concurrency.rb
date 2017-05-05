@@ -18,10 +18,10 @@ class IOEventLoop
             result = @body.call
 
             if @interval
-              @run_queue_entry = @run_queue.schedule @fiber, @run_queue_entry.schedule_time+@interval if @run_queue_entry.scheduled?
+              @run_queue_cart = @run_queue.schedule @fiber, @run_queue_cart.time+@interval if @run_queue_cart.active?
               Fiber.yield # go back to the main loop
             else
-              cancel_schedule
+              cancel
               @requesting_fiber.resume result if @requesting_fiber
               break
             end
@@ -33,11 +33,11 @@ class IOEventLoop
     end
 
     def schedule_in(seconds, result = nil)
-      @run_queue_entry = @run_queue.schedule_in fiber, seconds, result
+      @run_queue_cart = @run_queue.schedule_in fiber, seconds, result
     end
 
-    def cancel_schedule
-      @run_queue_entry.cancel_schedule if @run_queue_entry
+    def cancel
+      @run_queue_cart.cancel if @run_queue_cart
     end
   end
 end
