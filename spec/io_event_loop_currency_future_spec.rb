@@ -20,12 +20,12 @@ describe IOEventLoop::Concurrency::Future do
       # e.g. resuming the fiber raises a FiberError
       before { loop.concurrently do
         begin
-          allow(Fiber.current).to receive(:resume).and_raise FiberError, 'resume error'
+          allow(Fiber.current).to receive(:transfer).and_raise FiberError, 'transfer error'
           loop.concurrently{ :result }.result
         end
       end }
 
-      it { is_expected.to raise_error IOEventLoop::CancelledError, 'resume error' }
+      it { is_expected.to raise_error IOEventLoop::CancelledError, 'transfer error' }
     end
   end
 
@@ -72,7 +72,7 @@ describe IOEventLoop::Concurrency::Future do
     subject { loop.start }
     before { loop.concurrently do
       loop.concurrently_wait 0.0001
-      @cancel_result = future.cancel *reason
+      future.cancel *reason
     end }
 
     before { loop.concurrently do
@@ -90,7 +90,6 @@ describe IOEventLoop::Concurrency::Future do
     context "when giving no explicit reason" do
       let(:reason) { nil }
       it { is_expected.not_to raise_error }
-      after { expect(@cancel_result).to be :cancelled }
       after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
         message: "waiting cancelled") }
     end
@@ -99,7 +98,6 @@ describe IOEventLoop::Concurrency::Future do
       let(:reason) { 'cancel reason' }
 
       it { is_expected.not_to raise_error }
-      after { expect(@cancel_result).to be :cancelled }
       after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
         message: "cancel reason") }
     end

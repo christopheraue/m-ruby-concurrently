@@ -61,7 +61,7 @@ class IOEventLoop
 
   def concurrently_wait(seconds)
     @run_queue.schedule_in Fiber.current, seconds
-    Fiber.yield
+    @io_event_loop.transfer
   end
 
 

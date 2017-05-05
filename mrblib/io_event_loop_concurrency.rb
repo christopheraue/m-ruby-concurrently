@@ -15,7 +15,11 @@ class IOEventLoop
         begin
           result = @body.call
           cancel
-          @requesting_fiber.resume result if @requesting_fiber
+          if @requesting_fiber
+            @requesting_fiber.transfer result
+          else
+            @loop.io_event_loop.transfer
+          end
         rescue Exception => e
           @loop.trigger :error, e
         end

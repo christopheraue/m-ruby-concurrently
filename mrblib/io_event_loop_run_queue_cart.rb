@@ -12,7 +12,7 @@ class IOEventLoop
     alias to_f time
 
     def process
-      @fiber.resume @result if @fiber
+      @fiber.transfer @result if @fiber
     end
 
     def cancel

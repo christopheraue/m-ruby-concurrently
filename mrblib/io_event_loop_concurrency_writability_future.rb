@@ -9,7 +9,7 @@ class IOEventLoop
       def result(*args)
         @concurrency.loop.attach_writer(@io) do
           @concurrency.loop.detach_writer(@io)
-          @concurrency.fiber.resume :writable
+          @concurrency.fiber.transfer :writable
         end
         super
       end

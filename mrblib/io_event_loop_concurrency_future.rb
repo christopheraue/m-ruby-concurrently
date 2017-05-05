@@ -17,7 +17,7 @@ class IOEventLoop
         @concurrency.requesting_fiber = @requesting_fiber
 
         # yields back to the loop from the current Concurrency
-        result = Fiber.yield
+        result = @concurrency.loop.io_event_loop.transfer
 
         @concurrency.requesting_fiber = nil
 
@@ -30,7 +30,7 @@ class IOEventLoop
 
       def cancel(reason = "waiting cancelled")
         if @requesting_fiber
-          @requesting_fiber.resume CancelledError.new(reason)
+          @requesting_fiber.transfer CancelledError.new(reason)
         else
           @concurrency.cancel
         end

@@ -39,7 +39,7 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
     subject { loop.start }
     before { loop.concurrently do
       loop.concurrently_wait 0.0001
-      @cancel_result = future.cancel
+      future.cancel
     end }
 
     before { loop.concurrently do
@@ -52,7 +52,6 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
     let(:future) { loop.concurrently_readable(reader){ :readable } }
 
     it { is_expected.not_to raise_error }
-    after { expect(@cancel_result).to be :cancelled }
     after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
       message: "waiting cancelled") }
   end

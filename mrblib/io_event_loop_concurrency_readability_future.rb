@@ -9,7 +9,7 @@ class IOEventLoop
       def result(*args)
         @concurrency.loop.attach_reader(@io) do
           @concurrency.loop.detach_reader(@io)
-          @concurrency.fiber.resume :readable
+          @concurrency.fiber.transfer :readable
         end
         super
       end
