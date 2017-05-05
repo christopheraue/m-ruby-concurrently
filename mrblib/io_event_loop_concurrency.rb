@@ -19,21 +19,23 @@ class IOEventLoop
 
     attr_reader :loop
 
-    attr_writer :requesting_concurrency
+    attr_writer :requesting_fiber
 
-    private def fiber
+    def fiber
       @fiber ||= Fiber.new do
         begin
           REGISTRY[@fiber] = self
 
           while true
+
             result = @body.call
 
             if @interval
               schedule_at @schedule_time+@interval if @scheduled
               Fiber.yield # go back to the main loop
             else
-              @requesting_concurrency.resume_with result if @requesting_concurrency
+              cancel_schedule
+              @requesting_fiber.resume result if @requesting_fiber
               break
             end
           end
@@ -74,11 +76,6 @@ class IOEventLoop
 
     def <=>(other)
       @schedule_time <=> other.to_f
-    end
-
-    def resume_with(result)
-      cancel_schedule
-      fiber.resume result
     end
   end
 end
