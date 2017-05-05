@@ -72,9 +72,13 @@ describe IOEventLoop do
   describe "#after" do
     subject { instance.start }
 
-    let!(:timer1) { instance.concurrently{ instance.now_in(seconds1).await; callback1.call } }
-    let!(:timer2) { instance.concurrently{ instance.now_in(seconds2).await; callback2.call } }
-    let!(:timer3) { instance.concurrently{ instance.now_in(seconds3).await; callback3.call } }
+    let(:timer1) { instance.now_in(seconds1) }
+    let(:timer2) { instance.now_in(seconds2) }
+    let(:timer3) { instance.now_in(seconds3) }
+
+    before { instance.concurrently{ (timer1.await; callback1.call) rescue nil } }
+    before { instance.concurrently{ (timer2.await; callback2.call) rescue nil } }
+    before { instance.concurrently{ (timer3.await; callback3.call) rescue nil } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0003 }
     let(:seconds3) { 0.0002 }

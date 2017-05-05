@@ -2,12 +2,24 @@ class IOEventLoop
   class TimeFuture
     def initialize(loop, run_queue, seconds)
       @loop = loop
-      @fiber = Fiber.current
-      run_queue.schedule_in @fiber, seconds
+      @run_queue = run_queue
+      @seconds = seconds
     end
 
     def await
-      @loop.io_event_loop.transfer
+      unless instance_variable_defined? :@result
+        @fiber = Fiber.current
+        @run_queue.schedule_in @fiber, @seconds
+        @result = @loop.io_event_loop.transfer
+        @fiber = false
+      end
+
+      (CancelledError === @result) ? raise(@result) : @result
+    end
+
+    def cancel(reason = "waiting cancelled")
+      @result = CancelledError.new(reason)
+      @fiber.transfer @result if @fiber
     end
   end
 end
