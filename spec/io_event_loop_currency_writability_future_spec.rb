@@ -13,7 +13,7 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
 
     before { loop.concurrently do
       begin
-        @result = future.result within: 0.0002, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        @result = future.result within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
       rescue => e
         @result = e
         raise e
@@ -22,7 +22,10 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
     let(:future) { loop.concurrently_writable(writer) { writer.write 'test' } }
 
     context "when writable after some time" do
-      before { loop.concurrently(after: 0.0001) { reader.read(65536) } } # clear the pipe
+      before { loop.concurrently do
+        loop.concurrently_wait 0.0001
+        reader.read(65536) # clears the pipe
+      end }
 
       it { is_expected.not_to raise_error }
       after { expect(@result).to be 4 }
@@ -36,7 +39,10 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
 
   describe "#cancel" do
     subject { loop.start }
-    before { loop.concurrently(after: 0.0001) { @cancel_result = future.cancel } }
+    before { loop.concurrently do
+      loop.concurrently_wait 0.0001
+      @cancel_result = future.cancel
+    end }
 
     before { loop.concurrently do
       begin

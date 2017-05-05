@@ -51,10 +51,10 @@ class IOEventLoop
     @running
   end
 
-  def concurrently(opts = {}) # &block
+  def concurrently # &block
     concurrency = Concurrency.new(self, @run_queue){ yield }
-    concurrency.schedule_in opts.fetch(:after, 0)
-    Concurrency::Future.new concurrency, @run_queue
+    concurrency.schedule_in 0
+    Concurrency::Future.new(concurrency, @run_queue)
   end
 
   def concurrently_wait(seconds)

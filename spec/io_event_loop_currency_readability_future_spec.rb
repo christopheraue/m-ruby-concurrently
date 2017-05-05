@@ -10,7 +10,7 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
 
     before { loop.concurrently do
       begin
-        @result = future.result within: 0.0002, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+        @result = future.result within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
       rescue => e
         @result = e
         raise e
@@ -19,7 +19,11 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
     let(:future) { loop.concurrently_readable(reader) { reader.read } }
 
     context "when readable after some time" do
-      before { loop.concurrently(after: 0.0001) { writer.write 'Wake up!'; writer.close } }
+      before { loop.concurrently do
+        loop.concurrently_wait 0.0001
+        writer.write 'Wake up!'
+        writer.close
+      end }
 
       it { is_expected.not_to raise_error }
       after { expect(@result).to eq 'Wake up!' }
@@ -33,7 +37,10 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
 
   describe "#cancel" do
     subject { loop.start }
-    before { loop.concurrently(after: 0.0001) { @cancel_result = future.cancel } }
+    before { loop.concurrently do
+      loop.concurrently_wait 0.0001
+      @cancel_result = future.cancel
+    end }
 
     before { loop.concurrently do
       begin

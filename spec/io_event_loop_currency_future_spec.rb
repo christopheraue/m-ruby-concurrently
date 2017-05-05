@@ -49,7 +49,10 @@ describe IOEventLoop::Concurrency::Future do
     end
 
     context "when evaluation of result is too slow" do
-      let(:future) { loop.concurrently(after: 0.0002){ :result } }
+      let(:future) { loop.concurrently do
+        loop.concurrently_wait 0.0002
+        :result
+      end }
 
       context "when the timeout result is a timeout error" do
         let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
@@ -67,7 +70,10 @@ describe IOEventLoop::Concurrency::Future do
 
   describe "#cancel" do
     subject { loop.start }
-    before { loop.concurrently(after: 0.0001) { @cancel_result = future.cancel *reason } }
+    before { loop.concurrently do
+      loop.concurrently_wait 0.0001
+      @cancel_result = future.cancel *reason
+    end }
 
     before { loop.concurrently do
       begin
@@ -76,7 +82,10 @@ describe IOEventLoop::Concurrency::Future do
         @result = e
       end
     end }
-    let(:future) { loop.concurrently(after: 0.0002){ :result } }
+    let(:future) { loop.concurrently do
+      loop.concurrently_wait 0.0002
+      :result
+    end }
 
     context "when giving no explicit reason" do
       let(:reason) { nil }

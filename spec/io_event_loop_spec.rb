@@ -12,7 +12,10 @@ describe IOEventLoop do
     end
 
     context "when it has nothing to watch but a timer to wait for" do
-      before { instance.concurrently(after: 0.0001) { callback.call } }
+      before { instance.concurrently do
+        instance.concurrently_wait 0.0001
+        callback.call
+      end }
       let(:callback) { proc{} }
       before { expect(callback).to receive(:call) }
 
@@ -25,7 +28,11 @@ describe IOEventLoop do
       let(:writer) { pipe[1] }
 
       context "when its waiting to be readable" do
-        before { instance.concurrently(after: 0.0001) { writer.write 'Wake up!'; writer.close } }
+        before { instance.concurrently do
+          instance.concurrently_wait 0.0001
+          writer.write 'Wake up!'
+          writer.close
+        end }
         before { instance.concurrently_readable(reader){ :result } }
 
         it { is_expected.to be nil }
@@ -65,9 +72,9 @@ describe IOEventLoop do
   describe "#after" do
     subject { instance.start }
 
-    let!(:timer1) { instance.concurrently(after: seconds1) { callback1.call } }
-    let!(:timer2) { instance.concurrently(after: seconds2) { callback2.call } }
-    let!(:timer3) { instance.concurrently(after: seconds3) { callback3.call } }
+    let!(:timer1) { instance.concurrently{ instance.concurrently_wait seconds1; callback1.call } }
+    let!(:timer2) { instance.concurrently{ instance.concurrently_wait seconds2; callback2.call } }
+    let!(:timer3) { instance.concurrently{ instance.concurrently_wait seconds3; callback3.call } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0003 }
     let(:seconds3) { 0.0002 }
@@ -183,7 +190,10 @@ describe IOEventLoop do
       let(:callback1) { proc{ instance.detach_reader(reader) } }
 
       # make the reader readable
-      before { instance.concurrently(after: 0.0001) { writer.write 'Message!' } }
+      before { instance.concurrently do
+        instance.concurrently_wait 0.0001
+        writer.write 'Message!'
+      end }
 
       before { expect(callback1).to receive(:call).and_call_original }
       it { is_expected.to be nil }
