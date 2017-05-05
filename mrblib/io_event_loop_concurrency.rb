@@ -15,8 +15,6 @@ class IOEventLoop
         begin
           result = @body.call
 
-          @run_queue_cart.cancel if @run_queue_cart
-
           if @requesting_fiber
             @requesting_fiber.transfer result
           else
@@ -26,10 +24,6 @@ class IOEventLoop
           @loop.trigger :error, e
         end
       end
-    end
-
-    def schedule_in(seconds, result = nil)
-      @run_queue_cart = @run_queue.schedule_in fiber, seconds, result
     end
   end
 end

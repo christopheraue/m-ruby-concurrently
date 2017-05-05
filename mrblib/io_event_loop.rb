@@ -55,7 +55,7 @@ class IOEventLoop
 
   def concurrently # &block
     concurrency = Concurrency.new(self, @run_queue){ yield }
-    concurrency.schedule_in 0
+    @run_queue.schedule_in concurrency.fiber, 0
     Concurrency::Future.new(concurrency, @run_queue)
   end
 
