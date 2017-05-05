@@ -20,7 +20,7 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
 
     context "when readable after some time" do
       before { loop.concurrently do
-        loop.concurrently_wait 0.0001
+        loop.now_in(0.0001).await
         writer.write 'Wake up!'
         writer.close
       end }
@@ -38,7 +38,7 @@ describe IOEventLoop::Concurrency::ReadabilityFuture do
   describe "#cancel" do
     subject { loop.start }
     before { loop.concurrently do
-      loop.concurrently_wait 0.0001
+      loop.now_in(0.0001).await
       future.cancel
     end }
 

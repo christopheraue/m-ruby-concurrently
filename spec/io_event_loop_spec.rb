@@ -13,7 +13,7 @@ describe IOEventLoop do
 
     context "when it has nothing to watch but a timer to wait for" do
       before { instance.concurrently do
-        instance.concurrently_wait 0.0001
+        instance.now_in(0.0001).await
         callback.call
       end }
       let(:callback) { proc{} }
@@ -29,7 +29,7 @@ describe IOEventLoop do
 
       context "when its waiting to be readable" do
         before { instance.concurrently do
-          instance.concurrently_wait 0.0001
+          instance.now_in(0.0001).await
           writer.write 'Wake up!'
           writer.close
         end }
@@ -72,9 +72,9 @@ describe IOEventLoop do
   describe "#after" do
     subject { instance.start }
 
-    let!(:timer1) { instance.concurrently{ instance.concurrently_wait seconds1; callback1.call } }
-    let!(:timer2) { instance.concurrently{ instance.concurrently_wait seconds2; callback2.call } }
-    let!(:timer3) { instance.concurrently{ instance.concurrently_wait seconds3; callback3.call } }
+    let!(:timer1) { instance.concurrently{ instance.now_in(seconds1).await; callback1.call } }
+    let!(:timer2) { instance.concurrently{ instance.now_in(seconds2).await; callback2.call } }
+    let!(:timer3) { instance.concurrently{ instance.now_in(seconds3).await; callback3.call } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0003 }
     let(:seconds3) { 0.0002 }
@@ -168,7 +168,7 @@ describe IOEventLoop do
     before { @count = 0 }
     before { instance.concurrently do
       while (@count += 1) < 4
-        instance.concurrently_wait 0.0001
+        instance.now_in(0.0001).await
         callback.call
       end
     end }
@@ -191,7 +191,7 @@ describe IOEventLoop do
 
       # make the reader readable
       before { instance.concurrently do
-        instance.concurrently_wait 0.0001
+        instance.now_in(0.0001).await
         writer.write 'Message!'
       end }
 

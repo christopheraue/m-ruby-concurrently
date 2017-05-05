@@ -59,9 +59,8 @@ class IOEventLoop
     Concurrency::Future.new(concurrency, @run_queue)
   end
 
-  def concurrently_wait(seconds)
-    @run_queue.schedule_in Fiber.current, seconds
-    @io_event_loop.transfer
+  def now_in(seconds)
+    TimeFuture.new(self, @run_queue, seconds)
   end
 
 

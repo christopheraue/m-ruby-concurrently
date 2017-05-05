@@ -23,7 +23,7 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
 
     context "when writable after some time" do
       before { loop.concurrently do
-        loop.concurrently_wait 0.0001
+        loop.now_in(0.0001).await
         reader.read(65536) # clears the pipe
       end }
 
@@ -40,7 +40,7 @@ describe IOEventLoop::Concurrency::WritabilityFuture do
   describe "#cancel" do
     subject { loop.start }
     before { loop.concurrently do
-      loop.concurrently_wait 0.0001
+      loop.now_in(0.0001).await
       future.cancel
     end }
 
