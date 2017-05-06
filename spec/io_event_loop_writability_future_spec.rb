@@ -16,7 +16,7 @@ describe IOEventLoop::WritabilityFuture do
       writer.write 'test'
     end }
 
-    context "when readable after some time" do
+    context "when writable after some time" do
       before { loop.concurrently do
         loop.wait(0.0001)
         reader.read(65536) # clears the pipe

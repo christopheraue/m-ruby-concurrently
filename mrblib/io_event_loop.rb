@@ -61,16 +61,22 @@ class IOEventLoop
 
   # Waiting for a readable IO
 
-  def attach_reader(io, &on_readable)
-    @readers[io] = on_readable
-  end
+  def await_readable(io, opts = {})
+    fiber = Fiber.current
 
-  def detach_reader(io)
-    @readers.delete(io)
-  end
+    if seconds = opts[:within]
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
+      timeout = @run_queue.schedule_in seconds, fiber, timeout_result
+    end
 
-  def readable(io)
-    ReadabilityFuture.new self, @run_queue, io
+    @readers[io] = proc{ @readers.delete(io); fiber.transfer }
+    result = resume
+
+    if seconds
+      timeout.cancel
+    end
+
+    (CancelledError === result) ? (raise result) : result
   end
 
 
