@@ -4,7 +4,7 @@ class IOEventLoop
       @loop = loop
       @run_queue = run_queue
       @fiber = fiber
-      @run_queue.schedule_in @fiber, 0, proc{ @parent_fiber }
+      @run_queue.schedule_in 0, @fiber, proc{ @parent_fiber }
     end
 
     def result(opts = {})
@@ -13,7 +13,7 @@ class IOEventLoop
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          @timeout = @run_queue.schedule_in @parent_fiber, seconds, timeout_result
+          @timeout = @run_queue.schedule_in seconds, @parent_fiber, timeout_result
         end
 
         @result = @loop.resume

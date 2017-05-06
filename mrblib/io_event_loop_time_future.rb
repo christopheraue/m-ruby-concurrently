@@ -9,8 +9,8 @@ class IOEventLoop
     def await
       unless instance_variable_defined? :@result
         @fiber = Fiber.current
-        @run_queue.schedule_in @fiber, @seconds
-        @result = @loop.resume
+        @run_queue.schedule_in @seconds, @fiber
+          @result = @loop.resume
         @fiber = false
       end
 

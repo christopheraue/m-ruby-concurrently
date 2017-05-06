@@ -12,7 +12,7 @@ class IOEventLoop
       entry
     end
 
-    def schedule_in(fiber, seconds, result = nil)
+    def schedule_in(seconds, fiber, result = nil)
       schedule fiber, @loop.wall_clock.now+seconds, result
     end
 

@@ -12,7 +12,7 @@ class IOEventLoop
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          @timeout = @run_queue.schedule_in @fiber, seconds, timeout_result
+          @timeout = @run_queue.schedule_in seconds, @fiber, timeout_result
         end
 
         @loop.attach_writer(@io) { @loop.detach_writer(@io); @fiber.transfer }
