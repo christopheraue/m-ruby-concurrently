@@ -82,16 +82,22 @@ class IOEventLoop
 
   # Waiting for a writable IO
 
-  def attach_writer(io, &on_writable)
-    @writers[io] = on_writable
-  end
+  def await_writable(io, opts = {})
+    fiber = Fiber.current
 
-  def detach_writer(io)
-    @writers.delete(io)
-  end
+    if seconds = opts[:within]
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
+      timeout = @run_queue.schedule_in seconds, fiber, timeout_result
+    end
 
-  def writable(io)
-    WritabilityFuture.new self, @run_queue, io
+    @writers[io] = proc{ @writers.delete(io); fiber.transfer }
+    result = resume
+
+    if seconds
+      timeout.cancel
+    end
+
+    (CancelledError === result) ? (raise result) : result
   end
 
 
