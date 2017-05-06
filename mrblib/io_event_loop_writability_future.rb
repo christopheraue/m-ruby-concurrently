@@ -16,7 +16,7 @@ class IOEventLoop
         end
 
         @loop.attach_writer(@io) { @loop.detach_writer(@io); @fiber.transfer }
-        @result = @loop.io_event_loop.transfer
+        @result = @loop.resume
 
         if seconds
           @timeout.cancel

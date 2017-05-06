@@ -15,7 +15,7 @@ class IOEventLoop
         @timeout = @run_queue.schedule_in @parent_fiber, seconds, timeout_result
       end
 
-      result = @loop.io_event_loop.transfer
+      result = @loop.resume
 
       @parent_fiber = nil
 

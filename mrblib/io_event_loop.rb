@@ -29,7 +29,7 @@ class IOEventLoop
     end
   end
 
-  attr_reader :wall_clock, :io_event_loop
+  attr_reader :wall_clock
 
   def forgive_iteration_errors!
     @stop_and_raise_error.cancel
@@ -53,6 +53,10 @@ class IOEventLoop
     @running
   end
 
+  def resume
+    @io_event_loop.transfer
+  end
+
   def concurrently # &block
     fiber = Fiber.new do |parent_fiber_getter|
       begin
@@ -61,7 +65,7 @@ class IOEventLoop
         if parent_fiber = parent_fiber_getter.call
           parent_fiber.transfer result
         else
-          @io_event_loop.transfer
+          resume
         end
       rescue Exception => e
         trigger :error, e
