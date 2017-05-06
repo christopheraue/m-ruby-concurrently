@@ -4,20 +4,19 @@ class IOEventLoop
       @loop = loop
       @run_queue = run_queue
       @run_queue.schedule_in 0, fiber, self
+      @requesting_fibers = []
     end
 
     def result(opts = {})
       unless instance_variable_defined? :@result
-        @parent_fiber = Fiber.current
+        @requesting_fibers.push Fiber.current
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          timeout = @run_queue.schedule_in seconds, @parent_fiber, timeout_result
+          timeout = @run_queue.schedule_in seconds, Fiber.current, timeout_result
         end
 
         @result = @loop.resume
-
-        @parent_fiber = nil
 
         if seconds
           timeout.cancel
@@ -33,7 +32,7 @@ class IOEventLoop
 
     def evaluate_to(result)
       @result = result
-      @run_queue.schedule_in 0, @parent_fiber, result if @parent_fiber
+      @requesting_fibers.each{ |fiber| @run_queue.schedule_in 0, fiber, result }.clear
       @loop.resume
     end
 
