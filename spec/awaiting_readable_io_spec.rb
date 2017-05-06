@@ -28,8 +28,7 @@ describe "using #await_readable in concurrent blocks" do
     subject { concurrency.result }
 
     let(:concurrency) { loop.concurrently do
-      loop.await_readable reader, within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
-      reader.read
+      loop.await_readable reader, within: 0.0005
     end }
 
     context "when readable after some time" do
@@ -39,11 +38,11 @@ describe "using #await_readable in concurrent blocks" do
         writer.close
       end }
 
-      it { is_expected.to eq 'Wake up!' }
+      it { is_expected.to be true }
     end
 
     context "when not readable in time" do
-      it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+      it { is_expected.to be false }
     end
   end
 end

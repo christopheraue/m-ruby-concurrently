@@ -30,8 +30,7 @@ describe "using #await_writable in concurrent blocks" do
     subject { concurrency.result }
 
     let(:concurrency) { loop.concurrently do
-      loop.await_writable writer, within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
-      writer.write 'test'
+      loop.await_writable writer, within: 0.0005
     end }
 
     context "when writable after some time" do
@@ -40,11 +39,11 @@ describe "using #await_writable in concurrent blocks" do
         reader.read(65536) # clears the pipe
       end }
 
-      it { is_expected.to be 4 }
+      it { is_expected.to be true }
     end
 
     context "when not writable in time" do
-      it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+      it { is_expected.to be false }
     end
   end
 end

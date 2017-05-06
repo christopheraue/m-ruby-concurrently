@@ -63,20 +63,12 @@ class IOEventLoop
 
   def await_readable(io, opts = {})
     fiber = Fiber.current
-
-    if seconds = opts[:within]
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-      timeout = @run_queue.schedule_in seconds, fiber, timeout_result
-    end
-
-    @readers[io] = proc{ @readers.delete(io); fiber.transfer }
-    result = resume
-
-    if seconds
-      timeout.cancel
-    end
-
-    (CancelledError === result) ? (raise result) : result
+    max_seconds = opts[:within]
+    timeout = @run_queue.schedule_in max_seconds, fiber, false if max_seconds
+    @readers[io] = proc{ @readers.delete(io); fiber.transfer true }
+    resume
+  ensure
+    timeout.cancel if max_seconds
   end
 
 
@@ -84,20 +76,12 @@ class IOEventLoop
 
   def await_writable(io, opts = {})
     fiber = Fiber.current
-
-    if seconds = opts[:within]
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-      timeout = @run_queue.schedule_in seconds, fiber, timeout_result
-    end
-
-    @writers[io] = proc{ @writers.delete(io); fiber.transfer }
-    result = resume
-
-    if seconds
-      timeout.cancel
-    end
-
-    (CancelledError === result) ? (raise result) : result
+    max_seconds = opts[:within]
+    timeout = @run_queue.schedule_in max_seconds, fiber, false if max_seconds
+    @writers[io] = proc{ @writers.delete(io); fiber.transfer true }
+    resume
+  ensure
+    timeout.cancel if max_seconds
   end
 
 
