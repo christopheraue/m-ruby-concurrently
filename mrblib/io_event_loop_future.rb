@@ -8,27 +8,29 @@ class IOEventLoop
     end
 
     def result(opts = {})
-      @parent_fiber = Fiber.current
+      unless instance_variable_defined? :@result
+        @parent_fiber = Fiber.current
 
-      if seconds = opts[:within]
-        timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-        @timeout = @run_queue.schedule_in @parent_fiber, seconds, timeout_result
+        if seconds = opts[:within]
+          timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
+          @timeout = @run_queue.schedule_in @parent_fiber, seconds, timeout_result
+        end
+
+        @result = @loop.resume
+
+        @parent_fiber = nil
+
+        if seconds
+          @timeout.cancel
+        end
       end
 
-      result = @loop.resume
-
-      @parent_fiber = nil
-
-      if seconds
-        @timeout.cancel
-      end
-
-      (CancelledError === result) ? raise(result) : result
+      (CancelledError === @result) ? (raise @result) : @result
     end
 
     def cancel(reason = "waiting cancelled")
-      @parent_fiber.transfer CancelledError.new(reason)
-      :cancelled
+      @result = CancelledError.new(reason)
+      @parent_fiber.transfer @result if @parent_fiber
     end
   end
 end
