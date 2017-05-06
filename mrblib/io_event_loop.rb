@@ -44,6 +44,7 @@ class IOEventLoop
         trigger :error, e
         e
       end
+      resume
     end
 
     Future.new(self, @run_queue, fiber)
