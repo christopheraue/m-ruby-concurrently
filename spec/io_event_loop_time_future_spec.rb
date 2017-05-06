@@ -1,12 +1,12 @@
 describe IOEventLoop::TimeFuture do
   subject(:loop) { IOEventLoop.new }
   
-  describe "#await" do
+  describe "using #wait in concurrent blocks" do
     subject { concurrency.result }
 
     let(:seconds) { 0.01 }
     let(:concurrency) { loop.concurrently do
-      loop.now_in(seconds).await
+      loop.wait(seconds)
       Time.now.to_f
     end }
     let!(:start_time) { Time.now.to_f }
@@ -27,7 +27,7 @@ describe IOEventLoop::TimeFuture do
 
     context "when doing it after awaiting it" do
       before { loop.concurrently do
-        loop.now_in(0.0001).await
+        loop.wait(0.0001)
         future.cancel
       end }
 
@@ -45,7 +45,7 @@ describe IOEventLoop::TimeFuture do
     let!(:concurrency1) { loop.concurrently{ (timer1.await; callback1.call) rescue nil } }
     let!(:concurrency2) { loop.concurrently{ (timer2.await; callback2.call) rescue nil } }
     let!(:concurrency3) { loop.concurrently{ (timer3.await; callback3.call) rescue nil } }
-    let(:concurrency) { loop.concurrently{ loop.now_in(0.0004).await } }
+    let(:concurrency) { loop.concurrently{ loop.wait(0.0004) } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0002 }
     let(:seconds3) { 0.0003 }
@@ -138,7 +138,7 @@ describe IOEventLoop::TimeFuture do
     before { @count = 0 }
     let(:concurrency) { loop.concurrently do
       while (@count += 1) < 4
-        loop.now_in(0.0001).await
+        loop.wait(0.0001)
         callback.call
       end
       :result

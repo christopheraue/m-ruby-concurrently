@@ -18,7 +18,7 @@ describe IOEventLoop::WritabilityFuture do
 
     context "when readable after some time" do
       before { loop.concurrently do
-        loop.now_in(0.0001).await
+        loop.wait(0.0001)
         reader.read(65536) # clears the pipe
       end }
 
@@ -36,7 +36,7 @@ describe IOEventLoop::WritabilityFuture do
 
     context "when writable after some time" do
       before { loop.concurrently do
-        loop.now_in(0.0001).await
+        loop.wait(0.0001)
         reader.read(65536) # clears the pipe
       end }
 
@@ -61,7 +61,7 @@ describe IOEventLoop::WritabilityFuture do
 
     context "when doing it after awaiting it" do
       before { loop.concurrently do
-        loop.now_in(0.0001).await
+        loop.wait(0.0001)
         future.cancel
       end }
 

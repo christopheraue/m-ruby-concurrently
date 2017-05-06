@@ -57,6 +57,11 @@ class IOEventLoop
     TimeFuture.new(self, @run_queue, seconds)
   end
 
+  def wait(seconds)
+    @run_queue.schedule_in seconds, Fiber.current
+    resume
+  end
+
 
   # Readable IO
 

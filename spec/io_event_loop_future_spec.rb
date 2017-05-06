@@ -35,7 +35,7 @@ describe IOEventLoop::Future do
 
     context "when evaluation of result is too slow" do
       let(:concurrency) { loop.concurrently do
-        loop.now_in(0.0002).await
+        loop.wait(0.0002)
         :result
       end }
 
@@ -54,7 +54,7 @@ describe IOEventLoop::Future do
   describe "#cancel" do
     subject { concurrency.result }
 
-    let(:concurrency) { loop.concurrently{ loop.now_in(0.0002).await } }
+    let(:concurrency) { loop.concurrently{ loop.wait(0.0002) } }
 
     context "when doing it before requesting the result" do
       before { concurrency.cancel *reason }
@@ -72,7 +72,7 @@ describe IOEventLoop::Future do
 
     context "when doing it after requesting the result" do
       before { loop.concurrently do
-        loop.now_in(0.0001).await
+        loop.wait(0.0001)
         concurrency.cancel *reason
       end }
 
