@@ -16,8 +16,8 @@ class IOEventLoop
           @run_queue.run_pending
         elsif @readers.any? or @writers.any? or waiting_time
           if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-            selected[0].each{ |readable_io| @readers[readable_io].call } unless selected[0].empty?
-            selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
+            selected[0].each{ |readable_io| @readers[readable_io].transfer true } unless selected[0].empty?
+            selected[1].each{ |writable_io| @writers[writable_io].transfer true } unless selected[1].empty?
           end
         else
           Fiber.yield # would block indefinitely otherwise
@@ -65,9 +65,10 @@ class IOEventLoop
     fiber = Fiber.current
     max_seconds = opts[:within]
     timeout = @run_queue.schedule_in max_seconds, fiber, false if max_seconds
-    @readers[io] = proc{ @readers.delete(io); fiber.transfer true }
+    @readers[io] = fiber
     resume
   ensure
+    @readers.delete io
     timeout.cancel if max_seconds
   end
 
@@ -78,9 +79,10 @@ class IOEventLoop
     fiber = Fiber.current
     max_seconds = opts[:within]
     timeout = @run_queue.schedule_in max_seconds, fiber, false if max_seconds
-    @writers[io] = proc{ @writers.delete(io); fiber.transfer true }
+    @writers[io] = fiber
     resume
   ensure
+    @writers.delete io
     timeout.cancel if max_seconds
   end
 
