@@ -10,7 +10,7 @@ class IOEventLoop
       unless instance_variable_defined? :@result
         @fiber = Fiber.current
         @run_queue.schedule_in @seconds, @fiber
-          @result = @loop.resume
+        @result = @loop.resume
         @fiber = false
       end
 
