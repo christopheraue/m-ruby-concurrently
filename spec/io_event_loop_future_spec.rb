@@ -34,6 +34,16 @@ describe IOEventLoop::Future do
         it { is_expected.to raise_error RuntimeError, 'evil error' }
       end
     end
+
+    context "when getting the evaluating result from two concurrent blocks" do
+      let!(:concurrency) { loop.concurrently{ loop.wait(0.0001); :result } }
+      let!(:concurrency1) { loop.concurrently{ concurrency.result } }
+      let!(:concurrency2) { loop.concurrently{ concurrency.result } }
+
+      it { is_expected.to be :result }
+      after { expect(concurrency1.result).to be :result }
+      after { expect(concurrency2.result).to be :result }
+    end
   end
 
   describe "#result with a timeout" do
@@ -61,6 +71,17 @@ describe IOEventLoop::Future do
         let(:timeout_result) { :timeout_result }
         it { is_expected.to be :timeout_result }
       end
+    end
+
+    context "when getting the evaluating result from two concurrent blocks, from one with a timeout" do
+      subject { concurrency.result }
+      let!(:concurrency) { loop.concurrently{ loop.wait(0.0002); :result } }
+      let!(:concurrency1) { loop.concurrently{ concurrency.result } }
+      let!(:concurrency2) { loop.concurrently{ concurrency.result within: 0.0001, timeout_result: :timeout_result } }
+
+      it { is_expected.to be :result }
+      after { expect(concurrency1.result).to be :result }
+      after { expect(concurrency2.result).to be :timeout_result }
     end
   end
 
