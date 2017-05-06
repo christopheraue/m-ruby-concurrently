@@ -5,10 +5,13 @@ class IOEventLoop
       @run_queue = run_queue
       @run_queue.schedule_in 0, fiber, self
       @requesting_fibers = []
+      @evaluated = false
     end
 
     def result(opts = {})
-      unless instance_variable_defined? :@result
+      if @evaluated
+        result = @result
+      else
         @requesting_fibers.push Fiber.current
 
         if seconds = opts[:within]
@@ -16,22 +19,23 @@ class IOEventLoop
           timeout = @run_queue.schedule_in seconds, Fiber.current, timeout_result
         end
 
-        @result = @loop.resume
+        result = @loop.resume
 
         if seconds
           timeout.cancel
         end
       end
 
-      (Exception === @result) ? (raise @result) : @result
+      (Exception === result) ? (raise result) : result
     end
 
-    def evaluated?
-      instance_variable_defined? :@result
-    end
+    attr_reader :evaluated
+    alias evaluated? evaluated
+    undef evaluated
 
     def evaluate_to(result)
       @result = result
+      @evaluated = true
       @requesting_fibers.each{ |fiber| @run_queue.schedule_in 0, fiber, result }.clear
       @loop.resume
     end
