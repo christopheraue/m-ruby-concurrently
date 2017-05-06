@@ -8,18 +8,24 @@ describe "using #await_readable in concurrent blocks" do
   describe "waiting indefinitely" do
     subject { concurrency.result }
 
-    let(:concurrency) { loop.concurrently do
+    before { loop.concurrently do
+      loop.wait 0.0001
+      writer.write 'Wake up!'
+      writer.close
+    end }
+
+    let(:wait_proc) { proc do
       loop.await_readable reader
       reader.read
     end }
 
-    context "when readable after some time" do
-      before { loop.concurrently do
-        loop.wait 0.0001
-        writer.write 'Wake up!'
-        writer.close
-      end }
+    context "when originating inside a concurrent block" do
+      subject { loop.concurrently(&wait_proc).result }
+      it { is_expected.to eq 'Wake up!' }
+    end
 
+    context "when originating outside a concurrent block" do
+      subject { wait_proc.call }
       it { is_expected.to eq 'Wake up!' }
     end
   end

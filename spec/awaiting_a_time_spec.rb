@@ -1,17 +1,25 @@
 describe "using #wait in concurrent blocks" do
   subject(:loop) { IOEventLoop.new }
 
-  describe "the simplest case" do
-    subject { concurrency.result }
-
+  describe "waiting for given seconds" do
     let(:seconds) { 0.01 }
-    let(:concurrency) { loop.concurrently do
+
+    let(:wait_proc) { proc do
       loop.wait(seconds)
       Time.now.to_f
     end }
+
     let!(:start_time) { Time.now.to_f }
 
-    it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+    context "when originating inside a concurrent block" do
+      subject { loop.concurrently(&wait_proc).result }
+      it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+    end
+
+    context "when originating outside a concurrent block" do
+      subject { wait_proc.call }
+      it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+    end
   end
 
   describe "order of multiple deferred concurrently blocks" do

@@ -11,17 +11,23 @@ describe "using #await_writable in concurrent blocks" do
   describe "waiting indefinitely" do
     subject { concurrency.result }
 
-    let(:concurrency) { loop.concurrently do
+    before { loop.concurrently do
+      loop.wait 0.0001
+      reader.read 65536 # clears the pipe
+    end }
+
+    let(:wait_proc) { proc do
       loop.await_writable writer
       writer.write 'test'
     end }
 
-    context "when writable after some time" do
-      before { loop.concurrently do
-        loop.wait(0.0001)
-        reader.read(65536) # clears the pipe
-      end }
+    context "when originating inside a concurrent block" do
+      subject { loop.concurrently(&wait_proc).result }
+      it { is_expected.to be 4 }
+    end
 
+    context "when originating outside a concurrent block" do
+      subject { wait_proc.call }
       it { is_expected.to be 4 }
     end
   end
