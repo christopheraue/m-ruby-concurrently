@@ -42,18 +42,13 @@ class IOEventLoop
   end
 
   def concurrently # &block
-    fiber = Fiber.new do |parent_fiber_getter|
-      result = begin
+    fiber = Fiber.new do |future|
+      next if future.evaluated?
+      future.evaluate_to begin
         yield
       rescue Exception => e
         trigger :error, e
         e
-      end
-
-      if parent_fiber = parent_fiber_getter.call
-        parent_fiber.transfer result
-      else
-        resume
       end
     end
 
