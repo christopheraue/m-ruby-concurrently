@@ -33,17 +33,6 @@ class IOEventLoop
 
   # Flow control
 
-  def start
-    @running = true
-    @io_event_loop.resume
-    (CancelledError === @result) ? raise(@result) : @result
-  end
-
-  def stop(result = nil)
-    @running = false
-    @result = result
-  end
-
   def running?
     @running
   end
