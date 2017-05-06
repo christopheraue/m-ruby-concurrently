@@ -25,7 +25,7 @@ describe IOEventLoop::Future do
         end
       end }
 
-      it { is_expected.to raise_error IOEventLoop::CancelledError, 'transfer error' }
+      it { is_expected.to raise_error FiberError, 'transfer error' }
     end
   end
 

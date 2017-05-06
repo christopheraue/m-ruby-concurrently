@@ -6,7 +6,7 @@ class IOEventLoop
   def initialize(*)
     @wall_clock = WallClock.new
 
-    @running = false
+    @running = true
     @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
     @run_queue = RunQueue.new self
@@ -68,7 +68,12 @@ class IOEventLoop
           resume
         end
       rescue Exception => e
-        trigger :error, e
+        if parent_fiber = parent_fiber_getter.call
+          parent_fiber.transfer e
+        else
+          trigger :error, e
+          resume
+        end
       end
     end
 
