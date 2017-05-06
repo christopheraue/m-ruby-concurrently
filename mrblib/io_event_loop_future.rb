@@ -25,7 +25,7 @@ class IOEventLoop
         end
       end
 
-      (CancelledError === @result) ? (raise @result) : @result
+      (Exception === @result) ? (raise @result) : @result
     end
 
     def cancel(reason = "waiting cancelled")

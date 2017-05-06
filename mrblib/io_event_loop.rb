@@ -7,7 +7,6 @@ class IOEventLoop
     @wall_clock = WallClock.new
 
     @running = true
-    @stop_and_raise_error = on(:error) { |_,e| stop CancelledError.new(e) }
 
     @run_queue = RunQueue.new self
     @readers = {}
@@ -30,10 +29,6 @@ class IOEventLoop
   end
 
   attr_reader :wall_clock
-
-  def forgive_iteration_errors!
-    @stop_and_raise_error.cancel
-  end
 
 
   # Flow control
@@ -59,21 +54,17 @@ class IOEventLoop
 
   def concurrently # &block
     fiber = Fiber.new do |parent_fiber_getter|
-      begin
-        result = yield
-
-        if parent_fiber = parent_fiber_getter.call
-          parent_fiber.transfer result
-        else
-          resume
-        end
+      result = begin
+        yield
       rescue Exception => e
-        if parent_fiber = parent_fiber_getter.call
-          parent_fiber.transfer e
-        else
-          trigger :error, e
-          resume
-        end
+        trigger :error, e
+        e
+      end
+
+      if parent_fiber = parent_fiber_getter.call
+        parent_fiber.transfer result
+      else
+        resume
       end
     end
 

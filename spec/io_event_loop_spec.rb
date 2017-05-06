@@ -63,23 +63,6 @@ describe IOEventLoop do
     end
   end
 
-  describe "an iteration causing an error" do
-    subject { instance.start }
-    before { instance.concurrently{ raise 'evil error' }  }
-
-    before { expect(instance).to receive(:trigger).with(:error,
-      (be_a(RuntimeError).and have_attributes message: 'evil error')).and_call_original }
-
-    context "when the loop should stop and raise the error (the default)" do
-      it { is_expected.to raise_error 'evil error' }
-    end
-
-    context "when the loop should forgive the error" do
-      before { instance.forgive_iteration_errors! }
-      it { is_expected.to be nil }
-    end
-  end
-
   describe "#watch_events" do
     subject { instance.watch_events(object, :event) }
 

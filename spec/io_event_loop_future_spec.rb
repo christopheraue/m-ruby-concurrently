@@ -11,9 +11,15 @@ describe IOEventLoop::Future do
     end
 
     context "when resuming a fiber raises an error" do
-      # e.g. resuming the fiber raises a FiberError
       before { allow(Fiber.current).to receive(:transfer).and_raise FiberError, 'transfer error' }
       it { is_expected.to raise_error FiberError, 'transfer error' }
+    end
+
+    context "when the code inside the fiber raises an error" do
+      let(:concurrency) { loop.concurrently{ raise 'evil error' } }
+      before { expect(loop).to receive(:trigger).with(:error,
+        (be_a(RuntimeError).and have_attributes message: 'evil error')) }
+      it { is_expected.to raise_error RuntimeError, 'evil error' }
     end
   end
 
