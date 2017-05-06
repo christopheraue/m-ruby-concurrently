@@ -6,8 +6,16 @@ describe IOEventLoop::Future do
 
     let(:concurrency) { loop.concurrently{ :result } }
 
+    before { expect(concurrency).not_to be_evaluated }
+    after { expect(concurrency).to be_evaluated }
+
     context "when everything goes fine" do
       it { is_expected.to be :result }
+
+      context "when requesting the result a second time" do
+        before { concurrency.result }
+        it { is_expected.to be :result }
+      end
     end
 
     context "when resuming a fiber raises an error" do
@@ -20,6 +28,11 @@ describe IOEventLoop::Future do
       before { expect(loop).to receive(:trigger).with(:error,
         (be_a(RuntimeError).and have_attributes message: 'evil error')) }
       it { is_expected.to raise_error RuntimeError, 'evil error' }
+
+      context "when requesting the result a second time" do
+        before { concurrency.result rescue nil }
+        it { is_expected.to raise_error RuntimeError, 'evil error' }
+      end
     end
   end
 
@@ -52,39 +65,52 @@ describe IOEventLoop::Future do
   end
 
   describe "#cancel" do
-    subject { concurrency.result }
-
-    let(:concurrency) { loop.concurrently{ loop.wait(0.0002) } }
+    before { expect(concurrency).not_to be_evaluated }
+    after { expect(concurrency).to be_evaluated }
 
     context "when doing it before requesting the result" do
-      before { concurrency.cancel *reason }
+      subject { concurrency.cancel *reason }
+
+      let(:concurrency) { loop.concurrently{ :result } }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
-        it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
+        it { is_expected.to be :cancelled }
+        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
-        it { is_expected.to raise_error IOEventLoop::CancelledError, "cancel reason" }
+        it { is_expected.to be :cancelled }
+        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "cancel reason" }
       end
     end
 
     context "when doing it after requesting the result" do
-      before { loop.concurrently do
-        loop.wait(0.0001)
-        concurrency.cancel *reason
-      end }
+      subject { loop.concurrently{ concurrency.cancel *reason }.result }
+
+      let(:concurrency) { loop.concurrently{ loop.wait(0.0001) } }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
-        it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
+        it { is_expected.to be :cancelled }
+        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
-        it { is_expected.to raise_error IOEventLoop::CancelledError, "cancel reason" }
+        it { is_expected.to be :cancelled }
+        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "cancel reason" }
       end
+    end
+
+    context "when cancelling after it is already evaluated" do
+      subject { concurrency.cancel }
+
+      let(:concurrency) { loop.concurrently{ :result } }
+      before { concurrency.result }
+
+      it { is_expected.to raise_error IOEventLoop::Error, "already evaluated" }
     end
   end
 end

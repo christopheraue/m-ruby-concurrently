@@ -35,10 +35,14 @@ class IOEventLoop
     undef evaluated
 
     def evaluate_to(result)
-      @result = result
-      @evaluated = true
-      @run_queue.schedule_in 0, @requesting_fiber, result if @requesting_fiber
-      :evaluated
+      if @evaluated
+        raise Error, "already evaluated"
+      else
+        @result = result
+        @evaluated = true
+        @run_queue.schedule_in 0, @requesting_fiber, result if @requesting_fiber
+        :evaluated
+      end
     end
 
     def cancel(reason = "waiting cancelled")
