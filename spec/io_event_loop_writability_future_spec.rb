@@ -9,11 +9,11 @@ describe IOEventLoop::WritabilityFuture do
   before { writer.write('a' * 65536) }
 
   describe "#await" do
-    subject { loop.start }
+    subject { concurrency.result }
 
-    before { loop.concurrently do
+    let(:concurrency) { loop.concurrently do
       loop.writable(writer).await
-      @result = writer.write 'test'
+      writer.write 'test'
     end }
 
     context "when readable after some time" do
@@ -22,22 +22,16 @@ describe IOEventLoop::WritabilityFuture do
         reader.read(65536) # clears the pipe
       end }
 
-      it { is_expected.not_to raise_error }
-      after { expect(@result).to be 4 }
+      it { is_expected.to be 4 }
     end
   end
 
   describe "#await with a timeout" do
-    subject { loop.start }
+    subject { concurrency.result }
 
-    before { loop.concurrently do
-      begin
-        loop.writable(writer).await within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
-        @result = writer.write 'test'
-      rescue => e
-        @result = e
-        raise e
-      end
+    let(:concurrency) { loop.concurrently do
+      loop.writable(writer).await within: 0.0005, timeout_result: IOEventLoop::TimeoutError.new("Time's up!")
+      writer.write 'test'
     end }
 
     context "when writable after some time" do
@@ -46,34 +40,23 @@ describe IOEventLoop::WritabilityFuture do
         reader.read(65536) # clears the pipe
       end }
 
-      it { is_expected.not_to raise_error }
-      after { expect(@result).to be 4 }
+      it { is_expected.to be 4 }
     end
 
     context "when not writable in time" do
-      it { is_expected.to raise_error IOEventLoop::CancelledError, "Time's up!" }
-      after { expect(@result).to be_a(IOEventLoop::TimeoutError).and have_attributes(message: "Time's up!") }
+      it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
     end
   end
 
   describe "#cancel" do
-    subject { loop.start }
+    subject { concurrency.result }
 
-    before { loop.concurrently do
-      begin
-        future.await
-      rescue => e
-        @result = e
-      end
-    end }
+    let(:concurrency) { loop.concurrently{ future.await } }
     let(:future) { loop.writable(writer) }
 
     context "when doing it before awaiting it" do
       before { future.cancel }
-
-      it { is_expected.not_to raise_error }
-      after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
-        message: "waiting cancelled") }
+      it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
     end
 
     context "when doing it after awaiting it" do
@@ -82,9 +65,7 @@ describe IOEventLoop::WritabilityFuture do
         future.cancel
       end }
 
-      it { is_expected.not_to raise_error }
-      after { expect(@result).to be_a(IOEventLoop::CancelledError).and having_attributes(
-        message: "waiting cancelled") }
+      it { is_expected.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
     end
   end
 end
