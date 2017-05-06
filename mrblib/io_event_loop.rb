@@ -20,7 +20,14 @@ class IOEventLoop
             selected[1].each{ |writable_io| @writers[writable_io].transfer true } unless selected[1].empty?
           end
         else
-          Fiber.yield # would block indefinitely otherwise
+          # Having no pending timeouts or IO events would make run this loop
+          # forever. But, since we always leave the loop through one of the
+          # fibers resumed in the code above, this part of the loop is never
+          # reached. When  resuming the loop at a later time it will be because
+          # of an added timeout of IO event. So, there will always be something
+          # to wait for.
+          raise Error, "Infinitely running event loop detected. This " <<
+            "should not happen and is considered a bug in this gem."
         end
       end
     end
