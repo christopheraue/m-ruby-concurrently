@@ -80,44 +80,6 @@ describe IOEventLoop do
     end
   end
 
-  describe "#attach_reader and #detach_reader" do
-    subject { instance.start }
-
-    let(:pipe) { IO.pipe }
-    let(:reader) { pipe[0] }
-    let(:writer) { pipe[1] }
-
-    context "when watching readability" do
-      before { instance.attach_reader(reader, &callback1) }
-      let(:callback1) { proc{ instance.detach_reader(reader) } }
-
-      # make the reader readable
-      before { instance.concurrently do
-        instance.now_in(0.0001).await
-        writer.write 'Message!'
-      end }
-
-      before { expect(callback1).to receive(:call).and_call_original }
-      it { is_expected.to be nil }
-    end
-  end
-
-  describe "#attach_writer and #detach_writer" do
-    subject { instance.start }
-
-    let(:pipe) { IO.pipe }
-    let(:reader) { pipe[0] }
-    let(:writer) { pipe[1] }
-
-    context "when watching writability" do
-      before { instance.attach_writer(writer, &callback1) }
-      let(:callback1) { proc{ instance.detach_writer(writer) } }
-
-      before { expect(callback1).to receive(:call).and_call_original }
-      it { is_expected.to be nil }
-    end
-  end
-
   describe "#watch_events" do
     subject { instance.watch_events(object, :event) }
 
