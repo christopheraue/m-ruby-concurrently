@@ -6,14 +6,12 @@ class IOEventLoop
   def initialize(*)
     @wall_clock = WallClock.new
 
-    @running = true
-
     @run_queue = RunQueue.new self
     @readers = {}
     @writers = {}
 
     @io_event_loop = Fiber.new do
-      while @running
+      while true
         if (waiting_time = @run_queue.waiting_time) == 0
           @run_queue.run_pending
         elsif @readers.any? or @writers.any? or waiting_time
@@ -22,7 +20,7 @@ class IOEventLoop
             selected[1].each{ |writable_io| @writers[writable_io].call } unless selected[1].empty?
           end
         else
-          @running = false # would block indefinitely otherwise
+          Fiber.yield # would block indefinitely otherwise
         end
       end
     end
@@ -30,16 +28,12 @@ class IOEventLoop
 
   attr_reader :wall_clock
 
-
-  # Flow control
-
-  def running?
-    @running
-  end
-
   def resume
     @io_event_loop.transfer
   end
+
+
+  # Concurrently executed block of code
 
   def concurrently # &block
     fiber = Fiber.new do |future|
@@ -54,6 +48,9 @@ class IOEventLoop
 
     Future.new(self, @run_queue, fiber)
   end
+
+
+  # Point of time in the future
 
   def now_in(seconds)
     TimeFuture.new(self, @run_queue, seconds)
