@@ -37,13 +37,13 @@ class IOEventLoop
 
   def concurrently # &block
     fiber = Fiber.new do |future|
-      next if future.evaluated?
-      future.evaluate_to begin
+      future.evaluated? or future.evaluate_to begin
         yield
       rescue Exception => e
         trigger :error, e
         e
       end
+
       resume
     end
 
@@ -51,11 +51,7 @@ class IOEventLoop
   end
 
 
-  # Point of time in the future
-
-  def now_in(seconds)
-    TimeFuture.new(self, @run_queue, seconds)
-  end
+  # Waiting for a given time
 
   def wait(seconds)
     @run_queue.schedule_in seconds, Fiber.current
@@ -63,7 +59,7 @@ class IOEventLoop
   end
 
 
-  # Readable IO
+  # Waiting for a readable IO
 
   def attach_reader(io, &on_readable)
     @readers[io] = on_readable
@@ -78,7 +74,7 @@ class IOEventLoop
   end
 
 
-  # Writable IO
+  # Waiting for a writable IO
 
   def attach_writer(io, &on_writable)
     @writers[io] = on_writable
