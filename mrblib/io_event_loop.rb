@@ -7,18 +7,14 @@ class IOEventLoop
     @wall_clock = WallClock.new
 
     @run_queue = RunQueue.new self
-    @readers = {}
-    @writers = {}
+    @io_watcher = IOWatcher.new self
 
-    @io_event_loop = Fiber.new do
+    @event_loop = Fiber.new do
       while true
         if (waiting_time = @run_queue.waiting_time) == 0
           @run_queue.process_pending
-        elsif @readers.any? or @writers.any? or waiting_time
-          if selected = IO.select(@readers.keys, @writers.keys, nil, waiting_time)
-            selected[0].each{ |readable_io| @readers[readable_io].transfer true } unless selected[0].empty?
-            selected[1].each{ |writable_io| @writers[writable_io].transfer true } unless selected[1].empty?
-          end
+        elsif @io_watcher.watches? or waiting_time
+          @io_watcher.process_ready_in waiting_time
         else
           # Having no pending timeouts or IO events would make run this loop
           # forever. But, since we always leave the loop through one of the
@@ -36,7 +32,7 @@ class IOEventLoop
   attr_reader :wall_clock
 
   def resume
-    @io_event_loop.transfer
+    @event_loop.transfer
   end
 
 
@@ -75,10 +71,10 @@ class IOEventLoop
     fiber = Fiber.current
     max_seconds = opts[:within]
     @run_queue.schedule fiber, max_seconds, false if max_seconds
-    @readers[io] = fiber
+    @io_watcher.watch_reader io, fiber
     resume
   ensure
-    @readers.delete io
+    @io_watcher.cancel_watching_reader io
     @run_queue.cancel fiber if max_seconds
   end
 
@@ -89,10 +85,10 @@ class IOEventLoop
     fiber = Fiber.current
     max_seconds = opts[:within]
     @run_queue.schedule fiber, max_seconds, false if max_seconds
-    @writers[io] = fiber
+    @io_watcher.watch_writer io, fiber
     resume
   ensure
-    @writers.delete io
+    @io_watcher.cancel_watching_writer io
     @run_queue.cancel fiber if max_seconds
   end
 
