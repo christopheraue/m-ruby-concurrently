@@ -51,7 +51,7 @@ class IOEventLoop
       resume
     end
 
-    future = Future.new self, @run_queue, fiber
+    future = Future.new self, @run_queue, @io_watcher, fiber
     @run_queue.schedule fiber, 0, future
     future
   end

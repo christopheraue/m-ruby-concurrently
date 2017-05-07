@@ -1,8 +1,9 @@
 class IOEventLoop
   class Future
-    def initialize(loop, run_queue, fiber)
+    def initialize(loop, run_queue, io_watcher, fiber)
       @loop = loop
       @run_queue = run_queue
+      @io_watcher = io_watcher
       @fiber = fiber
       @requesting_fibers = {}
       @evaluated = false
@@ -43,6 +44,7 @@ class IOEventLoop
         @result = result
         @evaluated = true
         @run_queue.cancel @fiber
+        @io_watcher.cancel @fiber
         @requesting_fibers.each_key{ |fiber| @run_queue.schedule fiber, 0, result }
         :evaluated
       end
