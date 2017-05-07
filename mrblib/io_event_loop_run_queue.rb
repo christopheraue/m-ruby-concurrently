@@ -8,7 +8,7 @@ class IOEventLoop
 
     def schedule(fiber, seconds, result = nil)
       cart = Cart.new(fiber, @wall_clock.now+seconds, result)
-      index = bisect_left(@cart_track, cart)
+      index = bisect_left(@cart_track, cart.time)
       @cart_track.insert(index, cart)
       @cart_index[fiber] = cart
     end
@@ -31,14 +31,14 @@ class IOEventLoop
       @cart_track.pop(@cart_track.length-index).reverse_each(&:process)
     end
 
-    # Return the left-most index in a list of timers sorted in DESCENDING order
-    # relative to a time or fiber e in O(log n).
-    # Shamelessly copied from https://github.com/celluloid/timers/blob/master/lib/timers/events.rb
+    # Return the left-most index in a list of carts sorted in DESCENDING order
+    # relative to a time e in O(log n).
+    # Shamelessly copied from https://github.com/socketry/timers/blob/75b71e402025cb289eccc0e733fac9bd7edde925/lib/timers/events.rb#L97
     private def bisect_left(a, e, l = 0, u = a.length)
       while l < u
         m = l + (u - l).div(2)
 
-        if a[m] > e
+        if a[m].time > e
           l = m + 1
         else
           u = m
