@@ -104,6 +104,23 @@ class IOEventLoop
   end
 
 
+  # Waiting for an event
+
+  def await_event(subject, event)
+    fiber = Fiber.current
+
+    callback = subject.on(event) do |_,result|
+      @run_queue.schedule(fiber, 0, result)
+    end
+    result, return_fiber = @event_loop.transfer
+    callback.cancel
+
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case transfer back to the given return_fiber.
+    (result == fiber) ? return_fiber.transfer : result
+  end
+
+
   # Watching events
 
   def watch_events(*args)
