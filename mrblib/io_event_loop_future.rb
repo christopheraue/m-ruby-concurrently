@@ -7,7 +7,6 @@ class IOEventLoop
       @io_watcher = io_watcher
 
       @evaluated = false
-      @run_queue.schedule(fiber, 0, self)
     end
 
     def result(opts = {})
@@ -24,13 +23,17 @@ class IOEventLoop
           @run_queue.schedule(fiber, seconds, timeout_result)
         end
 
-        result = @event_loop.transfer
+        result, return_fiber = @event_loop.transfer
 
         if seconds
           @run_queue.cancel fiber
         end
 
         @requesting_fibers.delete fiber
+
+        # If result is this very fiber it means this fiber has been evaluated
+        # prematurely. In this case transfer back to the given return_fiber.
+        (result == fiber) ? return_fiber.transfer : result
       end
 
       (Exception === result) ? (raise result) : result
@@ -46,8 +49,7 @@ class IOEventLoop
       else
         @result = result
         @evaluated = true
-        @run_queue.cancel @fiber
-        @io_watcher.cancel @fiber
+        @fiber.transfer @fiber, Fiber.current
         @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) } if @requesting_fibers
         :evaluated
       end

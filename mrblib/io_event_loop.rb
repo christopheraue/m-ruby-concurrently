@@ -33,7 +33,15 @@ class IOEventLoop
   # Concurrently executed block of code
 
   def concurrently # &block
-    fiber = Fiber.new do |future|
+    fiber = Fiber.new do |future, return_fiber|
+      if future == fiber
+        # If future is this very fiber it means this fiber has been evaluated
+        # already before its start. Cancel the scheduled start of this fiber
+        # and transfer back to the given return_fiber.
+        @run_queue.cancel fiber
+        return_fiber.transfer
+      end
+
       result = begin
         yield
       rescue Exception => e
@@ -45,16 +53,24 @@ class IOEventLoop
       @event_loop.transfer
     end
 
-    Future.new(fiber, @event_loop, @run_queue, @io_watcher)
+    future = Future.new(fiber, @event_loop, @run_queue, @io_watcher)
+    @run_queue.schedule(fiber, 0, future)
+    future
   end
 
 
   # Waiting for a given time
 
   def wait(seconds)
-    @run_queue.schedule(Fiber.current, seconds)
-    @event_loop.transfer
-    :waited
+    fiber = Fiber.current
+
+    @run_queue.schedule(fiber, seconds)
+    result, return_fiber = @event_loop.transfer
+    @run_queue.cancel fiber
+
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case transfer back to the given return_fiber.
+    (result == fiber) ? return_fiber.transfer : :waited
   end
 
 
@@ -62,11 +78,14 @@ class IOEventLoop
 
   def await_readable(io)
     fiber = Fiber.current
+
     @io_watcher.await_reader(fiber, io)
-    @event_loop.transfer
-    :readable
-  ensure
+    result, return_fiber = @event_loop.transfer
     @io_watcher.cancel fiber
+
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case transfer back to the given return_fiber.
+    (result == fiber) ? return_fiber.transfer : :readable
   end
 
 
@@ -74,11 +93,14 @@ class IOEventLoop
 
   def await_writable(io)
     fiber = Fiber.current
+
     @io_watcher.await_writer(fiber, io)
-    @event_loop.transfer
-    :writable
-  ensure
+    result, return_fiber = @event_loop.transfer
     @io_watcher.cancel fiber
+
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case transfer back to the given return_fiber.
+    (result == fiber) ? return_fiber.transfer : :writable
   end
 
 
