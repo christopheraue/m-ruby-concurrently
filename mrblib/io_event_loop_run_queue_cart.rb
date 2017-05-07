@@ -4,20 +4,21 @@ class IOEventLoop
       @fiber = fiber
       @time = time
       @result = result
+      @active = true
     end
 
     attr_reader :time
 
+    attr_reader :active
+    alias active? active
+    undef active
+
     def process
-      @fiber.transfer @result if @fiber
+      @fiber.transfer @result if @active
     end
 
     def cancel
-      @fiber = false
-    end
-
-    def active?
-      !!@fiber
+      @active = false
     end
   end
 end
