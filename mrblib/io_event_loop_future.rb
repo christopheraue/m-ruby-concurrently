@@ -3,7 +3,7 @@ class IOEventLoop
     def initialize(loop, run_queue, fiber)
       @loop = loop
       @run_queue = run_queue
-      @run_queue.schedule fiber, 0, self
+      @fiber = fiber
       @requesting_fibers = {}
       @evaluated = false
     end
@@ -42,6 +42,7 @@ class IOEventLoop
       else
         @result = result
         @evaluated = true
+        @run_queue.cancel @fiber
         @requesting_fibers.each_key{ |fiber| @run_queue.schedule fiber, 0, result }
         :evaluated
       end

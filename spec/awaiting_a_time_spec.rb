@@ -111,7 +111,7 @@ describe "using #wait in concurrent blocks" do
       after { expect{ concurrency3.result }.to raise_error IOEventLoop::CancelledError }
     end
 
-    context "when a timer cancels a timer coming afterwards in the same batch" do
+    context "when a block cancels a block coming afterwards in the same batch" do
       let(:seconds1) { 0 }
       let(:seconds2) { 0.0001 }
       let(:seconds3) { 0 }
@@ -119,11 +119,26 @@ describe "using #wait in concurrent blocks" do
 
       before { expect(callback1).to receive(:call).ordered.and_call_original }
       before { expect(callback2).to receive(:call).ordered.and_call_original }
-      before { expect(callback3).to receive(:call).ordered.and_call_original }
+      before { expect(callback3).not_to receive(:call) }
       it { is_expected.not_to raise_error }
       after { expect(concurrency1.result).to be :result1 }
       after { expect(concurrency2.result).to be :result2 }
       after { expect{ concurrency3.result }.to raise_error IOEventLoop::CancelledError }
+    end
+
+    context "when a block evaluates a block coming afterwards in the same batch" do
+      let(:seconds1) { 0 }
+      let(:seconds2) { 0.0001 }
+      let(:seconds3) { 0 }
+      let(:callback1) { proc{ concurrency3.evaluate_to(:result_from_1); :result1 } }
+
+      before { expect(callback1).to receive(:call).ordered.and_call_original }
+      before { expect(callback2).to receive(:call).ordered.and_call_original }
+      before { expect(callback3).not_to receive(:call) }
+      it { is_expected.not_to raise_error }
+      after { expect(concurrency1.result).to be :result1 }
+      after { expect(concurrency2.result).to be :result2 }
+      after { expect(concurrency3.result).to be :result_from_1 }
     end
 
     context "when all timers are triggered in one go" do

@@ -14,7 +14,9 @@ class IOEventLoop
     end
 
     def cancel(fiber)
-      @cart_index.delete(fiber).cancel
+      if cart = @cart_index.delete(fiber)
+        cart.cancel
+      end
     end
 
     def waiting_time

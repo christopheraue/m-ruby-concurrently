@@ -44,28 +44,20 @@ class IOEventLoop
 
   def concurrently # &block
     fiber = Fiber.new do |future|
-      if future.evaluated?
-        # Evaluated/cancelled before the fiber has been scheduled to run.
-        resume
-      else
-        result = begin
-          yield
-        rescue Exception => e
-          trigger :error, e
-          e
-        end
-
-        if future.evaluated?
-          # Evaluated/cancelled while waited in the concurrent block.
-          resume
-        else
-          future.evaluate_to result
-          resume
-        end
+      result = begin
+        yield
+      rescue Exception => e
+        trigger :error, e
+        e
       end
+
+      future.evaluate_to result
+      resume
     end
 
-    Future.new(self, @run_queue, fiber)
+    future = Future.new self, @run_queue, fiber
+    @run_queue.schedule fiber, 0, future
+    future
   end
 
 
