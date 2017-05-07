@@ -60,33 +60,25 @@ class IOEventLoop
 
   # Waiting for a readable IO
 
-  def await_readable(io, opts = {})
+  def await_readable(io)
     fiber = Fiber.current
-
-    max_seconds = opts[:within]
-    max_seconds and @run_queue.schedule(fiber, max_seconds, false)
     @io_watcher.await_reader(fiber, io)
-
     @event_loop.transfer
+    :readable
   ensure
     @io_watcher.cancel fiber
-    max_seconds and @run_queue.cancel(fiber)
   end
 
 
   # Waiting for a writable IO
 
-  def await_writable(io, opts = {})
+  def await_writable(io)
     fiber = Fiber.current
-
-    max_seconds = opts[:within]
-    max_seconds and @run_queue.schedule(fiber, max_seconds, false)
     @io_watcher.await_writer(fiber, io)
-
     @event_loop.transfer
+    :writable
   ensure
     @io_watcher.cancel fiber
-    max_seconds and @run_queue.cancel(fiber)
   end
 
 

@@ -27,8 +27,8 @@ class IOEventLoop
 
     def process_ready_in(waiting_time)
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
-        selected[0].each{ |readable| @fibers[readable].transfer true } unless selected[0].empty?
-        selected[1].each{ |writable| @fibers[writable].transfer true } unless selected[1].empty?
+        selected[0].each{ |readable| @fibers[readable].transfer } unless selected[0].empty?
+        selected[1].each{ |writable| @fibers[writable].transfer } unless selected[1].empty?
       end
     end
   end
