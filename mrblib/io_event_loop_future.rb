@@ -1,12 +1,13 @@
 class IOEventLoop
   class Future
-    def initialize(loop, run_queue, io_watcher, fiber)
-      @loop = loop
+    def initialize(fiber, event_loop, run_queue, io_watcher)
+      @fiber = fiber
+      @event_loop = event_loop
       @run_queue = run_queue
       @io_watcher = io_watcher
-      @fiber = fiber
-      @requesting_fibers = {}
+
       @evaluated = false
+      @run_queue.schedule(fiber, 0, self)
     end
 
     def result(opts = {})
@@ -14,14 +15,16 @@ class IOEventLoop
         result = @result
       else
         fiber = Fiber.current
-        @requesting_fibers.store fiber, true
+
+        @requesting_fibers ||= {}
+        @requesting_fibers.store(fiber, true)
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          @run_queue.schedule fiber, seconds, timeout_result
+          @run_queue.schedule(fiber, seconds, timeout_result)
         end
 
-        result = @loop.resume
+        result = @event_loop.transfer
 
         if seconds
           @run_queue.cancel fiber
@@ -45,13 +48,13 @@ class IOEventLoop
         @evaluated = true
         @run_queue.cancel @fiber
         @io_watcher.cancel @fiber
-        @requesting_fibers.each_key{ |fiber| @run_queue.schedule fiber, 0, result }
+        @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) } if @requesting_fibers
         :evaluated
       end
     end
 
     def cancel(reason = "waiting cancelled")
-      evaluate_to CancelledError.new reason
+      evaluate_to CancelledError.new(reason)
       :cancelled
     end
   end

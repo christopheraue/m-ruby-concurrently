@@ -1,13 +1,13 @@
 class IOEventLoop
   class RunQueue
-    def initialize(loop)
-      @loop = loop
+    def initialize
+      @wall_clock = WallClock.new
       @cart_track = []
       @cart_index = {}
     end
 
     def schedule(fiber, seconds, result = nil)
-      cart = Cart.new(fiber, @loop.wall_clock.now+seconds, result)
+      cart = Cart.new(fiber, @wall_clock.now+seconds, result)
       index = bisect_left(@cart_track, cart)
       @cart_track.insert(index, cart)
       @cart_index[fiber] = cart
@@ -21,13 +21,13 @@ class IOEventLoop
 
     def waiting_time
       if next_scheduled = @cart_track.reverse_each.find(&:active?)
-        waiting_time = next_scheduled.time - @loop.wall_clock.now
+        waiting_time = next_scheduled.time - @wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
 
     def process_pending
-      index = bisect_left(@cart_track, @loop.wall_clock.now)
+      index = bisect_left(@cart_track, @wall_clock.now)
       @cart_track.pop(@cart_track.length-index).reverse_each(&:process)
     end
 

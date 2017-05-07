@@ -1,7 +1,6 @@
 class IOEventLoop
   class IOWatcher
-    def initialize(loop)
-      @loop = loop
+    def initialize
       @readers = {}
       @writers = {}
       @fibers = {}

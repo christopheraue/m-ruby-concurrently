@@ -4,14 +4,14 @@ class IOEventLoop
   include CallbacksAttachable
 
   def initialize(*)
-    @wall_clock = WallClock.new
-
-    @run_queue = RunQueue.new self
-    @io_watcher = IOWatcher.new self
+    @run_queue = RunQueue.new
+    @io_watcher = IOWatcher.new
 
     @event_loop = Fiber.new do
       while true
-        if (waiting_time = @run_queue.waiting_time) == 0
+        waiting_time = @run_queue.waiting_time
+
+        if waiting_time == 0
           @run_queue.process_pending
         elsif @io_watcher.awaiting? or waiting_time
           @io_watcher.process_ready_in waiting_time
@@ -29,12 +29,6 @@ class IOEventLoop
     end
   end
 
-  attr_reader :wall_clock
-
-  def resume
-    @event_loop.transfer
-  end
-
 
   # Concurrently executed block of code
 
@@ -48,20 +42,18 @@ class IOEventLoop
       end
 
       future.evaluate_to result
-      resume
+      @event_loop.transfer
     end
 
-    future = Future.new self, @run_queue, @io_watcher, fiber
-    @run_queue.schedule fiber, 0, future
-    future
+    Future.new(fiber, @event_loop, @run_queue, @io_watcher)
   end
 
 
   # Waiting for a given time
 
   def wait(seconds)
-    @run_queue.schedule Fiber.current, seconds
-    resume
+    @run_queue.schedule(Fiber.current, seconds)
+    @event_loop.transfer
   end
 
 
@@ -69,13 +61,15 @@ class IOEventLoop
 
   def await_readable(io, opts = {})
     fiber = Fiber.current
+
     max_seconds = opts[:within]
-    @run_queue.schedule fiber, max_seconds, false if max_seconds
-    @io_watcher.await_reader fiber, io
-    resume
+    max_seconds and @run_queue.schedule(fiber, max_seconds, false)
+    @io_watcher.await_reader(fiber, io)
+
+    @event_loop.transfer
   ensure
     @io_watcher.cancel fiber
-    @run_queue.cancel fiber if max_seconds
+    max_seconds and @run_queue.cancel(fiber)
   end
 
 
@@ -83,13 +77,15 @@ class IOEventLoop
 
   def await_writable(io, opts = {})
     fiber = Fiber.current
+
     max_seconds = opts[:within]
-    @run_queue.schedule fiber, max_seconds, false if max_seconds
-    @io_watcher.await_writer fiber, io
-    resume
+    max_seconds and @run_queue.schedule(fiber, max_seconds, false)
+    @io_watcher.await_writer(fiber, io)
+
+    @event_loop.transfer
   ensure
     @io_watcher.cancel fiber
-    @run_queue.cancel fiber if max_seconds
+    max_seconds and @run_queue.cancel(fiber)
   end
 
 
