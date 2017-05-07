@@ -1,24 +1,35 @@
 class IOEventLoop
   class RunQueue::Cart
-    def initialize(fiber, time, result)
+    def initialize(pool, index)
+      @pool = pool
+      @index = index
+    end
+
+    def load(fiber, time, result)
+      @index[fiber] = self
       @fiber = fiber
       @time = time
       @result = result
-      @active = true
+      @loaded = true
     end
 
-    attr_reader :time
+    attr_reader :fiber, :time, :result
 
-    attr_reader :active
-    alias active? active
-    undef active
+    attr_reader :loaded
+    alias loaded? loaded
+    undef loaded
 
-    def process
-      @fiber.transfer @result if @active
+    def unload
+      @loaded = false
     end
 
-    def cancel
-      @active = false
+    def unload_and_process
+      if @loaded
+        @loaded = false
+        @index.delete @fiber
+        @pool.push self
+        @fiber.transfer @result
+      end
     end
   end
 end

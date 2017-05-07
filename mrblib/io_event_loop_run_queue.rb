@@ -2,25 +2,23 @@ class IOEventLoop
   class RunQueue
     def initialize
       @wall_clock = WallClock.new
+      @cart_pool = CartPool.new
       @cart_track = []
-      @cart_index = {}
     end
 
     def schedule(fiber, seconds, result = nil)
-      cart = Cart.new(fiber, @wall_clock.now+seconds, result)
-      index = bisect_left(@cart_track, cart.time)
+      time = @wall_clock.now+seconds
+      cart = @cart_pool.take_and_load_with(fiber, time, result)
+      index = bisect_left(@cart_track, time)
       @cart_track.insert(index, cart)
-      @cart_index[fiber] = cart
     end
 
     def cancel(fiber)
-      if cart = @cart_index.delete(fiber)
-        cart.cancel
-      end
+      @cart_pool.unload_by_fiber fiber
     end
 
     def waiting_time
-      if next_scheduled = @cart_track.reverse_each.find(&:active?)
+      if next_scheduled = @cart_track.reverse_each.find(&:loaded?)
         waiting_time = next_scheduled.time - @wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
@@ -28,7 +26,7 @@ class IOEventLoop
 
     def process_pending
       index = bisect_left(@cart_track, @wall_clock.now)
-      @cart_track.pop(@cart_track.length-index).reverse_each(&:process)
+      @cart_track.pop(@cart_track.length-index).reverse_each(&:unload_and_process)
     end
 
     # Return the left-most index in a list of carts sorted in DESCENDING order
