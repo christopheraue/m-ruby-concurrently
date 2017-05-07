@@ -1,11 +1,9 @@
 class IOEventLoop
   class Future
-    def initialize(fiber, event_loop, run_queue, io_watcher)
+    def initialize(fiber, event_loop, run_queue)
       @fiber = fiber
       @event_loop = event_loop
       @run_queue = run_queue
-      @io_watcher = io_watcher
-
       @evaluated = false
     end
 

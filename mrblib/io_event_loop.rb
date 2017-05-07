@@ -53,7 +53,7 @@ class IOEventLoop
       @event_loop.transfer
     end
 
-    future = Future.new(fiber, @event_loop, @run_queue, @io_watcher)
+    future = Future.new(fiber, @event_loop, @run_queue)
     @run_queue.schedule(fiber, 0, future)
     future
   end
