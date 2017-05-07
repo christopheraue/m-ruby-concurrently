@@ -1,4 +1,4 @@
-fdescribe "using #await_writable in concurrent blocks" do
+describe "using #await_writable in concurrent blocks" do
   let(:loop) { IOEventLoop.new }
 
   let(:pipe) { IO.pipe }

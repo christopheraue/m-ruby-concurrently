@@ -54,6 +54,7 @@ class IOEventLoop
   def wait(seconds)
     @run_queue.schedule(Fiber.current, seconds)
     @event_loop.transfer
+    :waited
   end
 
 

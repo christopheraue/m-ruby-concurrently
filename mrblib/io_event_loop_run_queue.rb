@@ -17,16 +17,16 @@ class IOEventLoop
       @cart_pool.unload_by_fiber fiber
     end
 
+    def process_pending
+      index = bisect_left(@cart_track, @wall_clock.now)
+      @cart_track.pop(@cart_track.length-index).reverse_each(&:unload_and_process)
+    end
+
     def waiting_time
       if next_scheduled = @cart_track.reverse_each.find(&:loaded?)
         waiting_time = next_scheduled.time - @wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
-    end
-
-    def process_pending
-      index = bisect_left(@cart_track, @wall_clock.now)
-      @cart_track.pop(@cart_track.length-index).reverse_each(&:unload_and_process)
     end
 
     # Return the left-most index in a list of carts sorted in DESCENDING order
