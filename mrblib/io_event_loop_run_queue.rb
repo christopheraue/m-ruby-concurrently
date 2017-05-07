@@ -2,30 +2,31 @@ class IOEventLoop
   class RunQueue
     def initialize(loop)
       @loop = loop
-      @carts = []
+      @cart_track = []
+      @cart_index = {}
     end
 
-    def schedule(fiber, time, result = nil)
-      entry = Cart.new(fiber, time, result)
-      index = bisect_left(@carts, entry)
-      @carts.insert(index, entry)
-      entry
+    def schedule(fiber, seconds, result = nil)
+      cart = Cart.new(fiber, @loop.wall_clock.now+seconds, result)
+      index = bisect_left(@cart_track, cart)
+      @cart_track.insert(index, cart)
+      @cart_index[fiber] = cart
     end
 
-    def schedule_in(seconds, fiber, result = nil)
-      schedule fiber, @loop.wall_clock.now+seconds, result
+    def cancel(fiber)
+      @cart_index.delete(fiber).cancel
     end
 
     def waiting_time
-      if next_scheduled = @carts.reverse_each.find(&:active?)
+      if next_scheduled = @cart_track.reverse_each.find(&:active?)
         waiting_time = next_scheduled.time - @loop.wall_clock.now
         waiting_time < 0 ? 0 : waiting_time
       end
     end
 
-    def run_pending
-      index = bisect_left(@carts, @loop.wall_clock.now)
-      @carts.pop(@carts.length-index).reverse_each(&:process)
+    def process_pending
+      index = bisect_left(@cart_track, @loop.wall_clock.now)
+      @cart_track.pop(@cart_track.length-index).reverse_each(&:process)
     end
 
     # Return the left-most index in a list of timers sorted in DESCENDING order

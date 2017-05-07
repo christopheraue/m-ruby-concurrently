@@ -3,7 +3,7 @@ class IOEventLoop
     def initialize(loop, run_queue, fiber)
       @loop = loop
       @run_queue = run_queue
-      @run_queue.schedule_in 0, fiber, self
+      @run_queue.schedule fiber, 0, self
       @requesting_fibers = {}
       @evaluated = false
     end
@@ -12,20 +12,21 @@ class IOEventLoop
       if @evaluated
         result = @result
       else
-        @requesting_fibers.store Fiber.current, true
+        fiber = Fiber.current
+        @requesting_fibers.store fiber, true
 
         if seconds = opts[:within]
           timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
-          timeout = @run_queue.schedule_in seconds, Fiber.current, timeout_result
+          @run_queue.schedule fiber, seconds, timeout_result
         end
 
         result = @loop.resume
 
-        @requesting_fibers.delete Fiber.current
-
         if seconds
-          timeout.cancel
+          @run_queue.cancel fiber
         end
+
+        @requesting_fibers.delete fiber
       end
 
       (Exception === result) ? (raise result) : result
@@ -41,7 +42,7 @@ class IOEventLoop
       else
         @result = result
         @evaluated = true
-        @requesting_fibers.each_key{ |fiber| @run_queue.schedule_in 0, fiber, result }
+        @requesting_fibers.each_key{ |fiber| @run_queue.schedule fiber, 0, result }
         :evaluated
       end
     end
