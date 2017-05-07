@@ -13,7 +13,7 @@ class IOEventLoop
       while true
         if (waiting_time = @run_queue.waiting_time) == 0
           @run_queue.process_pending
-        elsif @io_watcher.watches? or waiting_time
+        elsif @io_watcher.awaiting? or waiting_time
           @io_watcher.process_ready_in waiting_time
         else
           # Having no pending timeouts or IO events would make run this loop
@@ -71,10 +71,10 @@ class IOEventLoop
     fiber = Fiber.current
     max_seconds = opts[:within]
     @run_queue.schedule fiber, max_seconds, false if max_seconds
-    @io_watcher.watch_reader io, fiber
+    @io_watcher.await_reader fiber, io
     resume
   ensure
-    @io_watcher.cancel_watching_reader io
+    @io_watcher.cancel fiber
     @run_queue.cancel fiber if max_seconds
   end
 
@@ -85,10 +85,10 @@ class IOEventLoop
     fiber = Fiber.current
     max_seconds = opts[:within]
     @run_queue.schedule fiber, max_seconds, false if max_seconds
-    @io_watcher.watch_writer io, fiber
+    @io_watcher.await_writer fiber, io
     resume
   ensure
-    @io_watcher.cancel_watching_writer io
+    @io_watcher.cancel fiber
     @run_queue.cancel fiber if max_seconds
   end
 
