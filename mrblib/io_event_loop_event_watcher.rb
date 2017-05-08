@@ -9,26 +9,18 @@ class IOEventLoop
       
       @results = []
       @callback = @subject.on(@event) do |_,result|
-        if @loop.awaits? __id__
-          @loop.resume __id__, result
-        else
-          @results.unshift result
-        end
-
+        @results.unshift result
         cancel "only interested in #{@max_events} event(s)" if (@received += 1) >= @max_events
       end
     end
 
     attr_reader :loop, :subject, :event, :received
 
-    def await(*args)
-      # Pass potential args along to loop#await. This allows us to use
-      # a timeout for this method when using IOEventLoop.
-
+    def await
       @results.pop or begin
         raise CancelledError, @cancel_reason if @cancel_reason
-        raise EventWatcherError, 'already waiting' if @loop.awaits? __id__
-        @loop.await(__id__, *args)
+        @loop.await_event(@subject, @event)
+        await
       end
     end
 
@@ -45,7 +37,6 @@ class IOEventLoop
 
       @cancel_reason = reason
       @callback.cancel
-      @loop.cancel __id__, reason if @loop.awaits? __id__
 
       :cancelled
     end

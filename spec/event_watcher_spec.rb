@@ -2,7 +2,7 @@ describe IOEventLoop::EventWatcher do
   let!(:instance) { described_class.new loop, object, event, *opts }
 
   let(:loop) { IOEventLoop.new }
-  let(:object) { Class.new{ include CallbacksAttachable }.new }
+  let(:object) { Object.new.extend CallbacksAttachable }
   let(:event) { :event }
   let(:opts) { nil }
 
@@ -32,28 +32,21 @@ describe IOEventLoop::EventWatcher do
 
         context "when we only want to watch for one event" do
           let(:opts) { [max_events: 1] }
-          it { expect{ subject }.to raise_error IOEventLoop::CancelledError,
+          it { is_expected.to raise_error IOEventLoop::CancelledError,
             'only interested in 1 event(s)' }
         end
       end
     end
 
     context "when the event happens later" do
-      before { loop.concurrently{ object.trigger(event, event_result) } }
-      before { loop.start }
+      before { loop.concurrently{ loop.wait(0.0001); object.trigger(event, event_result) } }
       it { is_expected.to be event_result }
       after { expect(instance.received).to be 1 }
     end
 
     context "when the watcher has already been cancelled" do
       before { instance.cancel('cancel reason') }
-      it { expect{ subject }.to raise_error IOEventLoop::CancelledError, 'cancel reason' }
-    end
-
-    context "when we are already waiting" do
-      before { loop.concurrently{ instance.await } }
-      before { loop.start }
-      it { expect{ subject }.to raise_error IOEventLoop::EventWatcherError, 'already waiting' }
+      it { is_expected.to raise_error IOEventLoop::CancelledError, 'cancel reason' }
     end
   end
 
@@ -61,17 +54,16 @@ describe IOEventLoop::EventWatcher do
     subject { instance.cancel('cancel reason') }
 
     it { is_expected.to be :cancelled }
-    after { expect(instance).to be_cancelled }
+    after { expect(instance.cancelled?).to be true }
 
     context "when the watcher is cancelled after starting to wait" do
-      before { loop.concurrently{ subject } }
-      before { loop.start }
+      before { loop.concurrently{ subject }.result }
       it { expect{ instance.await }.to raise_error IOEventLoop::CancelledError, 'cancel reason' }
     end
 
     context "when the watched has already been cancelled" do
       before { instance.cancel('cancel reason') }
-      it { expect{ subject }.to raise_error IOEventLoop::EventWatcherError, 'already cancelled' }
+      it { is_expected.to raise_error IOEventLoop::EventWatcherError, 'already cancelled' }
     end
   end
 end
