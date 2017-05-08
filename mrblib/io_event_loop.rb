@@ -81,7 +81,7 @@ class IOEventLoop
 
     @io_watcher.await_reader(fiber, io)
     result, return_fiber = @event_loop.transfer
-    @io_watcher.cancel fiber
+    @io_watcher.cancel_reader fiber
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely. In this case transfer back to the given return_fiber.
@@ -96,7 +96,7 @@ class IOEventLoop
 
     @io_watcher.await_writer(fiber, io)
     result, return_fiber = @event_loop.transfer
-    @io_watcher.cancel fiber
+    @io_watcher.cancel_writer fiber
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely. In this case transfer back to the given return_fiber.

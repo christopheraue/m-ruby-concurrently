@@ -20,8 +20,11 @@ class IOEventLoop
       @fibers[io] = fiber
     end
 
-    def cancel(fiber)
+    def cancel_reader(fiber)
       @fibers.delete @readers.delete fiber
+    end
+
+    def cancel_writer(fiber)
       @fibers.delete @writers.delete fiber
     end
 
