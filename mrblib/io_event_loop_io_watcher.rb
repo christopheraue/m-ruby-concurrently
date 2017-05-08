@@ -10,22 +10,22 @@ class IOEventLoop
       @fibers.any?
     end
 
-    def await_reader(fiber, io)
+    def await_reader(io, fiber)
       @readers[fiber] = io
       @fibers[io] = fiber
     end
 
-    def await_writer(fiber, io)
+    def await_writer(io, fiber)
       @writers[fiber] = io
       @fibers[io] = fiber
     end
 
-    def cancel_reader(fiber)
-      @fibers.delete @readers.delete fiber
+    def cancel_reader(io)
+      @readers.delete @fibers.delete io
     end
 
-    def cancel_writer(fiber)
-      @fibers.delete @writers.delete fiber
+    def cancel_writer(io)
+      @writers.delete @fibers.delete io
     end
 
     def process_ready_in(waiting_time)

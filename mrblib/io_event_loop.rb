@@ -79,9 +79,9 @@ class IOEventLoop
   def await_readable(io)
     fiber = Fiber.current
 
-    @io_watcher.await_reader(fiber, io)
+    @io_watcher.await_reader(io, fiber)
     result, return_fiber = @event_loop.transfer
-    @io_watcher.cancel_reader fiber
+    @io_watcher.cancel_reader(io)
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely. In this case transfer back to the given return_fiber.
@@ -94,9 +94,9 @@ class IOEventLoop
   def await_writable(io)
     fiber = Fiber.current
 
-    @io_watcher.await_writer(fiber, io)
+    @io_watcher.await_writer(io, fiber)
     result, return_fiber = @event_loop.transfer
-    @io_watcher.cancel_writer fiber
+    @io_watcher.cancel_writer(io)
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely. In this case transfer back to the given return_fiber.
