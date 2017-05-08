@@ -3,7 +3,7 @@ Object.__send__(:remove_const, :IOEventLoop) if Object.const_defined? :IOEventLo
 class IOEventLoop
   include CallbacksAttachable
 
-  def initialize(*)
+  def initialize
     @run_queue = RunQueue.new
     @io_watcher = IOWatcher.new
 
