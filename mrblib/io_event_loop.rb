@@ -7,6 +7,8 @@ class IOEventLoop
     @run_queue = RunQueue.new
     @io_watcher = IOWatcher.new
 
+    @empty_future_data = {}.freeze
+
     @event_loop = Fiber.new do
       while true
         waiting_time = @run_queue.waiting_time
@@ -32,7 +34,7 @@ class IOEventLoop
 
   # Concurrently executed block of code
 
-  def concurrently # &block
+  def concurrently(future_class = Future, future_data = @empty_future_data) # &block
     fiber = Fiber.new do |future|
       if Fiber === future
         # If future is a Fiber it means this fiber has already been evaluated
@@ -52,7 +54,7 @@ class IOEventLoop
       future.evaluate_to result
     end
 
-    future = Future.new(fiber, @event_loop, @run_queue)
+    future = future_class.new(fiber, @event_loop, @run_queue, future_data)
     @run_queue.schedule(fiber, 0, future, :resume)
     future
   end

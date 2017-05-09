@@ -171,4 +171,20 @@ describe IOEventLoop::Future do
       it { is_expected.to raise_error IOEventLoop::Error, "already evaluated" }
     end
   end
+
+  context "when it configures no custom future" do
+    subject(:concurrent_future) { loop.concurrently }
+
+    it { is_expected.to be_a(IOEventLoop::Future).and have_attributes(data: {}) }
+    it { expect(concurrent_future.data).to be_frozen }
+  end
+
+  context "when it configures a custom future" do
+    subject(:concurrent_future) { loop.concurrently(custom_future_class, { opt: :ion }) }
+
+    let(:custom_future_class) { Class.new(IOEventLoop::Future) }
+
+    it { is_expected.to be_a(custom_future_class).and have_attributes(data: { opt: :ion }) }
+    it { expect(concurrent_future.data).to be_frozen }
+  end
 end

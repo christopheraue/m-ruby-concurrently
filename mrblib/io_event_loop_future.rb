@@ -4,12 +4,15 @@ class IOEventLoop
     TimeoutError = IOEventLoop::TimeoutError
     CancelledError = IOEventLoop::CancelledError
 
-    def initialize(fiber, event_loop, run_queue)
+    def initialize(fiber, event_loop, run_queue, data)
       @fiber = fiber
       @event_loop = event_loop
       @run_queue = run_queue
       @evaluated = false
+      @data = data.freeze
     end
+
+    attr_reader :data
 
     def result(opts = {}) # &with_result
       if @evaluated
