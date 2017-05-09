@@ -21,7 +21,7 @@ class IOEventLoop
           @run_queue.schedule(fiber, seconds, timeout_result)
         end
 
-        result, return_fiber = @event_loop.transfer
+        result = @event_loop.transfer
 
         if seconds
           @run_queue.cancel fiber
@@ -29,9 +29,9 @@ class IOEventLoop
 
         @requesting_fibers.delete fiber
 
-        # If result is this very fiber it means this fiber has been evaluated
-        # prematurely. In this case transfer back to the given return_fiber.
-        (result == fiber) ? return_fiber.transfer : result
+        # If result is a fiber it means this fiber has been evaluated prematurely.
+        # In this case transfer back to the given result fiber.
+        (Fiber === result) ? result.transfer : result
       end
 
       result = yield result if block_given?
@@ -49,9 +49,12 @@ class IOEventLoop
       else
         @result = result
         @evaluated = true
-        current_fiber = Fiber.current
-        @fiber.transfer @fiber, current_fiber
-        @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, [result, current_fiber]) } if @requesting_fibers
+
+        # Cancel @fiber unless we are already in it. If we are in @fiber, this
+        # is a no op.
+        @fiber.transfer Fiber.current
+
+        @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) } if @requesting_fibers
         :evaluated
       end
     end
