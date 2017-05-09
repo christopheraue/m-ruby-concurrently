@@ -4,7 +4,7 @@ describe IOEventLoop::Future do
   describe "#result" do
     subject { concurrency.result(&with_result) }
 
-    let(:concurrency) { loop.concurrently{ result } }
+    let(:concurrency) { loop.concurrent_future{ result } }
     let(:with_result) { nil }
     let(:result) { :result }
 
@@ -43,7 +43,7 @@ describe IOEventLoop::Future do
     end
 
     context "when the code inside the fiber raises an error" do
-      let(:concurrency) { loop.concurrently{ raise 'error' } }
+      let(:concurrency) { loop.concurrent_future{ raise 'error' } }
       before { expect(loop).to receive(:trigger).with(:error,
         (be_a(RuntimeError).and have_attributes message: 'error')) }
       it { is_expected.to raise_error RuntimeError, 'error' }
@@ -67,9 +67,9 @@ describe IOEventLoop::Future do
     end
 
     context "when getting the evaluating result from two concurrent blocks" do
-      let!(:concurrency) { loop.concurrently{ loop.wait(0.0001); :result } }
-      let!(:concurrency1) { loop.concurrently{ concurrency.result } }
-      let!(:concurrency2) { loop.concurrently{ concurrency.result } }
+      let!(:concurrency) { loop.concurrent_future{ loop.wait(0.0001); :result } }
+      let!(:concurrency1) { loop.concurrent_future{ concurrency.result } }
+      let!(:concurrency2) { loop.concurrent_future{ concurrency.result } }
 
       it { is_expected.to be :result }
       after { expect(concurrency1.result).to be :result }
@@ -84,12 +84,12 @@ describe IOEventLoop::Future do
     let(:timeout_result) { :timeout_result }
 
     context "when the result arrives in time" do
-      let(:concurrency) { loop.concurrently{ :result } }
+      let(:concurrency) { loop.concurrent_future{ :result } }
       it { is_expected.to be :result }
     end
 
     context "when evaluation of result is too slow" do
-      let(:concurrency) { loop.concurrently do
+      let(:concurrency) { loop.concurrent_future do
         loop.wait(0.0002)
         :result
       end }
@@ -112,9 +112,9 @@ describe IOEventLoop::Future do
 
     context "when getting the evaluating result from two concurrent blocks, from one with a timeout" do
       subject { concurrency.result }
-      let!(:concurrency) { loop.concurrently{ loop.wait(0.0002); :result } }
-      let!(:concurrency1) { loop.concurrently{ concurrency.result } }
-      let!(:concurrency2) { loop.concurrently{ concurrency.result within: 0.0001, timeout_result: :timeout_result } }
+      let!(:concurrency) { loop.concurrent_future{ loop.wait(0.0002); :result } }
+      let!(:concurrency1) { loop.concurrent_future{ concurrency.result } }
+      let!(:concurrency2) { loop.concurrent_future{ concurrency.result within: 0.0001, timeout_result: :timeout_result } }
 
       it { is_expected.to be :result }
       after { expect(concurrency1.result).to be :result }
@@ -129,7 +129,7 @@ describe IOEventLoop::Future do
     context "when doing it before requesting the result" do
       subject { concurrency.cancel *reason }
 
-      let(:concurrency) { loop.concurrently{ :result } }
+      let(:concurrency) { loop.concurrent_future{ :result } }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
@@ -145,9 +145,9 @@ describe IOEventLoop::Future do
     end
 
     context "when doing it after requesting the result" do
-      subject { loop.concurrently{ concurrency.cancel *reason }.result }
+      subject { loop.concurrent_future{ concurrency.cancel *reason }.result }
 
-      let(:concurrency) { loop.concurrently{ loop.wait(0.0001) } }
+      let(:concurrency) { loop.concurrent_future{ loop.wait(0.0001) } }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
@@ -165,7 +165,7 @@ describe IOEventLoop::Future do
     context "when cancelling after it is already evaluated" do
       subject { concurrency.cancel }
 
-      let(:concurrency) { loop.concurrently{ :result } }
+      let(:concurrency) { loop.concurrent_future{ :result } }
       before { concurrency.result }
 
       it { is_expected.to raise_error IOEventLoop::Error, "already evaluated" }
@@ -173,14 +173,14 @@ describe IOEventLoop::Future do
   end
 
   context "when it configures no custom future" do
-    subject(:concurrent_future) { loop.concurrently }
+    subject(:concurrent_future) { loop.concurrent_future }
 
     it { is_expected.to be_a(IOEventLoop::Future).and have_attributes(data: {}) }
     it { expect(concurrent_future.data).to be_frozen }
   end
 
   context "when it configures a custom future" do
-    subject(:concurrent_future) { loop.concurrently(custom_future_class, { opt: :ion }) }
+    subject(:concurrent_future) { loop.concurrent_future(custom_future_class, { opt: :ion }) }
 
     let(:custom_future_class) { Class.new(IOEventLoop::Future) }
 

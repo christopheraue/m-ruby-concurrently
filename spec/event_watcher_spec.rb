@@ -39,7 +39,7 @@ describe IOEventLoop::EventWatcher do
     end
 
     context "when the event happens later" do
-      before { loop.concurrently{ loop.wait(0.0001); object.trigger(event, event_result) } }
+      before { loop.concurrent_future{ loop.wait(0.0001); object.trigger(event, event_result) } }
       it { is_expected.to be event_result }
       after { expect(instance.received).to be 1 }
     end
@@ -57,7 +57,7 @@ describe IOEventLoop::EventWatcher do
     after { expect(instance.cancelled?).to be true }
 
     context "when the watcher is cancelled after starting to wait" do
-      before { loop.concurrently{ subject }.result }
+      before { loop.concurrent_future{ subject }.result }
       it { expect{ instance.await }.to raise_error IOEventLoop::CancelledError, 'cancel reason' }
     end
 

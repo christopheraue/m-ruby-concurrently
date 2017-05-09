@@ -1,6 +1,6 @@
 describe "using #await_readable in concurrent blocks" do
   let(:loop) { IOEventLoop.new }
-  let(:concurrency) { loop.concurrently(&wait_proc) }
+  let(:concurrency) { loop.concurrent_future(&wait_proc) }
 
   let(:wait_proc) { proc do
     loop.await_readable reader
@@ -12,7 +12,7 @@ describe "using #await_readable in concurrent blocks" do
   let(:writer) { pipe[1] }
   let(:ready_time) { 0.0001 }
 
-  before { loop.concurrently do
+  before { loop.concurrent_future do
     loop.wait ready_time
     writer.write 'Wake up!'
     writer.close
@@ -35,7 +35,7 @@ describe "using #await_readable in concurrent blocks" do
       concurrency
     end
 
-    before { loop.concurrently do
+    before { loop.concurrent_future do
       # cancel the concurrent block half way through the waiting time
       loop.wait ready_time/2
       concurrency.evaluate_to :intercepted

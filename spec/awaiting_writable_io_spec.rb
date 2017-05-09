@@ -1,6 +1,6 @@
 describe "using #await_writable in concurrent blocks" do
   let(:loop) { IOEventLoop.new }
-  let(:concurrency) { loop.concurrently(&wait_proc) }
+  let(:concurrency) { loop.concurrent_future(&wait_proc) }
 
   let(:wait_proc) { proc do
     loop.await_writable writer
@@ -15,7 +15,7 @@ describe "using #await_writable in concurrent blocks" do
   # jam pipe: default pipe buffer size on linux is 65536
   before { writer.write('a' * 65536) }
 
-  before { loop.concurrently do
+  before { loop.concurrent_future do
     loop.wait ready_time
     reader.read 65536 # clears the pipe
   end }
@@ -37,7 +37,7 @@ describe "using #await_writable in concurrent blocks" do
       concurrency
     end
 
-    before { loop.concurrently do
+    before { loop.concurrent_future do
       # cancel the concurrent block half way through the waiting time
       loop.wait ready_time/2
       concurrency.evaluate_to :intercepted

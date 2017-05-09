@@ -12,7 +12,7 @@ describe "using #wait in concurrent blocks" do
     let!(:start_time) { Time.now.to_f }
 
     context "when originating inside a concurrent block" do
-      subject { loop.concurrently(&wait_proc).result }
+      subject { loop.concurrent_future(&wait_proc).result }
       it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
     end
 
@@ -26,9 +26,9 @@ describe "using #wait in concurrent blocks" do
     subject { concurrency.result }
 
     let(:wait_time) { 0.0001 }
-    let!(:concurrency) { loop.concurrently{ loop.wait wait_time; :completed } }
+    let!(:concurrency) { loop.concurrent_future{ loop.wait wait_time; :completed } }
 
-    before { loop.concurrently do
+    before { loop.concurrent_future do
       # cancel the concurrent block half way through the waiting time
       loop.wait wait_time/2
       concurrency.evaluate_to :intercepted
@@ -42,13 +42,13 @@ describe "using #wait in concurrent blocks" do
     it { is_expected.to be :intercepted }
   end
 
-  describe "order of multiple deferred concurrently blocks" do
+  describe "order of multiple deferred concurrent_future blocks" do
     subject { concurrency.result }
 
-    let!(:concurrency1) { loop.concurrently{ loop.wait(seconds1); callback1.call } }
-    let!(:concurrency2) { loop.concurrently{ loop.wait(seconds2); callback2.call } }
-    let!(:concurrency3) { loop.concurrently{ loop.wait(seconds3); callback3.call } }
-    let(:concurrency) { loop.concurrently{ loop.wait(0.0004) } }
+    let!(:concurrency1) { loop.concurrent_future{ loop.wait(seconds1); callback1.call } }
+    let!(:concurrency2) { loop.concurrent_future{ loop.wait(seconds2); callback2.call } }
+    let!(:concurrency3) { loop.concurrent_future{ loop.wait(seconds3); callback3.call } }
+    let(:concurrency) { loop.concurrent_future{ loop.wait(0.0004) } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0002 }
     let(:seconds3) { 0.0003 }
@@ -150,7 +150,7 @@ describe "using #wait in concurrent blocks" do
     subject { concurrency.result }
 
     before { @count = 0 }
-    let(:concurrency) { loop.concurrently do
+    let(:concurrency) { loop.concurrent_future do
       while (@count += 1) < 4
         loop.wait(0.0001)
         callback.call

@@ -34,7 +34,7 @@ class IOEventLoop
 
   # Concurrently executed block of code
 
-  def concurrently(future_class = Future, future_data = @empty_future_data) # &block
+  def concurrent_future(future_class = Future, future_data = @empty_future_data) # &block
     fiber = Fiber.new do |future|
       if Fiber === future
         # If future is a Fiber it means this fiber has already been evaluated

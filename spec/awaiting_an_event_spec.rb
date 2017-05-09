@@ -1,12 +1,12 @@
 describe "using #await_event in concurrent blocks" do
   let(:loop) { IOEventLoop.new }
-  let(:concurrency) { loop.concurrently(&wait_proc) }
+  let(:concurrency) { loop.concurrent_future(&wait_proc) }
   let(:wait_proc) { proc{ loop.await_event object, :event } }
 
   let(:object) { Object.new.extend CallbacksAttachable }
   let(:waiting_time) { 0.001 }
 
-  before { loop.concurrently do
+  before { loop.concurrent_future do
     loop.wait waiting_time
     object.trigger :event, :result
   end }
@@ -28,7 +28,7 @@ describe "using #await_event in concurrent blocks" do
       concurrency
     end
 
-    before { loop.concurrently do
+    before { loop.concurrent_future do
       # cancel the concurrent block half way through the waiting time
       loop.wait waiting_time/2
       concurrency.evaluate_to :intercepted
