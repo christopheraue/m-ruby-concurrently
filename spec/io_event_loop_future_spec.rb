@@ -47,8 +47,9 @@ describe IOEventLoop::Future do
   end
 
   describe "#result with a timeout" do
-    subject { concurrency.result within: 0.0001, timeout_result: timeout_result }
+    subject { concurrency.result options }
 
+    let(:options) { { within: 0.0001, timeout_result: timeout_result } }
     let(:timeout_result) { :timeout_result }
 
     context "when the result arrives in time" do
@@ -61,6 +62,11 @@ describe IOEventLoop::Future do
         loop.wait(0.0002)
         :result
       end }
+
+      context "when no timeout result is given" do
+        before { options.delete :timeout_result }
+        it { is_expected.to raise_error IOEventLoop::TimeoutError, "evaluation timed out after #{options[:within]} second(s)" }
+      end
 
       context "when the timeout result is a timeout error" do
         let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
@@ -97,7 +103,7 @@ describe IOEventLoop::Future do
       context "when giving no explicit reason" do
         let(:reason) { nil }
         it { is_expected.to be :cancelled }
-        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
+        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "evaluation cancelled" }
       end
 
       context "when giving a reason" do
@@ -115,7 +121,7 @@ describe IOEventLoop::Future do
       context "when giving no explicit reason" do
         let(:reason) { nil }
         it { is_expected.to be :cancelled }
-        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "waiting cancelled" }
+        after { expect{ concurrency.result }.to raise_error IOEventLoop::CancelledError, "evaluation cancelled" }
       end
 
       context "when giving a reason" do

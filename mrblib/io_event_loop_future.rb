@@ -17,7 +17,7 @@ class IOEventLoop
         @requesting_fibers.store(fiber, true)
 
         if seconds = opts[:within]
-          timeout_result = opts.fetch(:timeout_result, TimeoutError.new("waiting timed out after #{seconds} second(s)"))
+          timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
           @run_queue.schedule(fiber, seconds, timeout_result)
         end
 
@@ -53,7 +53,7 @@ class IOEventLoop
       end
     end
 
-    def cancel(reason = "waiting cancelled")
+    def cancel(reason = "evaluation cancelled")
       evaluate_to CancelledError.new(reason)
       :cancelled
     end
