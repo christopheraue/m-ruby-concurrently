@@ -46,17 +46,17 @@ class IOEventLoop
     def evaluate_to(result)
       if @evaluated
         raise Error, "already evaluated"
-      else
-        @result = result
-        @evaluated = true
-
-        # Cancel @fiber unless we are already in it. If we are in @fiber, this
-        # is a no op.
-        @fiber.transfer Fiber.current
-
-        @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) } if @requesting_fibers
-        :evaluated
       end
+
+      @result = result
+      @evaluated = true
+
+      # Cancel @fiber unless we are already in it. If we are in @fiber, this
+      # is a no op.
+      @fiber.transfer Fiber.current
+
+      @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) } if @requesting_fibers
+      :evaluated
     end
 
     def cancel(reason = "evaluation cancelled")
