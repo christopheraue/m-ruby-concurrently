@@ -1,5 +1,9 @@
 class IOEventLoop
   class Future
+    Error = IOEventLoop::Error
+    TimeoutError = IOEventLoop::TimeoutError
+    CancelledError = IOEventLoop::CancelledError
+
     def initialize(fiber, event_loop, run_queue)
       @fiber = fiber
       @event_loop = event_loop
@@ -17,7 +21,7 @@ class IOEventLoop
         @requesting_fibers.store(fiber, true)
 
         if seconds = opts[:within]
-          timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
+          timeout_result = opts.fetch(:timeout_result, self.class::TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
           @run_queue.schedule(fiber, seconds, timeout_result)
         end
 
@@ -45,7 +49,7 @@ class IOEventLoop
 
     def evaluate_to(result)
       if @evaluated
-        raise Error, "already evaluated"
+        raise self.class::Error, "already evaluated"
       end
 
       @result = result
@@ -60,7 +64,7 @@ class IOEventLoop
     end
 
     def cancel(reason = "evaluation cancelled")
-      evaluate_to CancelledError.new(reason)
+      evaluate_to self.class::CancelledError.new(reason)
       :cancelled
     end
   end
