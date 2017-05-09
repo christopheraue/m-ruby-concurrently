@@ -7,7 +7,7 @@ class IOEventLoop
       @evaluated = false
     end
 
-    def result(opts = {})
+    def result(opts = {}) # &with_result
       if @evaluated
         result = @result
       else
@@ -33,6 +33,8 @@ class IOEventLoop
         # prematurely. In this case transfer back to the given return_fiber.
         (result == fiber) ? return_fiber.transfer : result
       end
+
+      result = yield result if block_given?
 
       (Exception === result) ? (raise result) : result
     end

@@ -2,9 +2,10 @@ describe IOEventLoop::Future do
   let(:loop) { IOEventLoop.new }
 
   describe "#result" do
-    subject { concurrency.result }
+    subject { concurrency.result(&with_result) }
 
     let(:concurrency) { loop.concurrently{ :result } }
+    let(:with_result) { nil }
 
     before { expect(concurrency).not_to be_evaluated }
     after { expect(concurrency).to be_evaluated }
@@ -16,6 +17,18 @@ describe IOEventLoop::Future do
         before { concurrency.result }
         it { is_expected.to be :result }
       end
+
+      context "when a block to do something with the result is given" do
+        context "when transforming to a non-error value" do
+          let(:with_result) { proc{ |result| "transformed #{result} to result" } }
+          it { is_expected.to eq "transformed result to result" }
+        end
+
+        context "when transforming to an error value" do
+          let(:with_result) { proc{ |result| RuntimeError.new("transformed #{result} to error") } }
+          it { is_expected.to raise_error RuntimeError, 'transformed result to error' }
+        end
+      end
     end
 
     context "when resuming a fiber raises an error" do
@@ -24,14 +37,26 @@ describe IOEventLoop::Future do
     end
 
     context "when the code inside the fiber raises an error" do
-      let(:concurrency) { loop.concurrently{ raise 'evil error' } }
+      let(:concurrency) { loop.concurrently{ raise 'error' } }
       before { expect(loop).to receive(:trigger).with(:error,
-        (be_a(RuntimeError).and have_attributes message: 'evil error')) }
-      it { is_expected.to raise_error RuntimeError, 'evil error' }
+        (be_a(RuntimeError).and have_attributes message: 'error')) }
+      it { is_expected.to raise_error RuntimeError, 'error' }
 
       context "when requesting the result a second time" do
         before { concurrency.result rescue nil }
-        it { is_expected.to raise_error RuntimeError, 'evil error' }
+        it { is_expected.to raise_error RuntimeError, 'error' }
+      end
+
+      context "when a block to do something with the result is given" do
+        context "when transforming to a non-error value" do
+          let(:with_result) { proc{ |result| "transformed #{result} to result" } }
+          it { is_expected.to eq "transformed error to result" }
+        end
+
+        context "when transforming to an error value" do
+          let(:with_result) { proc{ |result| RuntimeError.new("transformed #{result} to error") } }
+          it { is_expected.to raise_error RuntimeError, 'transformed error to error' }
+        end
       end
     end
 
