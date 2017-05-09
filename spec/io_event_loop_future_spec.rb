@@ -4,8 +4,9 @@ describe IOEventLoop::Future do
   describe "#result" do
     subject { concurrency.result(&with_result) }
 
-    let(:concurrency) { loop.concurrently{ :result } }
+    let(:concurrency) { loop.concurrently{ result } }
     let(:with_result) { nil }
+    let(:result) { :result }
 
     before { expect(concurrency).not_to be_evaluated }
     after { expect(concurrency).to be_evaluated }
@@ -28,6 +29,11 @@ describe IOEventLoop::Future do
           let(:with_result) { proc{ |result| RuntimeError.new("transformed #{result} to error") } }
           it { is_expected.to raise_error RuntimeError, 'transformed result to error' }
         end
+      end
+
+      context "when the result is an array" do
+        let(:result) { %i(a b c) }
+        it { is_expected.to eq %i(a b c) }
       end
     end
 

@@ -49,8 +49,9 @@ class IOEventLoop
       else
         @result = result
         @evaluated = true
-        @fiber.transfer @fiber, Fiber.current
-        @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) } if @requesting_fibers
+        current_fiber = Fiber.current
+        @fiber.transfer @fiber, current_fiber
+        @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, [result, current_fiber]) } if @requesting_fibers
         :evaluated
       end
     end
