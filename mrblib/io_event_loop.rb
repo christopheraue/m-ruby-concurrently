@@ -50,11 +50,10 @@ class IOEventLoop
       end
 
       future.evaluate_to result
-      @event_loop.transfer
     end
 
     future = Future.new(fiber, @event_loop, @run_queue)
-    @run_queue.schedule(fiber, 0, future)
+    @run_queue.schedule(fiber, 0, future, :resume)
     future
   end
 

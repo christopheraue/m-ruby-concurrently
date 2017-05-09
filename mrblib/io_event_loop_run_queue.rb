@@ -6,9 +6,9 @@ class IOEventLoop
       @cart_track = []
     end
 
-    def schedule(fiber, seconds, result = nil)
+    def schedule(fiber, seconds, result = nil, transfer = :transfer)
       time = @wall_clock.now+seconds
-      cart = @cart_pool.take_and_load_with(fiber, time, result)
+      cart = @cart_pool.take_and_load_with(fiber, time, result, transfer)
       index = bisect_left(@cart_track, time)
       @cart_track.insert(index, cart)
     end

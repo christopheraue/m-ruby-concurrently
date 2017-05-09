@@ -5,11 +5,12 @@ class IOEventLoop
       @index = index
     end
 
-    def load(fiber, time, result)
+    def load(fiber, time, result, transfer)
       @index[fiber] = self
       @fiber = fiber
       @time = time
       @result = result
+      @transfer = transfer
       @loaded = true
     end
 
@@ -28,7 +29,12 @@ class IOEventLoop
         @loaded = false
         @index.delete @fiber
         @pool.push self
-        @fiber.transfer @result
+
+        if @transfer == :transfer
+          @fiber.transfer @result
+        else
+          @fiber.resume @result
+        end
       end
     end
   end
