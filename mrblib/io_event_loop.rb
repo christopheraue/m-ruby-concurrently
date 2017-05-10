@@ -35,25 +35,7 @@ class IOEventLoop
   # Concurrently executed block of code
 
   def concurrent_future(future_class = Future, future_data = @empty_future_data) # &block
-    fiber = Fiber.new do |future|
-      if Fiber === future
-        # If future is a Fiber it means this fiber has already been evaluated
-        # before its start. Cancel the scheduled start of this fiber and
-        # transfer back to the given fiber.
-        @run_queue.cancel fiber
-        future.transfer
-      end
-
-      result = begin
-        yield
-      rescue Exception => e
-        trigger :error, e
-        e
-      end
-
-      future.evaluate_to result
-    end
-
+    fiber = ConcurrentProcFiber.new(self, @run_queue) { yield }
     future = future_class.new(fiber, @event_loop, @run_queue, future_data)
     @run_queue.schedule(fiber, 0, future, :resume)
     future
