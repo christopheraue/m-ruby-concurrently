@@ -1,9 +1,5 @@
 class IOEventLoop
-  class Future
-    Error = IOEventLoop::Error
-    TimeoutError = IOEventLoop::TimeoutError
-    CancelledError = IOEventLoop::CancelledError
-
+  class ConcurrentProc
     def initialize(fiber, event_loop, run_queue, data)
       @fiber = fiber
       @event_loop = event_loop
@@ -14,7 +10,7 @@ class IOEventLoop
 
     attr_reader :data
 
-    def result(opts = {}) # &with_result
+    def await_result(opts = {}) # &with_result
       if @evaluated
         result = @result
       else

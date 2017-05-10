@@ -1,4 +1,4 @@
-describe "using #wait in concurrent blocks" do
+describe "using #wait in concurrent procs" do
   subject(:loop) { IOEventLoop.new }
 
   describe "waiting for given seconds" do
@@ -11,44 +11,44 @@ describe "using #wait in concurrent blocks" do
 
     let!(:start_time) { Time.now.to_f }
 
-    context "when originating inside a concurrent block" do
-      subject { loop.concurrent_future(&wait_proc).result }
+    context "when originating inside a concurrent proc" do
+      subject { loop.concurrent_proc(&wait_proc).await_result }
       it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
     end
 
-    context "when originating outside a concurrent block" do
+    context "when originating outside a concurrent proc" do
       subject { wait_proc.call }
       it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
     end
   end
 
-  describe "evaluating/cancelling the concurrent block while it is waiting" do
-    subject { concurrency.result }
+  describe "evaluating/cancelling the concurrent proc while it is waiting" do
+    subject { concurrent_proc.await_result }
 
     let(:wait_time) { 0.0001 }
-    let!(:concurrency) { loop.concurrent_future{ loop.wait wait_time; :completed } }
+    let!(:concurrent_proc) { loop.concurrent_proc{ loop.wait wait_time; :completed } }
 
-    before { loop.concurrent_future do
-      # cancel the concurrent block half way through the waiting time
+    before { loop.concurrent_proc do
+      # cancel the concurrent proc half way through the waiting time
       loop.wait wait_time/2
-      concurrency.evaluate_to :intercepted
+      concurrent_proc.evaluate_to :intercepted
 
       # Wait after the timer would have been triggered to make sure the
-      # concurrent block is not resumed then (i.e. watching the timeout is
+      # concurrent proc is not resumed then (i.e. watching the timeout is
       # properly cancelled)
       loop.wait wait_time
-    end.result }
+    end.await_result }
 
     it { is_expected.to be :intercepted }
   end
 
-  describe "order of multiple deferred concurrent_future blocks" do
-    subject { concurrency.result }
+  describe "order of multiple deferred concurrent_proc blocks" do
+    subject { concurrent_proc.await_result }
 
-    let!(:concurrency1) { loop.concurrent_future{ loop.wait(seconds1); callback1.call } }
-    let!(:concurrency2) { loop.concurrent_future{ loop.wait(seconds2); callback2.call } }
-    let!(:concurrency3) { loop.concurrent_future{ loop.wait(seconds3); callback3.call } }
-    let(:concurrency) { loop.concurrent_future{ loop.wait(0.0004) } }
+    let!(:concurrent_proc1) { loop.concurrent_proc{ loop.wait(seconds1); callback1.call } }
+    let!(:concurrent_proc2) { loop.concurrent_proc{ loop.wait(seconds2); callback2.call } }
+    let!(:concurrent_proc3) { loop.concurrent_proc{ loop.wait(seconds3); callback3.call } }
+    let(:concurrent_proc) { loop.concurrent_proc{ loop.wait(0.0004) } }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0002 }
     let(:seconds3) { 0.0003 }
@@ -62,73 +62,73 @@ describe "using #wait in concurrent blocks" do
       before { expect(callback3).to receive(:call).ordered.and_call_original }
 
       it { is_expected.not_to raise_error }
-      after { expect(concurrency1.result).to be :result1 }
-      after { expect(concurrency2.result).to be :result2 }
-      after { expect(concurrency3.result).to be :result3 }
+      after { expect(concurrent_proc1.await_result).to be :result1 }
+      after { expect(concurrent_proc2.await_result).to be :result2 }
+      after { expect(concurrent_proc3.await_result).to be :result3 }
     end
 
     context "when the first block has been cancelled" do
-      before { concurrency1.cancel }
+      before { concurrent_proc1.cancel }
 
       before { expect(callback1).not_to receive(:call) }
       before { expect(callback2).to receive(:call).ordered.and_call_original }
       before { expect(callback3).to receive(:call).ordered.and_call_original }
       it { is_expected.not_to raise_error }
-      after { expect{ concurrency1.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect(concurrency2.result).to be :result2 }
-      after { expect(concurrency3.result).to be :result3 }
+      after { expect{ concurrent_proc1.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect(concurrent_proc2.await_result).to be :result2 }
+      after { expect(concurrent_proc3.await_result).to be :result3 }
     end
 
     context "when the first and second block have been cancelled" do
-      before { concurrency1.cancel }
-      before { concurrency2.cancel }
+      before { concurrent_proc1.cancel }
+      before { concurrent_proc2.cancel }
 
       before { expect(callback1).not_to receive(:call) }
       before { expect(callback2).not_to receive(:call) }
       before { expect(callback3).to receive(:call).ordered.and_call_original }
       it { is_expected.not_to raise_error }
-      after { expect{ concurrency1.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect{ concurrency2.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect(concurrency3.result).to be :result3 }
+      after { expect{ concurrent_proc1.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect{ concurrent_proc2.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect(concurrent_proc3.await_result).to be :result3 }
     end
 
     context "when all blocks have been cancelled" do
-      before { concurrency1.cancel }
-      before { concurrency2.cancel }
-      before { concurrency3.cancel }
+      before { concurrent_proc1.cancel }
+      before { concurrent_proc2.cancel }
+      before { concurrent_proc3.cancel }
 
       before { expect(callback1).not_to receive(:call) }
       before { expect(callback2).not_to receive(:call) }
       before { expect(callback3).not_to receive(:call) }
       it { is_expected.not_to raise_error }
-      after { expect{ concurrency1.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect{ concurrency2.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect{ concurrency3.result }.to raise_error IOEventLoop::CancelledError }
+      after { expect{ concurrent_proc1.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect{ concurrent_proc2.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect{ concurrent_proc3.await_result }.to raise_error IOEventLoop::CancelledError }
     end
 
     context "when the second block has been cancelled" do
-      before { concurrency2.cancel }
+      before { concurrent_proc2.cancel }
 
       before { expect(callback1).to receive(:call).ordered.and_call_original }
       before { expect(callback2).not_to receive(:call) }
       before { expect(callback3).to receive(:call).ordered.and_call_original }
       it { is_expected.not_to raise_error }
-      after { expect(concurrency1.result).to be :result1 }
-      after { expect{ concurrency2.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect(concurrency3.result).to be :result3 }
+      after { expect(concurrent_proc1.await_result).to be :result1 }
+      after { expect{ concurrent_proc2.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect(concurrent_proc3.await_result).to be :result3 }
     end
 
     context "when the second and last block have been cancelled" do
-      before { concurrency2.cancel }
-      before { concurrency3.cancel }
+      before { concurrent_proc2.cancel }
+      before { concurrent_proc3.cancel }
 
       before { expect(callback1).to receive(:call).ordered.and_call_original }
       before { expect(callback2).not_to receive(:call) }
       before { expect(callback3).not_to receive(:call) }
       it { is_expected.not_to raise_error }
-      after { expect(concurrency1.result).to be :result1 }
-      after { expect{ concurrency2.result }.to raise_error IOEventLoop::CancelledError }
-      after { expect{ concurrency3.result }.to raise_error IOEventLoop::CancelledError }
+      after { expect(concurrent_proc1.await_result).to be :result1 }
+      after { expect{ concurrent_proc2.await_result }.to raise_error IOEventLoop::CancelledError }
+      after { expect{ concurrent_proc3.await_result }.to raise_error IOEventLoop::CancelledError }
     end
 
     context "when all timers are triggered in one go" do
@@ -140,17 +140,17 @@ describe "using #wait in concurrent blocks" do
       before { expect(callback2).to receive(:call).ordered.and_call_original }
       before { expect(callback3).to receive(:call).ordered.and_call_original }
       it { is_expected.not_to raise_error }
-      after { expect(concurrency1.result).to be :result1 }
-      after { expect(concurrency2.result).to be :result2 }
-      after { expect(concurrency3.result).to be :result3 }
+      after { expect(concurrent_proc1.await_result).to be :result1 }
+      after { expect(concurrent_proc2.await_result).to be :result2 }
+      after { expect(concurrent_proc3.await_result).to be :result3 }
     end
   end
 
   describe "repeated execution in a fixed interval" do
-    subject { concurrency.result }
+    subject { concurrent_proc.await_result }
 
     before { @count = 0 }
-    let(:concurrency) { loop.concurrent_future do
+    let(:concurrent_proc) { loop.concurrent_proc do
       while (@count += 1) < 4
         loop.wait(0.0001)
         callback.call

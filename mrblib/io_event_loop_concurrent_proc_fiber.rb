@@ -1,13 +1,13 @@
 class IOEventLoop
   class ConcurrentProcFiber < Fiber
     def initialize(loop, run_queue)
-      super() do |future|
-        if Fiber === future
-          # If future is a Fiber it means this fiber has already been evaluated
-          # before its start. Cancel the scheduled start of this fiber and
-          # transfer back to the given fiber.
+      super() do |concurrent_proc|
+        if Fiber === concurrent_proc
+          # If concurrent_proc is a Fiber it means this fiber has already been
+          # evaluated before its start. Cancel the scheduled start of this
+          # fiber and transfer back to the given fiber.
           run_queue.cancel self
-          future.transfer
+          concurrent_proc.transfer
         end
 
         result = begin
@@ -17,7 +17,7 @@ class IOEventLoop
           e
         end
 
-        future.evaluate_to result
+        concurrent_proc.evaluate_to result
       end
     end
 

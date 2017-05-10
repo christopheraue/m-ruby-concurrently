@@ -34,11 +34,11 @@ class IOEventLoop
 
   # Concurrently executed block of code
 
-  def concurrent_future(future_class = Future, future_data = @empty_future_data) # &block
+  def concurrent_proc(klass = ConcurrentProc, data = @empty_future_data) # &block
     fiber = ConcurrentProcFiber.new(self, @run_queue) { yield }
-    future = future_class.new(fiber, @event_loop, @run_queue, future_data)
-    @run_queue.schedule(fiber, 0, future, :resume)
-    future
+    concurrent_proc = klass.new(fiber, @event_loop, @run_queue, data)
+    @run_queue.schedule(fiber, 0, concurrent_proc, :resume)
+    concurrent_proc
   end
 
 
