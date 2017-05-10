@@ -19,13 +19,13 @@ class IOEventLoop
           @io_watcher.process_ready_in waiting_time
         else
           # Having no pending timeouts or IO events would make run this loop
-          # forever. But, since we always leave the loop through one of the
-          # fibers resumed in the code above, this part of the loop is never
-          # reached. When  resuming the loop at a later time it will be because
-          # of an added timeout of IO event. So, there will always be something
-          # to wait for.
-          raise Error, "Infinitely running event loop detected. This " <<
-            "should not happen and is considered a bug in this gem."
+          # forever. But, since we always start the loop from one of the
+          # *await* methods, it is also always returning to them after waiting
+          # is complete. Therefore, we never reach this part of the code unless
+          # there is a bug or it is messed around with the internals of this gem.
+          raise Error, "Infinitely running event loop detected. There either "\
+            "is a bug in the io_event_loop gem or you messed around with the "\
+            "internals of said gem."
         end
       end
     end
