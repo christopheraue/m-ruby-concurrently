@@ -1,8 +1,8 @@
 class IOEventLoop
   class ConcurrentProc
-    def initialize(fiber, event_loop, run_queue, data)
+    def initialize(fiber, loop, run_queue, data)
       @fiber = fiber
-      @event_loop = event_loop
+      @loop = loop
       @run_queue = run_queue
       @evaluated = false
       @data = data.freeze
@@ -14,31 +14,25 @@ class IOEventLoop
       if @evaluated
         result = @result
       else
-        fiber = Fiber.current
+        @loop.await_outer do |fiber|
+          @requesting_fibers ||= {}
+          @requesting_fibers.store(fiber, true)
 
-        @requesting_fibers ||= {}
-        @requesting_fibers.store(fiber, true)
+          if seconds = opts[:within]
+            timeout_result = opts.fetch(:timeout_result, self.class::TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
+            @run_queue.schedule(fiber, seconds, timeout_result)
+          end
 
-        if seconds = opts[:within]
-          timeout_result = opts.fetch(:timeout_result, self.class::TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
-          @run_queue.schedule(fiber, seconds, timeout_result)
+          result = @loop.await_inner(fiber)
+
+          if seconds
+            @run_queue.cancel fiber
+          end
+
+          @requesting_fibers.delete fiber
+
+          result
         end
-
-        result = if ConcurrentProcFiber === fiber
-          Fiber.yield # yield back to event loop
-        else
-          @event_loop.resume # start event loop
-        end
-
-        if seconds
-          @run_queue.cancel fiber
-        end
-
-        @requesting_fibers.delete fiber
-
-        # If result is this very fiber it means this fiber has been evaluated
-        # prematurely. In this case yield back to the cancelling fiber.
-        (result == fiber) ? Fiber.yield : result
       end
 
       result = yield result if block_given?

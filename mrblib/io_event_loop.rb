@@ -37,87 +37,66 @@ class IOEventLoop
   def concurrent_proc(klass = ConcurrentProc, data = @empty_future_data) # &block
     fiber = ConcurrentProcFiber.new(self) { yield }
     @run_queue.schedule(fiber, 0)
-    concurrent_proc = klass.new(fiber, @event_loop, @run_queue, data)
+    concurrent_proc = klass.new(fiber, self, @run_queue, data)
     fiber.resume concurrent_proc
     concurrent_proc
   end
 
 
-  # Waiting for a given time
+  # Awaiting stuff
 
-  def wait(seconds)
+  def await_outer
     fiber = Fiber.current
 
-    @run_queue.schedule(fiber, seconds)
-    result = if ConcurrentProcFiber === fiber
-      Fiber.yield # yield back to event loop
-    else
-      @event_loop.resume # start event loop
-    end
-    @run_queue.cancel fiber
-
-    # If result is this very fiber it means this fiber has been evaluated
-    # prematurely. In this case yield back to the cancelling fiber.
-    (result == fiber) ? Fiber.yield : :waited
-  end
-
-
-  # Waiting for a readable IO
-
-  def await_readable(io)
-    fiber = Fiber.current
-
-    @io_watcher.await_reader(io, fiber)
-    result = if ConcurrentProcFiber === fiber
-      Fiber.yield # yield back to event loop
-    else
-      @event_loop.resume # start event loop
-    end
-    @io_watcher.cancel_reader(io)
-
-    # If result is this very fiber it means this fiber has been evaluated
-    # prematurely. In this case yield back to the cancelling fiber.
-    (result == fiber) ? Fiber.yield : :readable
-  end
-
-
-  # Waiting for a writable IO
-
-  def await_writable(io)
-    fiber = Fiber.current
-
-    @io_watcher.await_writer(io, fiber)
-    result = if ConcurrentProcFiber === fiber
-      Fiber.yield # yield back to event loop
-    else
-      @event_loop.resume # start event loop
-    end
-    @io_watcher.cancel_writer(io)
-
-    # If result is this very fiber it means this fiber has been evaluated
-    # prematurely. In this case yield back to the cancelling fiber.
-    (result == fiber) ? Fiber.yield : :writable
-  end
-
-
-  # Waiting for an event
-
-  def await_event(subject, event)
-    fiber = Fiber.current
-
-    callback = subject.on(event) do |_,result|
-      @run_queue.schedule(fiber, 0, result)
-    end
-    result = if ConcurrentProcFiber === fiber
-      Fiber.yield # yield back to event loop
-    else
-      @event_loop.resume # start event loop
-    end
-    callback.cancel
+    result = yield fiber
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely. In this case yield back to the cancelling fiber.
     (result == fiber) ? Fiber.yield : result
+  end
+
+  def await_inner(fiber)
+    if ConcurrentProcFiber === fiber
+      Fiber.yield # yield back to event loop
+    else
+      @event_loop.resume # start event loop
+    end
+  end
+
+  def wait(seconds)
+    await_outer do |fiber|
+      @run_queue.schedule(fiber, seconds)
+      result = await_inner fiber
+      @run_queue.cancel fiber
+      result
+    end
+  end
+
+  def await_readable(io)
+    await_outer do |fiber|
+      @io_watcher.await_reader(io, fiber)
+      result = await_inner fiber
+      @io_watcher.cancel_reader(io)
+      result
+    end
+  end
+
+  def await_writable(io)
+    await_outer do |fiber|
+      @io_watcher.await_writer(io, fiber)
+      result = await_inner fiber
+      @io_watcher.cancel_writer(io)
+      result
+    end
+  end
+
+  def await_event(subject, event)
+    await_outer do |fiber|
+      callback = subject.on(event) { |_,result| @run_queue.schedule(fiber, 0, result) }
+      result = await_inner fiber
+      callback.cancel
+      result
+    end
   end
 
 
