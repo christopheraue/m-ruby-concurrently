@@ -10,7 +10,7 @@ class IOEventLoop
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
 
-      super() do |future, block|
+      super() do |block, future = nil|
         # The fiber is started right away after creation or taking it out of
         # the pool to inject its future and block. It then directly yields back
         # to wait for its actual start.
@@ -40,7 +40,7 @@ class IOEventLoop
 
           # yield back to the event loop fiber and wait for the next block
           # to run.
-          future, block = Fiber.yield
+          block, future = Fiber.yield
         end
       end
     end
