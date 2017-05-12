@@ -55,9 +55,9 @@ class IOEventLoop
     end
     @run_queue.cancel fiber
 
-    # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case yield back to the given result fiber.
-    (Fiber === result) ? Fiber.yield : :waited
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case yield back to the cancelling fiber.
+    (result == fiber) ? Fiber.yield : :waited
   end
 
 
@@ -74,9 +74,9 @@ class IOEventLoop
     end
     @io_watcher.cancel_reader(io)
 
-    # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case yield back to the given result fiber.
-    (Fiber === result) ? Fiber.yield : :readable
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case yield back to the cancelling fiber.
+    (result == fiber) ? Fiber.yield : :readable
   end
 
 
@@ -93,9 +93,9 @@ class IOEventLoop
     end
     @io_watcher.cancel_writer(io)
 
-    # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case yield back to the given result fiber.
-    (Fiber === result) ? Fiber.yield : :writable
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case yield back to the cancelling fiber.
+    (result == fiber) ? Fiber.yield : :writable
   end
 
 
@@ -114,9 +114,9 @@ class IOEventLoop
     end
     callback.cancel
 
-    # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case yield back to the given result fiber.
-    (Fiber === result) ? Fiber.yield : result
+    # If result is this very fiber it means this fiber has been evaluated
+    # prematurely. In this case yield back to the cancelling fiber.
+    (result == fiber) ? Fiber.yield : result
   end
 
 

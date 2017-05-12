@@ -2,10 +2,10 @@ class IOEventLoop
   class ConcurrentProcFiber < Fiber
     def initialize(loop, run_queue)
       super() do |concurrent_proc|
-        if Fiber === concurrent_proc
-          # If evaluator is a fiber it means this fiber has just cancelled
-          # before its start. In this case cancel the scheduled start and
-          # yield back to the fiber that is responsible for cancelling.
+        if concurrent_proc == self
+          # If concurrent_proc is this very fiber it means this fiber has
+          # already been evaluated before its start. In this case cancel the
+          # scheduled start and yield back to the cancelling fiber.
           run_queue.cancel self
           Fiber.yield
         end
@@ -25,8 +25,7 @@ class IOEventLoop
 
     def cancel
       # Cancel fiber unless we are already in it
-      fiber = Fiber.current
-      resume fiber if fiber != self
+      resume self if Fiber.current != self
       :cancelled
     end
   end

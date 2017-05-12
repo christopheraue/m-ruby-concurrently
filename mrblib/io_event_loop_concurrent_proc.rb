@@ -36,9 +36,9 @@ class IOEventLoop
 
         @requesting_fibers.delete fiber
 
-        # If result is a fiber it means this fiber has been evaluated prematurely.
-        # In this case yield back to the given result fiber.
-        (Fiber === result) ? Fiber.yield : result
+        # If result is this very fiber it means this fiber has been evaluated
+        # prematurely. In this case yield back to the cancelling fiber.
+        (result == fiber) ? Fiber.yield : result
       end
 
       result = yield result if block_given?
