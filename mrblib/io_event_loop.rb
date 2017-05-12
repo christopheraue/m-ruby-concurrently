@@ -108,6 +108,10 @@ class IOEventLoop
     end
   end
 
+  def inject_result(fiber, result)
+    @run_queue.schedule(fiber, 0, result)
+  end
+
 
   # Watching events
 

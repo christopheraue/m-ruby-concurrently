@@ -1,11 +1,10 @@
 class IOEventLoop
   class ConcurrentProc
-    def initialize(fiber, loop, run_queue, data)
+    def initialize(fiber, loop, data)
       @fiber = fiber
       @loop = loop
-      @run_queue = run_queue
       @evaluated = false
-      @requesting_fibers = {}
+      @awaiting_result = {}
       @data = data.freeze
     end
 
@@ -16,9 +15,9 @@ class IOEventLoop
         result = @result
       else
         @loop.await_outer(opts) do |fiber|
-          @requesting_fibers.store(fiber, true)
+          @awaiting_result.store fiber, true
           result = @loop.await_inner(fiber)
-          @requesting_fibers.delete fiber
+          @awaiting_result.delete fiber
           result
         end
       end
@@ -42,7 +41,7 @@ class IOEventLoop
 
       @fiber.cancel
 
-      @requesting_fibers.each_key{ |fiber| @run_queue.schedule(fiber, 0, result) }
+      @awaiting_result.each_key{ |fiber| @loop.inject_result(fiber, result) }
       :evaluated
     end
 
