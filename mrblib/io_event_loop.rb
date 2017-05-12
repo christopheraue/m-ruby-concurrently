@@ -6,6 +6,7 @@ class IOEventLoop
   def initialize
     @run_queue = RunQueue.new
     @io_watcher = IOWatcher.new
+    @block_pool = []
 
     @empty_future_data = {}.freeze
 
@@ -35,14 +36,14 @@ class IOEventLoop
   # Concurrently executed block of code
 
   def concurrently(&block)
-    fiber = ConcurrentBlock.new(self)
+    fiber = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
     @run_queue.schedule(fiber, 0)
     fiber.resume(nil, block)
     fiber
   end
 
   def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data, &block)
-    fiber = ConcurrentBlock.new(self)
+    fiber = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
     @run_queue.schedule(fiber, 0)
     future = klass.new(fiber, self, data)
     fiber.resume(future, block)
