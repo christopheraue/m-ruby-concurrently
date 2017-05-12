@@ -1,5 +1,5 @@
 class IOEventLoop
-  class ConcurrentProcFiber < Fiber
+  class ConcurrentBlock < Fiber
     def initialize(loop)
       super() do |future|
         # The fiber is started right away after creation to inject the future

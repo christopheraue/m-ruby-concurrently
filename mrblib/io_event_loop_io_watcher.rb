@@ -32,7 +32,7 @@ class IOEventLoop
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
         selected.each{ |ios| ios.each do |io|
           case fiber = @fibers[io]
-          when ConcurrentProcFiber
+          when ConcurrentBlock
             fiber.resume
           else
             Fiber.yield # leave event loop and yield to root fiber

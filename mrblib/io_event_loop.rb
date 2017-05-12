@@ -35,14 +35,14 @@ class IOEventLoop
   # Concurrently executed block of code
 
   def concurrently # &block
-    fiber = ConcurrentProcFiber.new(self) { yield }
+    fiber = ConcurrentBlock.new(self) { yield }
     @run_queue.schedule(fiber, 0)
     fiber.resume nil
     fiber
   end
 
   def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data) # &block
-    fiber = ConcurrentProcFiber.new(self) { yield }
+    fiber = ConcurrentBlock.new(self) { yield }
     @run_queue.schedule(fiber, 0)
     future = klass.new(fiber, self, data)
     fiber.resume future
@@ -72,7 +72,7 @@ class IOEventLoop
   end
 
   def await_inner(fiber)
-    if ConcurrentProcFiber === fiber
+    if ConcurrentBlock === fiber
       Fiber.yield # yield back to event loop
     else
       @event_loop.resume # start event loop

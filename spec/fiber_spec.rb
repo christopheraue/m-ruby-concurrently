@@ -1,4 +1,4 @@
-describe IOEventLoop::ConcurrentProcFiber do
+describe IOEventLoop::ConcurrentBlock do
   let(:loop) { IOEventLoop.new }
 
   describe "#cancel" do

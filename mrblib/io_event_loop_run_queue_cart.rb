@@ -29,7 +29,7 @@ class IOEventLoop
         @index.delete @fiber
         @pool.push self
 
-        if ConcurrentProcFiber === @fiber
+        if ConcurrentBlock === @fiber
           @fiber.resume @result
         else
           Fiber.yield @result # leave event loop and yield to root fiber
