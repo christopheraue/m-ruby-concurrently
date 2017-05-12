@@ -45,10 +45,19 @@ class IOEventLoop
 
   # Awaiting stuff
 
-  def await_outer
+  def await_outer(opts = {})
     fiber = Fiber.current
 
+    if seconds = opts[:within]
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
+      @run_queue.schedule(fiber, seconds, timeout_result)
+    end
+
     result = yield fiber
+
+    if seconds
+      @run_queue.cancel fiber
+    end
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely. In this case yield back to the cancelling fiber.
