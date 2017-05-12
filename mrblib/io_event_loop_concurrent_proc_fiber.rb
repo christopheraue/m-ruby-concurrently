@@ -1,11 +1,7 @@
 class IOEventLoop
   class ConcurrentProcFiber < Fiber
     def initialize(loop)
-      super() do |future|
-        # The fiber is started right away after creation to inject the future
-        # and then yields back to where it was created.
-        start_argument = Fiber.yield
-
+      super() do |start_argument|
         if start_argument == self
           # If we are given with this very fiber when starting the fiber for
           # real it means this fiber is already evaluated right now before its
@@ -27,7 +23,12 @@ class IOEventLoop
           # yields back to the event loop fiber from where it was started
         end
       end
+
+      self.loop = loop
     end
+
+    attr_accessor :loop, :future
+    private :loop, :loop=, :future, :future=
 
     def cancel
       if Fiber.current != self
@@ -35,6 +36,10 @@ class IOEventLoop
         resume self
       end
       :cancelled
+    end
+
+    def to_future(klass = ConcurrentProc, data = {})
+      self.future = klass.new(self, loop, data)
     end
   end
 end
