@@ -6,10 +6,21 @@ describe "using #wait in concurrent procs" do
 
     let(:wait_proc) { proc do
       loop.wait(seconds)
-      Time.now.to_f
+      @end_time = Time.now.to_f
     end }
 
     let!(:start_time) { Time.now.to_f }
+
+    context "when originating inside a concurrently block" do
+      subject { @end_time }
+      before { loop.concurrently(&wait_proc) }
+
+      # We need a reference concurrent block whose result we can await to
+      # ensure we wait long enough for the concurrently block to finish.
+      before { loop.concurrent_proc(&wait_proc).await_result }
+
+      it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+    end
 
     context "when originating inside a concurrent proc" do
       subject { loop.concurrent_proc(&wait_proc).await_result }

@@ -18,7 +18,7 @@ class IOEventLoop
             e
           end
 
-          future.evaluate_to result
+          future.evaluate_to result if future
 
           # yields back to the event loop fiber from where it was started
         end
