@@ -29,8 +29,7 @@ describe "using #wait in concurrent procs" do
     let!(:concurrent_proc) { loop.concurrent_proc{ loop.wait wait_time; :completed } }
 
     before { loop.concurrent_proc do
-      # cancel the concurrent proc half way through the waiting time
-      loop.wait wait_time/2
+      # cancel the concurrent proc right away
       concurrent_proc.evaluate_to :intercepted
 
       # Wait after the timer would have been triggered to make sure the

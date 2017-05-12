@@ -29,8 +29,7 @@ describe "using #await_event in concurrent procs" do
     end
 
     before { loop.concurrent_proc do
-      # cancel the concurrent proc half way through the waiting time
-      loop.wait waiting_time/2
+      # cancel the concurrent proc  right away
       concurrent_proc.evaluate_to :intercepted
 
       # Wait after the event is triggered to make sure the concurrent proc

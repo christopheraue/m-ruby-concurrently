@@ -38,8 +38,7 @@ describe "using #await_writable in concurrent procs" do
     end
 
     before { loop.concurrent_proc do
-      # cancel the concurrent proc half way through the waiting time
-      loop.wait ready_time/2
+      # cancel the concurrent proc  right away
       concurrent_proc.evaluate_to :intercepted
 
       # Wait after the reader is readable to make sure the concurrent proc
