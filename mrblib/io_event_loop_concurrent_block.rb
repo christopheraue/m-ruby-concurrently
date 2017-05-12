@@ -1,7 +1,7 @@
 class IOEventLoop
   class ConcurrentBlock < Fiber
     def initialize(loop)
-      super() do |future|
+      super() do |future, block|
         # The fiber is started right away after creation to inject the future
         # and then yields back to where it was created.
         start_argument = Fiber.yield
@@ -15,14 +15,13 @@ class IOEventLoop
           # When this fiber is started when it is the next on schedule it will
           # just finish without running the block.
         else
-          result = begin
-            yield
+          begin
+            result = block.call
+            future.evaluate_to result if future
           rescue Exception => e
             loop.trigger :error, e
-            e
+            future.evaluate_to e if future
           end
-
-          future.evaluate_to result if future
 
           # yields back to the event loop fiber from where it was started
         end

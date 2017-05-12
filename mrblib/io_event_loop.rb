@@ -34,18 +34,18 @@ class IOEventLoop
 
   # Concurrently executed block of code
 
-  def concurrently # &block
-    fiber = ConcurrentBlock.new(self) { yield }
+  def concurrently(&block)
+    fiber = ConcurrentBlock.new(self)
     @run_queue.schedule(fiber, 0)
-    fiber.resume nil
+    fiber.resume(nil, block)
     fiber
   end
 
-  def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data) # &block
-    fiber = ConcurrentBlock.new(self) { yield }
+  def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data, &block)
+    fiber = ConcurrentBlock.new(self)
     @run_queue.schedule(fiber, 0)
     future = klass.new(fiber, self, data)
-    fiber.resume future
+    fiber.resume(future, block)
     future
   end
 
