@@ -1,5 +1,5 @@
 class IOEventLoop
-  class ConcurrentProc
+  class ConcurrentFuture
     def initialize(fiber, loop, data)
       @fiber = fiber
       @loop = loop

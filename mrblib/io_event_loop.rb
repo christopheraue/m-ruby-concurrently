@@ -40,7 +40,7 @@ class IOEventLoop
     fiber
   end
 
-  def concurrent_proc(klass = ConcurrentProc, data = @empty_future_data) # &block
+  def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data) # &block
     concurrently{ yield }.to_future(klass, data)
   end
 

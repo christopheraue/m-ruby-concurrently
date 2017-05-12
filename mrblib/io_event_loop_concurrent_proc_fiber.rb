@@ -38,7 +38,7 @@ class IOEventLoop
       :cancelled
     end
 
-    def to_future(klass = ConcurrentProc, data = {})
+    def to_future(klass = ConcurrentFuture, data = {})
       self.future = klass.new(self, loop, data)
     end
   end

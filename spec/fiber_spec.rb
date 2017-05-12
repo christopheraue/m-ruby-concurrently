@@ -5,18 +5,18 @@ describe IOEventLoop::ConcurrentProcFiber do
     before { @result = :not_evaluated }
 
     context "when doing it before its evaluation is started" do
-      subject { concurrent_block.cancel }
+      subject { concurrent_future.cancel }
 
-      let!(:concurrent_block) { loop.concurrently{ @result = :evaluated } }
+      let!(:concurrent_future) { loop.concurrently{ @result = :evaluated } }
 
       it { is_expected.to be :cancelled }
       after { expect{ loop.wait 0.001; @result }.to be :not_evaluated }
     end
 
     context "when doing it its evaluation is started" do
-      subject { loop.concurrent_proc{ concurrent_block.cancel }.await_result }
+      subject { loop.concurrent_future{ concurrent_future.cancel }.await_result }
 
-      let(:concurrent_block) { loop.concurrently{ loop.wait(0.0001); @result = :evaluated } }
+      let(:concurrent_future) { loop.concurrently{ loop.wait(0.0001); @result = :evaluated } }
 
       it { is_expected.to be :cancelled }
       after { expect{ loop.wait 0.001; @result }.to be :not_evaluated }
