@@ -37,7 +37,7 @@ class IOEventLoop
   def concurrent_proc(klass = ConcurrentProc, data = @empty_future_data) # &block
     fiber = ConcurrentProcFiber.new(self, @run_queue) { yield }
     concurrent_proc = klass.new(fiber, @event_loop, @run_queue, data)
-    @run_queue.schedule(fiber, 0, concurrent_proc, :resume)
+    @run_queue.schedule(fiber, 0, concurrent_proc)
     concurrent_proc
   end
 
@@ -48,12 +48,16 @@ class IOEventLoop
     fiber = Fiber.current
 
     @run_queue.schedule(fiber, seconds)
-    result = @event_loop.transfer
+    result = if ConcurrentProcFiber === fiber
+      Fiber.yield # yield back to event loop
+    else
+      @event_loop.resume # start event loop
+    end
     @run_queue.cancel fiber
 
     # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case transfer back to the given result fiber.
-    (Fiber === result) ? result.transfer : :waited
+    # In this case yield back to the given result fiber.
+    (Fiber === result) ? Fiber.yield : :waited
   end
 
 
@@ -63,12 +67,16 @@ class IOEventLoop
     fiber = Fiber.current
 
     @io_watcher.await_reader(io, fiber)
-    result = @event_loop.transfer
+    result = if ConcurrentProcFiber === fiber
+      Fiber.yield # yield back to event loop
+    else
+      @event_loop.resume # start event loop
+    end
     @io_watcher.cancel_reader(io)
 
     # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case transfer back to the given result fiber.
-    (Fiber === result) ? result.transfer : :readable
+    # In this case yield back to the given result fiber.
+    (Fiber === result) ? Fiber.yield : :readable
   end
 
 
@@ -78,12 +86,16 @@ class IOEventLoop
     fiber = Fiber.current
 
     @io_watcher.await_writer(io, fiber)
-    result = @event_loop.transfer
+    result = if ConcurrentProcFiber === fiber
+      Fiber.yield # yield back to event loop
+    else
+      @event_loop.resume # start event loop
+    end
     @io_watcher.cancel_writer(io)
 
     # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case transfer back to the given result fiber.
-    (Fiber === result) ? result.transfer : :writable
+    # In this case yield back to the given result fiber.
+    (Fiber === result) ? Fiber.yield : :writable
   end
 
 
@@ -95,12 +107,16 @@ class IOEventLoop
     callback = subject.on(event) do |_,result|
       @run_queue.schedule(fiber, 0, result)
     end
-    result = @event_loop.transfer
+    result = if ConcurrentProcFiber === fiber
+      Fiber.yield # yield back to event loop
+    else
+      @event_loop.resume # start event loop
+    end
     callback.cancel
 
     # If result is a fiber it means this fiber has been evaluated prematurely.
-    # In this case transfer back to the given result fiber.
-    (Fiber === result) ? result.transfer : result
+    # In this case yield back to the given result fiber.
+    (Fiber === result) ? Fiber.yield : result
   end
 
 

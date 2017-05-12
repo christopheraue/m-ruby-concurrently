@@ -6,9 +6,9 @@ class IOEventLoop
         @carts = []
       end
 
-      def take_and_load_with(fiber, time, result, transfer)
+      def take_and_load_with(fiber, time, result)
         cart = (@carts.pop or Cart.new(@carts, @index))
-        cart.load(fiber, time, result, transfer)
+        cart.load(fiber, time, result)
         cart
       end
 

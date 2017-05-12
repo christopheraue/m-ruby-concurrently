@@ -38,8 +38,8 @@ describe IOEventLoop::ConcurrentProc do
     end
 
     context "when resuming a fiber raises an error" do
-      before { allow(Fiber.current).to receive(:transfer).and_raise FiberError, 'transfer error' }
-      it { is_expected.to raise_error FiberError, 'transfer error' }
+      before { allow(Fiber).to receive(:yield).and_raise FiberError, 'fiber error' }
+      it { is_expected.to raise_error FiberError, 'fiber error' }
     end
 
     context "when the code inside the fiber raises an error" do

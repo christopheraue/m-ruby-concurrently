@@ -24,7 +24,11 @@ class IOEventLoop
           @run_queue.schedule(fiber, seconds, timeout_result)
         end
 
-        result = @event_loop.transfer
+        result = if ConcurrentProcFiber === fiber
+          Fiber.yield # yield back to event loop
+        else
+          @event_loop.resume # start event loop
+        end
 
         if seconds
           @run_queue.cancel fiber
@@ -33,8 +37,8 @@ class IOEventLoop
         @requesting_fibers.delete fiber
 
         # If result is a fiber it means this fiber has been evaluated prematurely.
-        # In this case transfer back to the given result fiber.
-        (Fiber === result) ? result.transfer : result
+        # In this case yield back to the given result fiber.
+        (Fiber === result) ? Fiber.yield : result
       end
 
       result = yield result if block_given?

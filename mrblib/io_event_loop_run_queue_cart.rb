@@ -5,12 +5,11 @@ class IOEventLoop
       @index = index
     end
 
-    def load(fiber, time, result, transfer)
+    def load(fiber, time, result)
       @index[fiber] = self
       @fiber = fiber
       @time = time
       @result = result
-      @transfer = transfer
       @loaded = true
     end
 
@@ -30,10 +29,10 @@ class IOEventLoop
         @index.delete @fiber
         @pool.push self
 
-        if @transfer == :transfer
-          @fiber.transfer @result
-        else
+        if ConcurrentProcFiber === @fiber
           @fiber.resume @result
+        else
+          Fiber.yield @result # leave event loop and yield to root fiber
         end
       end
     end
