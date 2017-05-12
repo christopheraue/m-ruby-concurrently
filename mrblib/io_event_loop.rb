@@ -36,8 +36,9 @@ class IOEventLoop
 
   def concurrent_proc(klass = ConcurrentProc, data = @empty_future_data) # &block
     fiber = ConcurrentProcFiber.new(self) { yield }
+    @run_queue.schedule(fiber, 0)
     concurrent_proc = klass.new(fiber, @event_loop, @run_queue, data)
-    @run_queue.schedule(fiber, 0, concurrent_proc)
+    fiber.resume concurrent_proc
     concurrent_proc
   end
 
