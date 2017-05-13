@@ -4,7 +4,8 @@ class IOEventLoop
   include CallbacksAttachable
 
   def initialize
-    @run_queue = RunQueue.new
+    @wall_clock = WallClock.new
+    @run_queue = RunQueue.new @wall_clock
     @io_watcher = IOWatcher.new
     @block_pool = []
 
@@ -30,6 +31,10 @@ class IOEventLoop
         end
       end
     end
+  end
+
+  def lifetime
+    @wall_clock.now
   end
 
 

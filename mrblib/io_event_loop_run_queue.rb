@@ -13,8 +13,8 @@ class IOEventLoop
     # The additional cart index exists so carts can be cancelled by their
     # fiber.
 
-    def initialize
-      @wall_clock = WallClock.new
+    def initialize(wall_clock)
+      @wall_clock = wall_clock
       @cart_index = {}
       @cart_track = []
       @fast_track = []
