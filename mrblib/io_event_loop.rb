@@ -37,14 +37,14 @@ class IOEventLoop
 
   def concurrently(&block)
     fiber = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    @run_queue.schedule(fiber, 0, block)
+    @run_queue.schedule_now(fiber, block)
     fiber
   end
 
   def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data, &block)
     fiber = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
     future = klass.new(fiber, self, data)
-    @run_queue.schedule(fiber, 0, [block, future])
+    @run_queue.schedule_now(fiber, [block, future])
     future
   end
 
@@ -107,7 +107,7 @@ class IOEventLoop
 
   def await_event(subject, event)
     await_outer do |fiber|
-      callback = subject.on(event) { |_,result| @run_queue.schedule(fiber, 0, result) }
+      callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
       result = await_inner fiber
       callback.cancel
       result
@@ -115,7 +115,7 @@ class IOEventLoop
   end
 
   def inject_result(fiber, result)
-    @run_queue.schedule(fiber, 0, result)
+    @run_queue.schedule_now(fiber, result)
   end
 
 

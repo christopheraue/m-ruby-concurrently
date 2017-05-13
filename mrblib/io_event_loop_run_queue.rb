@@ -7,15 +7,15 @@ class IOEventLoop
       @fast_track = []
     end
 
+    def schedule_now(fiber, result = nil)
+      @fast_track << @cart_pool.take_and_load_with(fiber, nil, result)
+    end
+
     def schedule(fiber, seconds, result = nil)
-      if seconds == 0
-        @fast_track << @cart_pool.take_and_load_with(fiber, nil, result)
-      else
-        time = @wall_clock.now+seconds
-        cart = @cart_pool.take_and_load_with(fiber, time, result)
-        index = @cart_track.bisect_left{ |cart| cart.time <= time }
-        @cart_track.insert(index, cart)
-      end
+      time = @wall_clock.now+seconds
+      cart = @cart_pool.take_and_load_with(fiber, time, result)
+      index = @cart_track.bisect_left{ |cart| cart.time <= time }
+      @cart_track.insert(index, cart)
     end
 
     def cancel(fiber)
