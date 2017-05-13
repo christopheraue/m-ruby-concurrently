@@ -5,23 +5,10 @@ class IOEventLoop
       @index = index
     end
 
-    def load(fiber, time, result)
-      @index.store fiber.hash, self
-      @fiber = fiber
-      @time = time
-      @result = result
-      @loaded = true
-    end
+    attr_accessor :fiber, :time, :result, :loaded
 
-    attr_reader :fiber, :time, :result
-
-    attr_reader :loaded
     alias loaded? loaded
     undef loaded
-
-    def unload
-      @loaded = false
-    end
 
     def unload_and_process
       @pool.push @index.delete @fiber.hash

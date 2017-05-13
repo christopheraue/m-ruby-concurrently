@@ -8,13 +8,17 @@ class IOEventLoop
 
       def take_and_load_with(fiber, time, result)
         cart = (@carts.pop or Cart.new(@carts, @index))
-        cart.load(fiber, time, result)
+        @index.store fiber.hash, cart
+        cart.fiber = fiber
+        cart.time = time
+        cart.result = result
+        cart.loaded = true
         cart
       end
 
       def unload_by_fiber(fiber)
         if cart = @index[fiber.hash]
-          cart.unload
+          cart.loaded = false
         end
       end
     end
