@@ -9,7 +9,7 @@ class IOEventLoop
 
     def schedule(fiber, seconds, result = nil)
       if seconds == 0
-        @fast_track.push @cart_pool.take_and_load_with(fiber, nil, result)
+        @fast_track << @cart_pool.take_and_load_with(fiber, nil, result)
       else
         time = @wall_clock.now+seconds
         cart = @cart_pool.take_and_load_with(fiber, time, result)

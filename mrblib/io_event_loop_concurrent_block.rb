@@ -33,7 +33,7 @@ class IOEventLoop
             end
           end
 
-          block_pool.push self
+          block_pool << self
 
           # yield back to the event loop fiber and wait for the next block
           # to run.

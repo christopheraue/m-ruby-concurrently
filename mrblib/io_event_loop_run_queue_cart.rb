@@ -11,7 +11,7 @@ class IOEventLoop
     undef loaded
 
     def unload_and_process
-      @pool.push @index.delete @fiber.hash
+      @pool << (@index.delete @fiber.hash)
 
       if @loaded
         @loaded = false
