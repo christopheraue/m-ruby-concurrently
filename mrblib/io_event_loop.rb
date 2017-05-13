@@ -41,15 +41,15 @@ class IOEventLoop
   # Concurrently executed block of code
 
   def concurrently(&block)
-    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    @run_queue.schedule_now(concurrent_block, block)
+    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool, @run_queue)
+    concurrent_block.start block
     concurrent_block
   end
 
   def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data, &block)
-    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
+    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool, @run_queue)
     future = klass.new(concurrent_block, self, data)
-    @run_queue.schedule_now(concurrent_block, [block, future])
+    concurrent_block.start block, future
     future
   end
 
