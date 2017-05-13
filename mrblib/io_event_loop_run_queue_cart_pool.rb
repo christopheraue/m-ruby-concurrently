@@ -13,7 +13,7 @@ class IOEventLoop
       end
 
       def unload_by_fiber(fiber)
-        if cart = @index[fiber]
+        if cart = @index[fiber.hash]
           cart.unload
         end
       end

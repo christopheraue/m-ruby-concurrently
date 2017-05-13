@@ -6,7 +6,7 @@ class IOEventLoop
     end
 
     def load(fiber, time, result)
-      @index.store fiber, self
+      @index.store fiber.hash, self
       @fiber = fiber
       @time = time
       @result = result
@@ -24,7 +24,7 @@ class IOEventLoop
     end
 
     def unload_and_process
-      @pool.push @index.delete @fiber
+      @pool.push @index.delete @fiber.hash
 
       if @loaded
         @loaded = false
