@@ -13,9 +13,8 @@ class IOEventLoop
       end
 
       def unload_by_fiber(fiber)
-        if cart = @index.delete(fiber)
+        if cart = @index[fiber]
           cart.unload
-          @carts.push cart
         end
       end
     end
