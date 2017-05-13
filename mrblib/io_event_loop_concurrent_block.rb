@@ -11,14 +11,11 @@ class IOEventLoop
       #   next iteration.
 
       super() do |block, future = nil|
-        # The fiber is started right away after creation or taking it out of
-        # the pool to inject its future and block. It then directly yields back
-        # to wait for its actual start.
+        # The fiber's block and future are passed when scheduled right after
+        # creation or taking it out of the pool.
 
         while true
-          start_argument = Fiber.yield
-
-          if start_argument == self
+          if block == self
             # If we are given with this very fiber when starting the fiber for
             # real it means this fiber is already evaluated right before its
             # start. In this case just yield back to the cancelling fiber.

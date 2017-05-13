@@ -37,16 +37,14 @@ class IOEventLoop
 
   def concurrently(&block)
     fiber = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    @run_queue.schedule(fiber, 0)
-    fiber.resume block
+    @run_queue.schedule(fiber, 0, block)
     fiber
   end
 
   def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data, &block)
     fiber = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    @run_queue.schedule(fiber, 0)
     future = klass.new(fiber, self, data)
-    fiber.resume block, future
+    @run_queue.schedule(fiber, 0, [block, future])
     future
   end
 
