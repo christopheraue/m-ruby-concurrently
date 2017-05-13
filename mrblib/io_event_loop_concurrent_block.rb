@@ -1,5 +1,7 @@
 class IOEventLoop
-  class ConcurrentBlock < Fiber
+  class ConcurrentBlock
+    class Fiber < ::Fiber; end
+
     def initialize(loop, block_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
       # concurrent blocks reusable:
@@ -10,12 +12,12 @@ class IOEventLoop
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
 
-      super() do |block, future = nil|
+      @fiber = Fiber.new do |block, future = nil|
         # The fiber's block and future are passed when scheduled right after
         # creation or taking it out of the pool.
 
         while true
-          if block == self
+          if block == @fiber
             # If we are given with this very fiber when starting the fiber for
             # real it means this fiber is already evaluated right before its
             # start. In this case just yield back to the cancelling fiber.
@@ -42,10 +44,14 @@ class IOEventLoop
       end
     end
 
+    def resume(*args)
+      @fiber.resume *args
+    end
+
     def cancel
-      if Fiber.current != self
+      if Fiber.current != @fiber
         # Cancel fiber by resuming it with itself as argument
-        resume self
+        @fiber.resume @fiber
       end
       :cancelled
     end

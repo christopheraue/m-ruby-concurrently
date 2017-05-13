@@ -1,7 +1,7 @@
 class IOEventLoop
   class ConcurrentFuture
-    def initialize(fiber, loop, data)
-      @fiber = fiber
+    def initialize(concurrent_block, loop, data)
+      @concurrent_block = concurrent_block
       @loop = loop
       @evaluated = false
       @awaiting_result = {}
@@ -39,7 +39,7 @@ class IOEventLoop
       @result = result
       @evaluated = true
 
-      @fiber.cancel
+      @concurrent_block.cancel
 
       @awaiting_result.each_key{ |fiber| @loop.inject_result(fiber, result) }
       :evaluated

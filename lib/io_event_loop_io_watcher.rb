@@ -29,7 +29,7 @@ class IOEventLoop
     def process_ready_in(waiting_time)
       @selector.select(waiting_time) do |monitor|
         case fiber = monitor.value
-        when ConcurrentBlock
+        when ConcurrentBlock::Fiber
           fiber.resume
         else
           Fiber.yield # leave event loop and yield to root fiber

@@ -55,8 +55,9 @@ class IOEventLoop
         @cart_index.delete cart[FIBER].hash
 
         if cart[ACTIVE]
-          if ConcurrentBlock === cart[FIBER]
-            cart[FIBER].resume cart[RESULT]
+          case fiber = cart[FIBER]
+          when ConcurrentBlock, ConcurrentBlock::Fiber
+            fiber.resume cart[RESULT]
           else
             Fiber.yield cart[RESULT] # leave event loop and yield to root fiber
           end
