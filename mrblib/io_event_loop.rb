@@ -82,6 +82,10 @@ class IOEventLoop
     end
   end
 
+  def manually_resume!(fiber, result = nil)
+    @run_queue.schedule_now(fiber, result)
+  end
+
   def wait(seconds)
     fiber = Fiber.current
     @run_queue.schedule(fiber, seconds)
@@ -112,10 +116,6 @@ class IOEventLoop
     await_manual_resume fiber
   ensure
     callback.cancel
-  end
-
-  def inject_result(fiber, result)
-    @run_queue.schedule_now(fiber, result)
   end
 
 

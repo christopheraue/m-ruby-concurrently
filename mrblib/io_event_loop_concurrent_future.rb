@@ -42,7 +42,7 @@ class IOEventLoop
 
       @concurrent_block.cancel
 
-      @awaiting_result.each_key{ |fiber| @loop.inject_result(fiber, result) }
+      @awaiting_result.each_key{ |fiber| @loop.manually_resume!(fiber, result) }
       :evaluated
     end
 
