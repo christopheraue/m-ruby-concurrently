@@ -25,14 +25,18 @@ class IOEventLoop
             # When this fiber is started when it is the next on schedule it will
             # just finish without running the block.
           else
-            catch(:cancel) do
-              begin
-                result = block.call_consecutively
-                evaluation.conclude_with result if evaluation
-              rescue Exception => e
-                loop.trigger :error, e
-                evaluation.conclude_with e if evaluation
-              end
+            begin
+              result = block.call_consecutively
+              evaluation.conclude_with result if evaluation
+            rescue CancelledConcurrentBlock
+              # Generally, throw-catch is faster than raise-rescue if the code
+              # needs to play back the call stack, i.e. the throw resp. raise
+              # is invoked. If not playing back the call stack, a begin block
+              # is faster than a catch block. Since we mostly won't jump out
+              # of block above, we go with begin-raise-rescue.
+            rescue Exception => e
+              loop.trigger :error, e
+              evaluation.conclude_with e if evaluation
             end
           end
 

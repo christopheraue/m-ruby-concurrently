@@ -9,6 +9,8 @@ class IOEventLoop
     @io_watcher = IOWatcher.new
     @block_pool = []
 
+    @empty_call_stack = [].freeze
+
     @event_loop = Fiber.new do
       while true
         waiting_time = @run_queue.waiting_time
@@ -72,7 +74,7 @@ class IOEventLoop
     # prematurely.
     if result == fiber
       @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
-      throw :cancel
+      raise CancelledConcurrentBlock, '', @empty_call_stack
     else
       result
     end
