@@ -56,10 +56,17 @@ class IOEventLoop
 
   # Awaiting stuff
 
-  def await_outer
-    fiber = Fiber.current
+  def await_manual_resume(fiber, opts = {})
+    if seconds = opts[:within]
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
+      @run_queue.schedule(fiber, seconds, timeout_result)
+    end
 
-    result = yield fiber
+    result = if ConcurrentBlock::Fiber === fiber
+      Fiber.yield # yield back to event loop
+    else
+      @event_loop.resume # start event loop
+    end
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.
@@ -68,19 +75,6 @@ class IOEventLoop
       throw :cancel
     else
       result
-    end
-  end
-
-  def await_inner(fiber, opts = {})
-    if seconds = opts[:within]
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
-      @run_queue.schedule(fiber, seconds, timeout_result)
-    end
-
-    if ConcurrentBlock::Fiber === fiber
-      Fiber.yield # yield back to event loop
-    else
-      @event_loop.resume # start event loop
     end
   ensure
     if seconds
@@ -91,10 +85,7 @@ class IOEventLoop
   def wait(seconds)
     fiber = Fiber.current
     @run_queue.schedule(fiber, seconds)
-
-    await_outer do
-      await_inner fiber
-    end
+    await_manual_resume fiber
   ensure
     @run_queue.cancel fiber
   end
@@ -102,10 +93,7 @@ class IOEventLoop
   def await_readable(io)
     fiber = Fiber.current
     @io_watcher.await_reader(io, fiber)
-
-    await_outer do
-      await_inner fiber
-    end
+    await_manual_resume fiber
   ensure
     @io_watcher.cancel_reader(io)
   end
@@ -113,10 +101,7 @@ class IOEventLoop
   def await_writable(io)
     fiber = Fiber.current
     @io_watcher.await_writer(io, fiber)
-
-    await_outer do
-      await_inner fiber
-    end
+    await_manual_resume fiber
   ensure
     @io_watcher.cancel_writer(io)
   end
@@ -124,10 +109,7 @@ class IOEventLoop
   def await_event(subject, event)
     fiber = Fiber.current
     callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
-
-    await_outer do
-      await_inner fiber
-    end
+    await_manual_resume fiber
   ensure
     callback.cancel
   end
