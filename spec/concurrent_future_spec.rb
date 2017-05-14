@@ -170,6 +170,20 @@ describe IOEventLoop::ConcurrentFuture do
 
       it { is_expected.to raise_error IOEventLoop::Error, "already evaluated" }
     end
+
+    context "when evaluating a future from a nested future" do
+      subject { concurrent_future.await_result }
+
+      let!(:concurrent_future) { loop.concurrent_future do
+        loop.concurrent_future do
+          loop.concurrent_future do
+            concurrent_future.evaluate_to :cancelled
+          end
+        end.await_result
+      end }
+
+      it { is_expected.not_to raise_error }
+    end
   end
 
   context "when it configures no custom concurrent future" do

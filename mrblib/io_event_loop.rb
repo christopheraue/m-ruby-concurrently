@@ -73,6 +73,7 @@ class IOEventLoop
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.
     if result == fiber
+      @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
       throw :cancel
     else
       result

@@ -20,6 +20,8 @@ class IOEventLoop
         # creation or taking it out of the pool.
 
         while true
+          raise Error, "concurrent block ran without being started" unless @block
+
           if start_arg == @fiber
             # If we are given this very fiber when starting the fiber for real
             # it means this fiber is evaluated right before its start. In this
