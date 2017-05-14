@@ -56,19 +56,10 @@ class IOEventLoop
 
   # Awaiting stuff
 
-  def await_outer(opts = {})
+  def await_outer
     fiber = Fiber.current
 
-    if seconds = opts[:within]
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
-      @run_queue.schedule(fiber, seconds, timeout_result)
-    end
-
     result = yield fiber
-
-    if seconds
-      @run_queue.cancel fiber
-    end
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.
@@ -80,11 +71,20 @@ class IOEventLoop
     end
   end
 
-  def await_inner(fiber)
+  def await_inner(fiber, opts = {})
+    if seconds = opts[:within]
+      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
+      @run_queue.schedule(fiber, seconds, timeout_result)
+    end
+
     if ConcurrentBlock::Fiber === fiber
       Fiber.yield # yield back to event loop
     else
       @event_loop.resume # start event loop
+    end
+  ensure
+    if seconds
+      @run_queue.cancel fiber
     end
   end
 

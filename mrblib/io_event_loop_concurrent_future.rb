@@ -14,9 +14,9 @@ class IOEventLoop
       if @evaluated
         result = @result
       else
-        @loop.await_outer(opts) do |fiber|
+        @loop.await_outer do |fiber|
           @awaiting_result.store fiber, true
-          result = @loop.await_inner(fiber)
+          result = @loop.await_inner(fiber, opts)
           @awaiting_result.delete fiber
           result
         end
