@@ -45,11 +45,13 @@ class IOEventLoop
 
   def concurrently # &block
     concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
+    # ConcurrentProc.new claims the method's block just like Proc.new does
     @run_queue.schedule_now concurrent_block, ConcurrentProc.new(self)
     concurrent_block
   end
 
-  def concurrent_future(evaluation_class = ConcurrentEvaluation)
+  def concurrent_future(evaluation_class = ConcurrentEvaluation) # &block
+    # ConcurrentProc.new claims the method's block just like Proc.new does
     ConcurrentProc.new(self, evaluation_class).call
   end
 

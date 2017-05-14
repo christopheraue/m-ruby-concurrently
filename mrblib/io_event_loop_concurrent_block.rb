@@ -9,7 +9,7 @@ class IOEventLoop
       #   pool.
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
-      super() do |block, evaluation|
+      super() do |block, args, evaluation|
         # The fiber's block and evaluation are passed when scheduled right after
         # creation or taking it out of the pool.
 
@@ -26,7 +26,7 @@ class IOEventLoop
             # just finish without running the block.
           else
             begin
-              result = block.call_consecutively
+              result = block.call_consecutively *args
               evaluation.conclude_with result if evaluation
             rescue CancelledConcurrentBlock
               # Generally, throw-catch is faster than raise-rescue if the code
@@ -44,7 +44,7 @@ class IOEventLoop
 
           # Yield back to the event loop fiber or the fiber cancelling this one
           # and wait for the next block to evaluate.
-          block, evaluation = Fiber.yield
+          block, args, evaluation = Fiber.yield
         end
       end
     end

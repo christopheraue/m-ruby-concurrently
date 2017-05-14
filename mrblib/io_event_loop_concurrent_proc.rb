@@ -7,10 +7,12 @@ class IOEventLoop
 
     alias_method :call_consecutively, :call
 
-    def call
+    def call(*args)
       evaluation = @evaluation_class.new @loop
-      evaluation.manually_resume! [self, evaluation]
+      evaluation.manually_resume! [self, args, evaluation]
       evaluation
     end
+
+    alias [] call
   end
 end
