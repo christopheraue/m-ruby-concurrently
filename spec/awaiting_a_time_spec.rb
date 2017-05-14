@@ -41,7 +41,7 @@ describe "using #wait in concurrent futures" do
 
     before { loop.concurrent_future do
       # cancel the concurrent future right away
-      concurrent_future.evaluate_to :intercepted
+      concurrent_future.conclude_with :intercepted
 
       # Wait after the timer would have been triggered to make sure the
       # concurrent future is not resumed then (i.e. watching the timeout is

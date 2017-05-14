@@ -4,7 +4,7 @@ class IOEventLoop
   class TimeoutError < CancelledError; end
   class EventWatcherError < Error; end
 
-  class ConcurrentFuture
+  class ConcurrentEvaluation
     Error = IOEventLoop::Error
     CancelledError = IOEventLoop::CancelledError
   end

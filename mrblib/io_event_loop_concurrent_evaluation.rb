@@ -1,9 +1,9 @@
 class IOEventLoop
-  class ConcurrentFuture
+  class ConcurrentEvaluation
     def initialize(concurrent_block, loop, data)
       @concurrent_block = concurrent_block
       @loop = loop
-      @evaluated = false
+      @concluded = false
       @awaiting_result = {}
       @data = data.freeze
     end
@@ -11,7 +11,7 @@ class IOEventLoop
     attr_reader :data
 
     def await_result(opts = {}) # &with_result
-      if @evaluated
+      if @concluded
         result = @result
       else
         result = begin
@@ -28,26 +28,26 @@ class IOEventLoop
       (Exception === result) ? (raise result) : result
     end
 
-    attr_reader :evaluated
-    alias evaluated? evaluated
-    undef evaluated
+    attr_reader :concluded
+    alias concluded? concluded
+    undef concluded
 
-    def evaluate_to(result)
-      if @evaluated
-        raise self.class::Error, "already evaluated"
+    def conclude_with(result)
+      if @concluded
+        raise self.class::Error, "already concluded"
       end
 
       @result = result
-      @evaluated = true
+      @concluded = true
 
       @concurrent_block.cancel
 
       @awaiting_result.each_key{ |fiber| @loop.manually_resume!(fiber, result) }
-      :evaluated
+      :concluded
     end
 
     def cancel(reason = "evaluation cancelled")
-      evaluate_to self.class::CancelledError.new(reason)
+      conclude_with self.class::CancelledError.new(reason)
       :cancelled
     end
 

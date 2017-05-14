@@ -1,4 +1,4 @@
-describe IOEventLoop::ConcurrentFuture do
+describe IOEventLoop::ConcurrentEvaluation do
   let(:loop) { IOEventLoop.new }
 
   describe "#await_result" do
@@ -8,8 +8,8 @@ describe IOEventLoop::ConcurrentFuture do
     let(:with_result) { nil }
     let(:result) { :result }
 
-    before { expect(concurrent_future).not_to be_evaluated }
-    after { expect(concurrent_future).to be_evaluated }
+    before { expect(concurrent_future).not_to be_concluded }
+    after { expect(concurrent_future).to be_concluded }
 
     context "when everything goes fine" do
       it { is_expected.to be :result }
@@ -123,8 +123,8 @@ describe IOEventLoop::ConcurrentFuture do
   end
 
   describe "#cancel" do
-    before { expect(concurrent_future).not_to be_evaluated }
-    after { expect(concurrent_future).to be_evaluated }
+    before { expect(concurrent_future).not_to be_concluded }
+    after { expect(concurrent_future).to be_concluded }
 
     context "when doing it before requesting the result" do
       subject { concurrent_future.cancel *reason }
@@ -168,7 +168,7 @@ describe IOEventLoop::ConcurrentFuture do
       let(:concurrent_future) { loop.concurrent_future{ :result } }
       before { concurrent_future.await_result }
 
-      it { is_expected.to raise_error IOEventLoop::Error, "already evaluated" }
+      it { is_expected.to raise_error IOEventLoop::Error, "already concluded" }
     end
 
     context "when evaluating a future from a nested future" do
@@ -177,7 +177,7 @@ describe IOEventLoop::ConcurrentFuture do
       let!(:concurrent_future) { loop.concurrent_future do
         loop.concurrent_future do
           loop.concurrent_future do
-            concurrent_future.evaluate_to :cancelled
+            concurrent_future.conclude_with :cancelled
           end
         end.await_result
       end }
@@ -189,14 +189,14 @@ describe IOEventLoop::ConcurrentFuture do
   context "when it configures no custom concurrent future" do
     subject(:concurrent_future) { loop.concurrent_future }
 
-    it { is_expected.to be_a(IOEventLoop::ConcurrentFuture).and have_attributes(data: {}) }
+    it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: {}) }
     it { expect(concurrent_future.data).to be_frozen }
   end
 
   context "when it configures a custom concurrent future" do
     subject(:concurrent_future) { loop.concurrent_future(custom_future_class, { opt: :ion }) }
 
-    let(:custom_future_class) { Class.new(IOEventLoop::ConcurrentFuture) }
+    let(:custom_future_class) { Class.new(IOEventLoop::ConcurrentEvaluation) }
 
     it { is_expected.to be_a(custom_future_class).and have_attributes(data: { opt: :ion }) }
     it { expect(concurrent_future.data).to be_frozen }
