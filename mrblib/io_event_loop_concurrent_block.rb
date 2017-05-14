@@ -1,12 +1,6 @@
 class IOEventLoop
-  class ConcurrentBlock
-    class Fiber < ::Fiber; end
-
-    def initialize(loop, block_pool, run_queue)
-      @loop = loop
-      @block_pool = block_pool
-      @run_queue = run_queue
-
+  class ConcurrentBlock < Fiber
+    def initialize(loop, block_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
       # concurrent blocks reusable:
       # - Each concurrent block of code is executed during one iteration
@@ -15,14 +9,14 @@ class IOEventLoop
       #   pool.
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
-      @fiber = Fiber.new do |start_arg|
+      super() do |block, future = nil|
         # The fiber's block and future are passed when scheduled right after
         # creation or taking it out of the pool.
 
         while true
-          raise Error, "concurrent block ran without being started" unless @block
+          raise Error, "concurrent block ran without being started" unless block
 
-          if start_arg == @fiber
+          if block == self
             # If we are given this very fiber when starting the fiber for real
             # it means this fiber is evaluated right before its start. In this
             # case just yield back to the cancelling fiber.
@@ -33,39 +27,28 @@ class IOEventLoop
           else
             catch(:cancel) do
               begin
-                result = @block.call
-                @future.evaluate_to result if @future
+                result = block.call
+                future.evaluate_to result if future
               rescue Exception => e
-                @loop.trigger :error, e
-                @future.evaluate_to e if @future
+                loop.trigger :error, e
+                future.evaluate_to e if future
               end
             end
           end
 
-          @block = nil
-          @block_pool << self
+          block_pool << self
 
           # Yield back to the event loop fiber or the fiber cancelling this one
           # and wait for the next block to evaluate.
-          start_arg = Fiber.yield
+          block, future = Fiber.yield
         end
-      end
-    end
-    
-    def start(block, future = nil)
-      if @block
-        raise Error, 'already running'
-      else
-        @block = block
-        @future = future
-        @run_queue.schedule_now @fiber
       end
     end
 
     def cancel
-      if Fiber.current != @fiber
+      if Fiber.current != self
         # Cancel fiber by resuming it with itself as argument
-        @fiber.resume @fiber
+        resume self
       end
       :cancelled
     end

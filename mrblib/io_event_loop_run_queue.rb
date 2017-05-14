@@ -56,7 +56,7 @@ class IOEventLoop
 
         if cart[ACTIVE]
           case fiber = cart[FIBER]
-          when ConcurrentBlock::Fiber
+          when ConcurrentBlock
             fiber.resume cart[RESULT]
           else
             Fiber.yield cart[RESULT] # leave event loop and yield to root fiber

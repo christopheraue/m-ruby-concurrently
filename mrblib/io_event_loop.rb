@@ -41,15 +41,15 @@ class IOEventLoop
   # Concurrently executed block of code
 
   def concurrently(&block)
-    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool, @run_queue)
-    concurrent_block.start block
+    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
+    @run_queue.schedule_now concurrent_block, block
     concurrent_block
   end
 
   def concurrent_future(klass = ConcurrentFuture, data = @empty_future_data, &block)
-    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool, @run_queue)
+    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
     future = klass.new(concurrent_block, self, data)
-    concurrent_block.start block, future
+    @run_queue.schedule_now concurrent_block, [block, future]
     future
   end
 
@@ -62,7 +62,7 @@ class IOEventLoop
       @run_queue.schedule(fiber, seconds, timeout_result)
     end
 
-    result = if ConcurrentBlock::Fiber === fiber
+    result = if ConcurrentBlock === fiber
       Fiber.yield # yield back to event loop
     else
       @event_loop.resume # start event loop
