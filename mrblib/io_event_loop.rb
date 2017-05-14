@@ -9,8 +9,6 @@ class IOEventLoop
     @io_watcher = IOWatcher.new
     @block_pool = []
 
-    @empty_evaluation_data = {}.freeze
-
     @event_loop = Fiber.new do
       while true
         waiting_time = @run_queue.waiting_time
@@ -39,18 +37,18 @@ class IOEventLoop
 
 
   # Concurrently executed block of code
+  def fresh_concurrent_block
+    @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
+  end
 
-  def concurrently(&block)
+  def concurrently # &block
     concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    @run_queue.schedule_now concurrent_block, block
+    @run_queue.schedule_now concurrent_block, ConcurrentProc.new
     concurrent_block
   end
 
-  def concurrent_future(klass = ConcurrentEvaluation, data = @empty_evaluation_data, &block)
-    concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    evaluation = klass.new(concurrent_block, self, data)
-    @run_queue.schedule_now concurrent_block, [block, evaluation]
-    evaluation
+  def concurrent_future(evaluation_class = ConcurrentEvaluation, evaluation_data = nil)
+    ConcurrentProc.new.call self, evaluation_class, evaluation_data
   end
 
 

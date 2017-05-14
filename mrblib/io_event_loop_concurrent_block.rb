@@ -9,7 +9,7 @@ class IOEventLoop
       #   pool.
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
-      super() do |block, evaluation = nil|
+      super() do |block, evaluation|
         # The fiber's block and evaluation are passed when scheduled right after
         # creation or taking it out of the pool.
 
@@ -27,7 +27,7 @@ class IOEventLoop
           else
             catch(:cancel) do
               begin
-                result = block.call
+                result = block.call_consecutively
                 evaluation.conclude_with result if evaluation
               rescue Exception => e
                 loop.trigger :error, e

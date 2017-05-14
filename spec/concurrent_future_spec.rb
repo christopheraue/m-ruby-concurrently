@@ -187,14 +187,14 @@ describe IOEventLoop::ConcurrentEvaluation do
   end
 
   context "when it configures no custom concurrent future" do
-    subject(:concurrent_future) { loop.concurrent_future }
+    subject(:concurrent_future) { loop.concurrent_future{} }
 
-    it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: {}) }
+    it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: nil) }
     it { expect(concurrent_future.data).to be_frozen }
   end
 
   context "when it configures a custom concurrent future" do
-    subject(:concurrent_future) { loop.concurrent_future(custom_future_class, { opt: :ion }) }
+    subject(:concurrent_future) { loop.concurrent_future(custom_future_class, { opt: :ion }){} }
 
     let(:custom_future_class) { Class.new(IOEventLoop::ConcurrentEvaluation) }
 

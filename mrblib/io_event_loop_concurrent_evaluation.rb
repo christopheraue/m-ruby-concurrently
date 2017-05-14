@@ -5,7 +5,7 @@ class IOEventLoop
       @loop = loop
       @concluded = false
       @awaiting_result = {}
-      @data = data.freeze
+      @data = data
     end
 
     attr_reader :data
