@@ -50,9 +50,9 @@ class IOEventLoop
     concurrent_block
   end
 
-  def concurrent_future(evaluation_class = ConcurrentEvaluation) # &block
+  def concurrent_proc(evaluation_class = ConcurrentEvaluation) # &block
     # ConcurrentProc.new claims the method's block just like Proc.new does
-    ConcurrentProc.new(self, evaluation_class).call
+    ConcurrentProc.new(self, evaluation_class)
   end
 
 

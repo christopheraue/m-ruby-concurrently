@@ -4,10 +4,10 @@ describe IOEventLoop::ConcurrentBlock do
   describe "the reuse of concurrent blocks" do
     subject { concurrent_block3.await_result } # let the third block finish
 
-    let!(:concurrent_block1) { loop.concurrent_future{ @fiber1 = Fiber.current } }
-    let!(:concurrent_block2) { loop.concurrent_future{ @fiber2 = Fiber.current } }
+    let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call }
+    let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call }
     before { concurrent_block2.await_result } # let the two blocks finish
-    let!(:concurrent_block3) { loop.concurrent_future{ @fiber3 = Fiber.current } }
+    let!(:concurrent_block3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call }
 
     it { is_expected.not_to raise_error }
 
@@ -29,7 +29,7 @@ describe IOEventLoop::ConcurrentBlock do
     end
 
     context "when doing it its evaluation is started" do
-      subject { loop.concurrent_future{ concurrent_block.cancel }.await_result }
+      subject { loop.concurrent_proc{ concurrent_block.cancel }.call.await_result }
 
       let(:concurrent_block) { loop.concurrently{ loop.wait(0.0001); @result = :evaluated } }
 

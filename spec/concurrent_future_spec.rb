@@ -2,20 +2,20 @@ describe IOEventLoop::ConcurrentEvaluation do
   let(:loop) { IOEventLoop.new }
 
   describe "#await_result" do
-    subject { concurrent_future.await_result(&with_result) }
+    subject { concurrent_evaluation.await_result(&with_result) }
 
-    let(:concurrent_future) { loop.concurrent_future{ result } }
+    let(:concurrent_evaluation) { loop.concurrent_proc{ result }.call }
     let(:with_result) { nil }
     let(:result) { :result }
 
-    before { expect(concurrent_future).not_to be_concluded }
-    after { expect(concurrent_future).to be_concluded }
+    before { expect(concurrent_evaluation).not_to be_concluded }
+    after { expect(concurrent_evaluation).to be_concluded }
 
     context "when everything goes fine" do
       it { is_expected.to be :result }
 
       context "when requesting the result a second time" do
-        before { concurrent_future.await_result }
+        before { concurrent_evaluation.await_result }
         it { is_expected.to be :result }
       end
 
@@ -43,13 +43,13 @@ describe IOEventLoop::ConcurrentEvaluation do
     end
 
     context "when the code inside the fiber raises an error" do
-      let(:concurrent_future) { loop.concurrent_future{ raise 'error' } }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ raise 'error' }.call }
       before { expect(loop).to receive(:trigger).with(:error,
         (be_a(RuntimeError).and have_attributes message: 'error')) }
       it { is_expected.to raise_error RuntimeError, 'error' }
 
       context "when requesting the result a second time" do
-        before { concurrent_future.await_result rescue nil }
+        before { concurrent_evaluation.await_result rescue nil }
         it { is_expected.to raise_error RuntimeError, 'error' }
       end
 
@@ -66,33 +66,33 @@ describe IOEventLoop::ConcurrentEvaluation do
       end
     end
 
-    context "when getting the evaluating result from two concurrent futures" do
-      let!(:concurrent_future) { loop.concurrent_future{ loop.wait(0.0001); :result } }
-      let!(:concurrent_future1) { loop.concurrent_future{ concurrent_future.await_result } }
-      let!(:concurrent_future2) { loop.concurrent_future{ concurrent_future.await_result } }
+    context "when getting the result of a concurrent proc from two other once" do
+      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001); :result }.call }
+      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call }
+      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call }
 
       it { is_expected.to be :result }
-      after { expect(concurrent_future1.await_result).to be :result }
-      after { expect(concurrent_future2.await_result).to be :result }
+      after { expect(concurrent_evaluation1.await_result).to be :result }
+      after { expect(concurrent_evaluation2.await_result).to be :result }
     end
   end
 
   describe "#await_result with a timeout" do
-    subject { concurrent_future.await_result options }
+    subject { concurrent_evaluation.await_result options }
 
     let(:options) { { within: 0.0001, timeout_result: timeout_result } }
     let(:timeout_result) { :timeout_result }
 
     context "when the result arrives in time" do
-      let(:concurrent_future) { loop.concurrent_future{ :result } }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call }
       it { is_expected.to be :result }
     end
 
     context "when evaluation of result is too slow" do
-      let(:concurrent_future) { loop.concurrent_future do
+      let(:concurrent_evaluation) { loop.concurrent_proc do
         loop.wait(0.0002)
         :result
-      end }
+      end.call }
 
       context "when no timeout result is given" do
         before { options.delete :timeout_result }
@@ -110,93 +110,93 @@ describe IOEventLoop::ConcurrentEvaluation do
       end
     end
 
-    context "when getting the evaluating result from two concurrent futures, from one with a timeout" do
-      subject { concurrent_future.await_result }
-      let!(:concurrent_future) { loop.concurrent_future{ loop.wait(0.0002); :result } }
-      let!(:concurrent_future1) { loop.concurrent_future{ concurrent_future.await_result } }
-      let!(:concurrent_future2) { loop.concurrent_future{ concurrent_future.await_result within: 0.0001, timeout_result: :timeout_result } }
+    context "when getting the result of a concurrent proc from to other ones, one with a timeout" do
+      subject { concurrent_evaluation.await_result }
+      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0002); :result }.call }
+      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call }
+      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result within: 0.0001, timeout_result: :timeout_result }.call }
 
       it { is_expected.to be :result }
-      after { expect(concurrent_future1.await_result).to be :result }
-      after { expect(concurrent_future2.await_result).to be :timeout_result }
+      after { expect(concurrent_evaluation1.await_result).to be :result }
+      after { expect(concurrent_evaluation2.await_result).to be :timeout_result }
     end
   end
 
   describe "#cancel" do
-    before { expect(concurrent_future).not_to be_concluded }
-    after { expect(concurrent_future).to be_concluded }
+    before { expect(concurrent_evaluation).not_to be_concluded }
+    after { expect(concurrent_evaluation).to be_concluded }
 
     context "when doing it before requesting the result" do
-      subject { concurrent_future.cancel *reason }
+      subject { concurrent_evaluation.cancel *reason }
 
-      let(:concurrent_future) { loop.concurrent_future{ :result } }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
         it { is_expected.to be :cancelled }
-        after { expect{ concurrent_future.await_result }.to raise_error IOEventLoop::CancelledError, "evaluation cancelled" }
+        after { expect{ concurrent_evaluation.await_result }.to raise_error IOEventLoop::CancelledError, "evaluation cancelled" }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
         it { is_expected.to be :cancelled }
-        after { expect{ concurrent_future.await_result }.to raise_error IOEventLoop::CancelledError, "cancel reason" }
+        after { expect{ concurrent_evaluation.await_result }.to raise_error IOEventLoop::CancelledError, "cancel reason" }
       end
     end
 
     context "when doing it after requesting the result" do
-      subject { loop.concurrent_future{ concurrent_future.cancel *reason }.await_result }
+      subject { loop.concurrent_proc{ concurrent_evaluation.cancel *reason }.call.await_result }
 
-      let(:concurrent_future) { loop.concurrent_future{ loop.wait(0.0001) } }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001) }.call }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
         it { is_expected.to be :cancelled }
-        after { expect{ concurrent_future.await_result }.to raise_error IOEventLoop::CancelledError, "evaluation cancelled" }
+        after { expect{ concurrent_evaluation.await_result }.to raise_error IOEventLoop::CancelledError, "evaluation cancelled" }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
         it { is_expected.to be :cancelled }
-        after { expect{ concurrent_future.await_result }.to raise_error IOEventLoop::CancelledError, "cancel reason" }
+        after { expect{ concurrent_evaluation.await_result }.to raise_error IOEventLoop::CancelledError, "cancel reason" }
       end
     end
 
     context "when cancelling after it is already evaluated" do
-      subject { concurrent_future.cancel }
+      subject { concurrent_evaluation.cancel }
 
-      let(:concurrent_future) { loop.concurrent_future{ :result } }
-      before { concurrent_future.await_result }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call }
+      before { concurrent_evaluation.await_result }
 
       it { is_expected.to raise_error IOEventLoop::Error, "already concluded" }
     end
 
-    context "when evaluating a future from a nested future" do
-      subject { concurrent_future.await_result }
+    context "when concluding an evaluation from a nested proc" do
+      subject { concurrent_evaluation.await_result }
 
-      let!(:concurrent_future) { loop.concurrent_future do
-        loop.concurrent_future do
-          loop.concurrent_future do
-            concurrent_future.conclude_with :cancelled
+      let!(:concurrent_evaluation) { loop.concurrent_proc do
+        loop.concurrent_proc do
+          loop.concurrent_proc do
+            concurrent_evaluation.conclude_with :cancelled
           end
-        end.await_result
-      end }
+        end.call.await_result
+      end.call }
 
       it { is_expected.not_to raise_error }
     end
   end
 
-  context "when it configures no custom concurrent future" do
-    subject(:concurrent_future) { loop.concurrent_future{} }
+  context "when it configures no custom evaluation" do
+    subject(:concurrent_evaluation) { loop.concurrent_proc{}.call }
 
     it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: {}) }
   end
 
-  context "when it configures a custom concurrent future" do
-    subject(:concurrent_future) { loop.concurrent_future(custom_future_class){} }
+  context "when it configures a custom evaluation" do
+    subject(:concurrent_evaluation) { loop.concurrent_proc(custom_evaluation_class){}.call }
 
-    let(:custom_future_class) { Class.new(IOEventLoop::ConcurrentEvaluation) }
+    let(:custom_evaluation_class) { Class.new(IOEventLoop::ConcurrentEvaluation) }
 
-    it { is_expected.to be_a(custom_future_class).and have_attributes(data: {}) }
+    it { is_expected.to be_a(custom_evaluation_class).and have_attributes(data: {}) }
   end
 end
