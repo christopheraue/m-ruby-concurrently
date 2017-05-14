@@ -71,8 +71,12 @@ class IOEventLoop
     end
 
     # If result is this very fiber it means this fiber has been evaluated
-    # prematurely. In this case yield back to the cancelling fiber.
-    (result == fiber) ? Fiber.yield : result
+    # prematurely.
+    if result == fiber
+      throw :cancel
+    else
+      result
+    end
   end
 
   def await_inner(fiber)
