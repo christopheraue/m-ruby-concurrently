@@ -1,11 +1,11 @@
 class IOEventLoop
   class ConcurrentEvaluation
-    def initialize(concurrent_block, loop, data)
-      @concurrent_block = concurrent_block
+    def initialize(loop)
       @loop = loop
+      @concurrent_block = loop.fresh_concurrent_block
       @concluded = false
       @awaiting_result = {}
-      @data = data
+      @data = {}
     end
 
     attr_reader :data

@@ -45,12 +45,12 @@ class IOEventLoop
 
   def concurrently # &block
     concurrent_block = @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
-    @run_queue.schedule_now concurrent_block, ConcurrentProc.new
+    @run_queue.schedule_now concurrent_block, ConcurrentProc.new(self)
     concurrent_block
   end
 
-  def concurrent_future(evaluation_class = ConcurrentEvaluation, evaluation_data = nil)
-    ConcurrentProc.new.call self, evaluation_class, evaluation_data
+  def concurrent_future(evaluation_class = ConcurrentEvaluation)
+    ConcurrentProc.new(self, evaluation_class).call
   end
 
 
