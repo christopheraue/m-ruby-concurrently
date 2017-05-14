@@ -46,11 +46,7 @@ class IOEventLoop
       @run_queue.schedule(fiber, seconds, timeout_result)
     end
 
-    result = if ConcurrentBlock === fiber
-      Fiber.yield # yield back to event loop
-    else
-      @event_loop.resume # start event loop
-    end
+    result = fiber.send_to_background! @event_loop
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.

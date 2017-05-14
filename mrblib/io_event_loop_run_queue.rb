@@ -53,15 +53,7 @@ class IOEventLoop
 
       processing.each do |cart|
         @cart_index.delete cart[FIBER].hash
-
-        if cart[ACTIVE]
-          case fiber = cart[FIBER]
-          when ConcurrentBlock
-            fiber.resume cart[RESULT]
-          else
-            Fiber.yield cart[RESULT] # leave event loop and yield to root fiber
-          end
-        end
+        cart[FIBER].send_to_foreground! cart[RESULT] if cart[ACTIVE]
       end
     end
 

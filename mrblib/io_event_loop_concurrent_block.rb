@@ -57,5 +57,13 @@ class IOEventLoop
       end
       :cancelled
     end
+
+    def send_to_background!(event_loop)
+      Fiber.yield # yield back to event loop
+    end
+
+    def send_to_foreground!(result = nil)
+      resume result
+    end
   end
 end

@@ -30,14 +30,9 @@ class IOEventLoop
 
     def process_ready_in(waiting_time)
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
-        selected.each{ |ios| ios.each do |io|
-          case fiber = @fibers[io]
-          when ConcurrentBlock
-            fiber.resume
-          else
-            Fiber.yield # leave event loop and yield to root fiber
-          end
-        end }
+        selected.each do |ios|
+          ios.each{ |io| @fibers[io].send_to_foreground! }
+        end
       end
     end
   end
