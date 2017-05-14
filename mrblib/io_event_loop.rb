@@ -56,7 +56,9 @@ class IOEventLoop
 
   # Awaiting stuff
 
-  def await_manual_resume(fiber, opts = {})
+  def await_manual_resume!(opts = {})
+    fiber = Fiber.current
+
     if seconds = opts[:within]
       timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
       @run_queue.schedule(fiber, seconds, timeout_result)
@@ -89,7 +91,7 @@ class IOEventLoop
   def wait(seconds)
     fiber = Fiber.current
     @run_queue.schedule(fiber, seconds)
-    await_manual_resume fiber
+    await_manual_resume!
   ensure
     @run_queue.cancel fiber
   end
@@ -97,7 +99,7 @@ class IOEventLoop
   def await_readable(io)
     fiber = Fiber.current
     @io_watcher.await_reader(io, fiber)
-    await_manual_resume fiber
+    await_manual_resume!
   ensure
     @io_watcher.cancel_reader(io)
   end
@@ -105,7 +107,7 @@ class IOEventLoop
   def await_writable(io)
     fiber = Fiber.current
     @io_watcher.await_writer(io, fiber)
-    await_manual_resume fiber
+    await_manual_resume!
   ensure
     @io_watcher.cancel_writer(io)
   end
@@ -113,7 +115,7 @@ class IOEventLoop
   def await_event(subject, event)
     fiber = Fiber.current
     callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
-    await_manual_resume fiber
+    await_manual_resume!
   ensure
     callback.cancel
   end

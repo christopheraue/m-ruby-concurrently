@@ -17,7 +17,7 @@ class IOEventLoop
         result = begin
           fiber = Fiber.current
           @awaiting_result.store fiber, true
-          @loop.await_manual_resume(fiber, opts)
+          @loop.await_manual_resume! opts
         ensure
           @awaiting_result.delete fiber
         end
