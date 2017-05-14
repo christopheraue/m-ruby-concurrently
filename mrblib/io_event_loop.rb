@@ -89,39 +89,47 @@ class IOEventLoop
   end
 
   def wait(seconds)
-    await_outer do |fiber|
-      @run_queue.schedule(fiber, seconds)
-      result = await_inner fiber
-      @run_queue.cancel fiber
-      result
+    fiber = Fiber.current
+    @run_queue.schedule(fiber, seconds)
+
+    await_outer do
+      await_inner fiber
     end
+  ensure
+    @run_queue.cancel fiber
   end
 
   def await_readable(io)
-    await_outer do |fiber|
-      @io_watcher.await_reader(io, fiber)
-      result = await_inner fiber
-      @io_watcher.cancel_reader(io)
-      result
+    fiber = Fiber.current
+    @io_watcher.await_reader(io, fiber)
+
+    await_outer do
+      await_inner fiber
     end
+  ensure
+    @io_watcher.cancel_reader(io)
   end
 
   def await_writable(io)
-    await_outer do |fiber|
-      @io_watcher.await_writer(io, fiber)
-      result = await_inner fiber
-      @io_watcher.cancel_writer(io)
-      result
+    fiber = Fiber.current
+    @io_watcher.await_writer(io, fiber)
+
+    await_outer do
+      await_inner fiber
     end
+  ensure
+    @io_watcher.cancel_writer(io)
   end
 
   def await_event(subject, event)
-    await_outer do |fiber|
-      callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
-      result = await_inner fiber
-      callback.cancel
-      result
+    fiber = Fiber.current
+    callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
+
+    await_outer do
+      await_inner fiber
     end
+  ensure
+    callback.cancel
   end
 
   def inject_result(fiber, result)

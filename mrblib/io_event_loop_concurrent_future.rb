@@ -14,11 +14,14 @@ class IOEventLoop
       if @evaluated
         result = @result
       else
-        @loop.await_outer do |fiber|
+        result = begin
+          fiber = Fiber.current
           @awaiting_result.store fiber, true
-          result = @loop.await_inner(fiber, opts)
+          @loop.await_outer do
+            @loop.await_inner(fiber, opts)
+          end
+        ensure
           @awaiting_result.delete fiber
-          result
         end
       end
 
