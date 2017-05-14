@@ -50,5 +50,9 @@ class IOEventLoop
       evaluate_to self.class::CancelledError.new(reason)
       :cancelled
     end
+
+    def manually_resume!(result)
+      @loop.manually_resume!(@concurrent_block, result)
+    end
   end
 end
