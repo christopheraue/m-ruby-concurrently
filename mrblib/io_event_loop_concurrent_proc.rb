@@ -5,7 +5,7 @@ class IOEventLoop
       @evaluation_class = evaluation_class
     end
 
-    alias_method :call_consecutively, :call
+    alias_method :__proc_call__, :call
 
     def call(*args)
       case immediate_result = call_nonblock(*args)

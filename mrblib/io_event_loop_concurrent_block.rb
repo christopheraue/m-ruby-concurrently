@@ -33,7 +33,7 @@ class IOEventLoop
             raise Error, "concurrent block started with an invalid proc" unless ConcurrentProc === proc
 
             begin
-              result = proc.call_consecutively *args
+              result = proc.__proc_call__ *args
               evaluation[0].conclude_with result if evaluation[0]
             rescue CancelledConcurrentBlock
               # Generally, throw-catch is faster than raise-rescue if the code
