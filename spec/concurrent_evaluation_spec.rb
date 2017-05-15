@@ -185,18 +185,4 @@ describe IOEventLoop::ConcurrentEvaluation do
       it { is_expected.not_to raise_error }
     end
   end
-
-  context "when it configures no custom evaluation" do
-    subject(:concurrent_evaluation) { loop.concurrent_proc{}.call }
-
-    it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: {}) }
-  end
-
-  context "when it configures a custom evaluation" do
-    subject(:concurrent_evaluation) { loop.concurrent_proc(custom_evaluation_class){}.call }
-
-    let(:custom_evaluation_class) { Class.new(IOEventLoop::ConcurrentEvaluation) }
-
-    it { is_expected.to be_a(custom_evaluation_class).and have_attributes(data: {}) }
-  end
 end

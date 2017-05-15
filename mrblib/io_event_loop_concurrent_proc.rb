@@ -1,6 +1,6 @@
 class IOEventLoop
   class ConcurrentProc < Proc
-    def initialize(loop, evaluation_class = nil)
+    def initialize(loop, evaluation_class = ConcurrentEvaluation)
       @loop = loop
       @evaluation_class = evaluation_class
     end
