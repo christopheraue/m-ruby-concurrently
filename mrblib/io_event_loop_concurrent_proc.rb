@@ -33,8 +33,9 @@ class IOEventLoop
     end
 
     def call_detached(*args)
-      evaluation = @evaluation_class.new @loop
-      evaluation.manually_resume! [self, args, [evaluation]]
+      concurrent_block = @loop.concurrent_block!
+      evaluation = @evaluation_class.new(@loop, concurrent_block)
+      @loop.manually_resume! concurrent_block, [self, args, [evaluation]]
       evaluation
     end
   end
