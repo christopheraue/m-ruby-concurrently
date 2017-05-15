@@ -9,12 +9,16 @@ class IOEventLoop
       #   a block pool.
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
-      super() do |proc, args, evaluation = []|
+      super() do |proc, args, evaluation|
         # The fiber's proc, arguments to call the proc with and evaluation
         # are passed when scheduled right after creation or taking it out of
         # the pool.
 
+        empty_evaluation_holder = [].freeze
+
         while true
+          evaluation ||= empty_evaluation_holder
+
           result = nil
 
           if proc == self

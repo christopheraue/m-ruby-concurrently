@@ -27,27 +27,64 @@ describe IOEventLoop::ConcurrentProc do
       let(:call_args) { [:arg1, :arg2] }
       it { is_expected.to eq call_args }
     end
+
+    describe "the reuse of concurrent blocks" do
+      subject { @fiber3 }
+
+      let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
+      let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+      before { concurrent_block2.await_result } # let the two blocks finish
+      let!(:concurrent_block3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
+      before { concurrent_block3.await_result } # let the third block finish
+
+      it { is_expected.to be @fiber2 }
+      after { expect(subject).not_to be @fiber1 }
+    end
   end
 
   describe "#call_detached!" do
-    subject { @result }
+    context "when called with arguments" do
+      subject { @result }
 
-    before { instance.call_detached! *call_args }
-    let(:call_args) { [:arg1, :arg2] }
+      before { instance.call_detached! *call_args }
+      let(:call_args) { [:arg1, :arg2] }
 
-    let(:block) { proc do |*args|
-      @result = args
-      loop.manually_resume! @spec_fiber
-    end }
+      let(:block) { proc do |*args|
+        @result = args
+        loop.manually_resume! @spec_fiber
+      end }
 
-    # We need a reference wait to ensure we wait long enough for the
-    # concurrently block to finish.
-    before do
-      @spec_fiber = Fiber.current
-      loop.await_manual_resume!
+      # We need a reference wait to ensure we wait long enough for the
+      # concurrently block to finish.
+      before do
+        @spec_fiber = Fiber.current
+        loop.await_manual_resume!
+      end
+
+      it { is_expected.to eq call_args }
     end
 
-    it { is_expected.to eq call_args }
+    describe "the reuse of concurrent blocks" do
+      subject { @fiber3 }
+
+      let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
+      let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+      before { concurrent_block2.await_result } # let the two blocks finish
+      let!(:concurrent_block3) { loop.concurrent_proc do
+        @fiber3 = Fiber.current
+        loop.manually_resume! @spec_fiber
+      end.call_detached! }
+
+      # We need a reference wait to ensure we wait long enough for the
+      # concurrently block to finish.
+      before do
+        @spec_fiber = Fiber.current
+        loop.await_manual_resume!
+      end
+
+      it { is_expected.to be @fiber2 }
+      after { expect(subject).not_to be @fiber1 }
+    end
   end
 
   describe "#call_nonblock" do
@@ -97,20 +134,5 @@ describe IOEventLoop::ConcurrentProc do
   describe "#[]" do
     subject(:call) { instance[*call_args] }
     it_behaves_like "evaluating the call synchronously"
-  end
-
-  describe "the reuse of concurrent blocks" do
-    subject { concurrent_block3.await_result } # let the third block finish
-
-    let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
-    let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
-    before { concurrent_block2.await_result } # let the two blocks finish
-    let!(:concurrent_block3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
-
-    it { is_expected.not_to raise_error }
-
-    after { expect(@fiber1).not_to be @fiber2 }
-    after { expect(@fiber2).to be @fiber3 }
-    after { expect(@fiber3).not_to be @fiber1 }
   end
 end
