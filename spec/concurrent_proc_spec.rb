@@ -7,6 +7,56 @@ describe IOEventLoop::ConcurrentProc do
 
   it { is_expected.to be_a Proc }
 
+  describe "#call and its variants" do
+    subject(:call) { instance.call *call_args }
+
+    shared_examples "evaluating a synchronous call" do
+      let(:call_args) { [:arg1, :arg2] }
+
+      context "if the block does not need to wait during evaluation" do
+        let(:block) { proc{ |*args| args } }
+        it { is_expected.to eq call_args }
+      end
+
+      context "if the block needs to wait during evaluation" do
+        let(:block) { proc{ |*args| loop.wait 0.0001; args } }
+        it { is_expected.to eq call_args }
+      end
+    end
+
+    it_behaves_like "evaluating a synchronous call"
+
+    describe "#.()" do
+      subject(:call) { instance.(*call_args) }
+      it_behaves_like "evaluating a synchronous call"
+    end
+
+    describe "#[]" do
+      subject(:call) { instance[*call_args] }
+      it_behaves_like "evaluating a synchronous call"
+    end
+  end
+
+  describe "#call_nonblock" do
+    subject(:call) { instance.call_nonblock *call_args }
+    let(:call_args) { [:arg1, :arg2] }
+
+    context "if the block does not need to wait during evaluation" do
+      let(:block) { proc{ |*args| args } }
+      it { is_expected.to eq call_args }
+    end
+
+    context "if the block needs to wait during evaluation" do
+      let(:block) { proc{ |*args| loop.wait 0.0001; args } }
+      it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation) }
+
+      describe "the result of the evaluation" do
+        subject { call.await_result }
+        it { is_expected.to eq call_args }
+      end
+    end
+  end
+
   describe "#call_detached" do
     subject(:call) { instance.call_detached *call_args }
     let(:call_args) { [] }
@@ -85,54 +135,5 @@ describe IOEventLoop::ConcurrentProc do
       it { is_expected.to be @fiber2 }
       after { expect(subject).not_to be @fiber1 }
     end
-  end
-
-  describe "#call_nonblock" do
-    subject(:call) { instance.call_nonblock *call_args }
-    let(:call_args) { [:arg1, :arg2] }
-
-    context "if the block does not need to wait during evaluation" do
-      let(:block) { proc{ |*args| args } }
-      it { is_expected.to eq call_args }
-    end
-
-    context "if the block needs to wait during evaluation" do
-      let(:block) { proc{ |*args| loop.wait 0.0001; args } }
-      it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation) }
-
-      describe "the result of the evaluation" do
-        subject { call.await_result }
-        it { is_expected.to eq call_args }
-      end
-    end
-  end
-
-  shared_examples "evaluating the call synchronously" do
-    let(:call_args) { [:arg1, :arg2] }
-
-    context "if the block does not need to wait during evaluation" do
-      let(:block) { proc{ |*args| args } }
-      it { is_expected.to eq call_args }
-    end
-
-    context "if the block needs to wait during evaluation" do
-      let(:block) { proc{ |*args| loop.wait 0.0001; args } }
-      it { is_expected.to eq call_args }
-    end
-  end
-
-  describe "#call" do
-    subject(:call) { instance.call *call_args }
-    it_behaves_like "evaluating the call synchronously"
-  end
-
-  describe "#.()" do
-    subject(:call) { instance.(*call_args) }
-    it_behaves_like "evaluating the call synchronously"
-  end
-
-  describe "#[]" do
-    subject(:call) { instance[*call_args] }
-    it_behaves_like "evaluating the call synchronously"
   end
 end
