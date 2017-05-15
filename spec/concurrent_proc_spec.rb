@@ -98,4 +98,19 @@ describe IOEventLoop::ConcurrentProc do
     subject(:call) { instance[*call_args] }
     it_behaves_like "evaluating the call synchronously"
   end
+
+  describe "the reuse of concurrent blocks" do
+    subject { concurrent_block3.await_result } # let the third block finish
+
+    let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
+    let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+    before { concurrent_block2.await_result } # let the two blocks finish
+    let!(:concurrent_block3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
+
+    it { is_expected.not_to raise_error }
+
+    after { expect(@fiber1).not_to be @fiber2 }
+    after { expect(@fiber2).to be @fiber3 }
+    after { expect(@fiber3).not_to be @fiber1 }
+  end
 end
