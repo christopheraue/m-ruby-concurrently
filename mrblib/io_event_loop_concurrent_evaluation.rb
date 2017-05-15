@@ -40,7 +40,7 @@ class IOEventLoop
       @result = result
       @concluded = true
 
-      @concurrent_block.cancel
+      @concurrent_block.cancel!
 
       @awaiting_result.each_key{ |fiber| @loop.manually_resume!(fiber, result) }
       :concluded

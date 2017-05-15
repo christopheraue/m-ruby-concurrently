@@ -50,7 +50,7 @@ class IOEventLoop
       end
     end
 
-    def cancel
+    def cancel!
       if Fiber.current != self
         # Cancel fiber by resuming it with itself as argument
         resume self

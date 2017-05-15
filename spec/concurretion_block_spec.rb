@@ -16,11 +16,11 @@ describe IOEventLoop::ConcurrentBlock do
     after { expect(@fiber3).not_to be @fiber1 }
   end
 
-  describe "#cancel" do
+  describe "#cancel!" do
     before { @result = :not_evaluated }
 
     context "when doing it before its evaluation is started" do
-      subject { concurrent_block.cancel }
+      subject { concurrent_block.cancel! }
 
       let!(:concurrent_block) { loop.concurrently{ @result = :evaluated } }
 
@@ -29,7 +29,7 @@ describe IOEventLoop::ConcurrentBlock do
     end
 
     context "when doing it its evaluation is started" do
-      subject { loop.concurrent_proc{ concurrent_block.cancel }.call.await_result }
+      subject { loop.concurrent_proc{ concurrent_block.cancel! }.call.await_result }
 
       let(:concurrent_block) { loop.concurrently{ loop.wait(0.0001); @result = :evaluated } }
 
