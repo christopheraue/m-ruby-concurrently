@@ -35,9 +35,9 @@ class IOEventLoop
               # is invoked. If not playing back the call stack, a begin block
               # is faster than a catch block. Since we mostly won't jump out
               # of proc above, we go with begin-raise-rescue.
-            rescue Exception => e
-              loop.trigger :error, e
-              evaluation.conclude_with e if evaluation
+            rescue Exception => result
+              loop.trigger :error, result
+              evaluation.conclude_with result if evaluation
             end
           end
 
@@ -59,11 +59,10 @@ class IOEventLoop
     end
 
     def send_to_background!(event_loop)
-      Fiber.yield # yield back to event loop
+      # Yield back to the event loop fiber or the fiber evaluating this one.
+      Fiber.yield
     end
 
-    def send_to_foreground!(result = nil)
-      resume result
-    end
+    alias_method :send_to_foreground!, :resume
   end
 end
