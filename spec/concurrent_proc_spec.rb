@@ -29,6 +29,27 @@ describe IOEventLoop::ConcurrentProc do
     end
   end
 
+  describe "#call_detached!" do
+    subject { @result }
+
+    before { instance.call_detached! *call_args }
+    let(:call_args) { [:arg1, :arg2] }
+
+    let(:block) { proc do |*args|
+      @result = args
+      loop.manually_resume! @spec_fiber
+    end }
+
+    # We need a reference wait to ensure we wait long enough for the
+    # concurrently block to finish.
+    before do
+      @spec_fiber = Fiber.current
+      loop.await_manual_resume!
+    end
+
+    it { is_expected.to eq call_args }
+  end
+
   describe "#call_nonblock" do
     subject(:call) { instance.call_nonblock *call_args }
     let(:call_args) { [:arg1, :arg2] }
