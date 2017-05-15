@@ -29,7 +29,7 @@ describe IOEventLoop::ConcurrentBlock do
     end
 
     context "when doing it its evaluation is started" do
-      subject { loop.concurrent_proc{ concurrent_block.cancel! }.call_detached.await_result }
+      subject { loop.concurrent_proc{ concurrent_block.cancel! }.call }
 
       let(:concurrent_block) { loop.concurrently{ loop.wait(0.0001); @result = :evaluated } }
 

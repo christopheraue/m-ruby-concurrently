@@ -13,11 +13,17 @@ describe "using #await_event in concurrent procs" do
 
   context "when originating inside a concurrently block" do
     subject { @result }
-    before { loop.concurrently(&wait_proc) }
+    before { loop.concurrently do
+      @result = loop.await_event object, :event
+      loop.manually_resume! @spec_fiber
+    end }
 
-    # We need a reference concurrent block whose result we can await to
-    # ensure we wait long enough for the concurrently block to finish.
-    before { loop.concurrent_proc{ loop.wait waiting_time }.call_detached.await_result }
+    # We need a reference wait to ensure we wait long enough for the
+    # concurrently block to finish.
+    before do
+      @spec_fiber = Fiber.current
+      loop.await_manual_resume!
+    end
 
     it { is_expected.to be :result }
   end
@@ -46,7 +52,7 @@ describe "using #await_event in concurrent procs" do
       # Wait after the event is triggered to make sure the concurrent evaluation
       # is not resumed then (i.e. watching the event is properly cancelled)
       loop.wait waiting_time
-    end.call_detached.await_result }
+    end.call }
 
     it { is_expected.to be :intercepted }
   end

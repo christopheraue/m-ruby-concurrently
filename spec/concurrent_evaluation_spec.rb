@@ -145,7 +145,7 @@ describe IOEventLoop::ConcurrentEvaluation do
     end
 
     context "when doing it after requesting the result" do
-      subject { loop.concurrent_proc{ concurrent_evaluation.cancel *reason }.call_detached.await_result }
+      subject { loop.concurrent_proc{ concurrent_evaluation.cancel *reason }.call }
 
       let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001) }.call_detached }
 
@@ -179,7 +179,7 @@ describe IOEventLoop::ConcurrentEvaluation do
           loop.concurrent_proc do
             concurrent_evaluation.conclude_with :cancelled
           end
-        end.call_detached.await_result
+        end.call
       end.call_detached }
 
       it { is_expected.not_to raise_error }

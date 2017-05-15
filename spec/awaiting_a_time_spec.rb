@@ -17,19 +17,19 @@ describe "using #wait in concurrent procs" do
 
       # We need a reference concurrent block whose result we can await to
       # ensure we wait long enough for the concurrently block to finish.
-      before { loop.concurrent_proc(&wait_proc).call_detached.await_result }
+      before { loop.concurrent_proc(&wait_proc).call }
 
-      it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+      it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
     end
 
     context "when originating inside a concurrent proc" do
-      subject { loop.concurrent_proc(&wait_proc).call_detached.await_result }
-      it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+      subject { loop.concurrent_proc(&wait_proc).call }
+      it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
     end
 
     context "when originating outside a concurrent proc" do
       subject { wait_proc.call }
-      it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
+      it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
     end
   end
 
@@ -47,7 +47,7 @@ describe "using #wait in concurrent procs" do
       # concurrent evaluation is not resumed then (i.e. watching the timeout
       # is properly cancelled)
       loop.wait wait_time
-    end.call_detached.await_result }
+    end.call }
 
     it { is_expected.to be :intercepted }
   end

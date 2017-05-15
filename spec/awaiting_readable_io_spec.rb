@@ -12,17 +12,26 @@ describe "using #await_readable in concurrent procs" do
   let(:writer) { pipe[1] }
 
   before { loop.concurrent_proc do
+    loop.wait 0.0001
     writer.write 'Wake up!'
     writer.close
   end.call_detached }
 
   context "when originating inside a concurrently block" do
     subject { @result }
-    before { loop.concurrently(&wait_proc) }
 
-    # We need a reference concurrent block whose result we can await to
-    # ensure we wait long enough for the concurrently block to finish.
-    before { loop.concurrent_proc{ loop.wait 0.0001 }.call_detached.await_result }
+    before { loop.concurrently do
+      loop.await_readable reader
+      @result = reader.read
+      loop.manually_resume! @spec_fiber
+    end }
+
+    # We need a reference wait to ensure we wait long enough for the
+    # concurrently block to finish.
+    before do
+      @spec_fiber = Fiber.current
+      loop.await_manual_resume!
+    end
 
     it { is_expected.to eq 'Wake up!' }
   end
@@ -51,7 +60,7 @@ describe "using #await_readable in concurrent procs" do
       # Wait after the reader is readable to make sure the concurrent evaluation
       # is not resumed then (i.e. watching the reader is properly cancelled)
       loop.wait 0.0001
-    end.call_detached.await_result }
+    end.call }
 
     it { is_expected.to be :intercepted }
   end

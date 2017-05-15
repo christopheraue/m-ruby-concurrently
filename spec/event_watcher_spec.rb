@@ -57,7 +57,7 @@ describe IOEventLoop::EventWatcher do
     after { expect(instance.cancelled?).to be true }
 
     context "when the watcher is cancelled after starting to wait" do
-      before { loop.concurrent_proc{ subject }.call_detached.await_result }
+      before { loop.concurrent_proc{ subject }.call }
       it { expect{ instance.await }.to raise_error IOEventLoop::CancelledError, 'cancel reason' }
     end
 
