@@ -15,8 +15,6 @@ class IOEventLoop
         # the pool.
 
         while true
-          raise Error, "concurrent block started without a proc" unless proc
-
           result = nil
 
           if proc == self
@@ -28,6 +26,8 @@ class IOEventLoop
             # When this fiber is started because it is next on schedule it will
             # just finish without running the proc.
           else
+            raise Error, "concurrent block started with an invalid proc" unless ConcurrentProc === proc
+
             begin
               result = proc.call_consecutively *args
               evaluation[0].conclude_with result if evaluation[0]

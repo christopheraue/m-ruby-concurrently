@@ -178,8 +178,13 @@ describe IOEventLoop::ConcurrentEvaluation do
         loop.concurrent_proc do
           loop.concurrent_proc do
             concurrent_evaluation.conclude_with :cancelled
-          end
-        end.call
+          end.call_detached
+
+          # The return value of this concurrent proc would be used as a
+          # proc in the scheduled concurrent block of the outer concurrent
+          # proc unless it is not properly cancelled.
+          :trouble_maker
+        end.call_detached.await_result
       end.call_detached }
 
       it { is_expected.not_to raise_error }
