@@ -7,6 +7,17 @@ class IOEventLoop
 
     alias_method :call_consecutively, :call
 
+    def call(*args)
+      case immediate_result = call_nonblock(*args)
+      when ConcurrentEvaluation
+        immediate_result.await_result
+      else
+        immediate_result
+      end
+    end
+
+    alias [] call
+
     def call_nonblock(*args)
       concurrent_block = @loop.concurrent_block!
       evaluation_holder = []

@@ -7,7 +7,10 @@ describe IOEventLoop::ConcurrentProc do
 
   it { is_expected.to be_a Proc }
 
-  shared_examples "evaluating the block of the concurrent proc" do
+  describe "#call_detached" do
+    subject(:call) { instance.call_detached *call_args }
+    let(:call_args) { [] }
+
     context "when it configures no custom evaluation" do
       it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: {}) }
     end
@@ -24,12 +27,6 @@ describe IOEventLoop::ConcurrentProc do
       let(:call_args) { [:arg1, :arg2] }
       it { is_expected.to eq call_args }
     end
-  end
-
-  describe "#call_detached" do
-    subject(:call) { instance.call_detached *call_args }
-    let(:call_args) { [] }
-    it_behaves_like "evaluating the block of the concurrent proc"
   end
 
   describe "#call_nonblock" do
@@ -52,15 +49,32 @@ describe IOEventLoop::ConcurrentProc do
     end
   end
 
-  xdescribe "#.()" do
-    subject(:call) { instance.(*call_args) }
-    let(:call_args) { [] }
-    it_behaves_like "evaluating the block of the concurrent proc"
+  shared_examples "evaluating the call synchronously" do
+    let(:call_args) { [:arg1, :arg2] }
+
+    context "if the block does not need to wait during evaluation" do
+      let(:block) { proc{ |*args| args } }
+      it { is_expected.to eq call_args }
+    end
+
+    context "if the block needs to wait during evaluation" do
+      let(:block) { proc{ |*args| loop.wait 0.0001; args } }
+      it { is_expected.to eq call_args }
+    end
   end
 
-  xdescribe "#[]" do
+  describe "#call" do
+    subject(:call) { instance.call *call_args }
+    it_behaves_like "evaluating the call synchronously"
+  end
+
+  describe "#.()" do
+    subject(:call) { instance.(*call_args) }
+    it_behaves_like "evaluating the call synchronously"
+  end
+
+  describe "#[]" do
     subject(:call) { instance[*call_args] }
-    let(:call_args) { [] }
-    it_behaves_like "evaluating the block of the concurrent proc"
+    it_behaves_like "evaluating the call synchronously"
   end
 end
