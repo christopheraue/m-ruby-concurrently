@@ -19,7 +19,7 @@ class IOEventLoop
 
 
   # Concurrently executed block of code
-  def fresh_concurrent_block
+  def concurrent_block!
     @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
   end
 
