@@ -1,8 +1,8 @@
 class IOEventLoop
   class ConcurrentEvaluation
-    def initialize(loop)
+    def initialize(loop, concurrent_block = loop.concurrent_block!)
       @loop = loop
-      @concurrent_block = loop.concurrent_block!
+      @concurrent_block = concurrent_block
       @concluded = false
       @awaiting_result = {}
       @data = {}

@@ -9,13 +9,15 @@ class IOEventLoop
       #   a block pool.
       # - Taking a block out of the pool and resuming it will enter the
       #   next iteration.
-      super() do |proc, args, evaluation|
+      super() do |proc, args, evaluation = []|
         # The fiber's proc, arguments to call the proc with and evaluation
         # are passed when scheduled right after creation or taking it out of
         # the pool.
 
         while true
           raise Error, "concurrent block started without a proc" unless proc
+
+          result = nil
 
           if proc == self
             # If we are given this very fiber when starting the concurrent block
@@ -28,7 +30,7 @@ class IOEventLoop
           else
             begin
               result = proc.call_consecutively *args
-              evaluation.conclude_with result if evaluation
+              evaluation[0].conclude_with result if evaluation[0]
             rescue CancelledConcurrentBlock
               # Generally, throw-catch is faster than raise-rescue if the code
               # needs to play back the call stack, i.e. the throw resp. raise
@@ -37,7 +39,7 @@ class IOEventLoop
               # of proc above, we go with begin-raise-rescue.
             rescue Exception => result
               loop.trigger :error, result
-              evaluation.conclude_with result if evaluation
+              evaluation[0].conclude_with result if evaluation[0]
             end
           end
 
@@ -45,7 +47,7 @@ class IOEventLoop
 
           # Yield back to the event loop fiber or the fiber evaluating this one
           # and wait for the next proc to evaluate.
-          proc, args, evaluation = Fiber.yield
+          proc, args, evaluation = Fiber.yield result
         end
       end
     end
@@ -60,7 +62,8 @@ class IOEventLoop
 
     def send_to_background!(event_loop)
       # Yield back to the event loop fiber or the fiber evaluating this one.
-      Fiber.yield
+      # Pass along itself to indicate it is not yet fully evaluated.
+      Fiber.yield self
     end
 
     alias_method :send_to_foreground!, :resume
