@@ -4,7 +4,7 @@ describe IOEventLoop::ConcurrentEvaluation do
   describe "#await_result" do
     subject { concurrent_evaluation.await_result(&with_result) }
 
-    let(:concurrent_evaluation) { loop.concurrent_proc{ result }.call }
+    let(:concurrent_evaluation) { loop.concurrent_proc{ result }.call_detached }
     let(:with_result) { nil }
     let(:result) { :result }
 
@@ -43,7 +43,7 @@ describe IOEventLoop::ConcurrentEvaluation do
     end
 
     context "when the code inside the fiber raises an error" do
-      let(:concurrent_evaluation) { loop.concurrent_proc{ raise 'error' }.call }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ raise 'error' }.call_detached }
       before { expect(loop).to receive(:trigger).with(:error,
         (be_a(RuntimeError).and have_attributes message: 'error')) }
       it { is_expected.to raise_error RuntimeError, 'error' }
@@ -67,9 +67,9 @@ describe IOEventLoop::ConcurrentEvaluation do
     end
 
     context "when getting the result of a concurrent proc from two other once" do
-      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001); :result }.call }
-      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call }
-      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call }
+      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001); :result }.call_detached }
+      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call_detached }
+      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call_detached }
 
       it { is_expected.to be :result }
       after { expect(concurrent_evaluation1.await_result).to be :result }
@@ -84,7 +84,7 @@ describe IOEventLoop::ConcurrentEvaluation do
     let(:timeout_result) { :timeout_result }
 
     context "when the result arrives in time" do
-      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call_detached }
       it { is_expected.to be :result }
     end
 
@@ -92,7 +92,7 @@ describe IOEventLoop::ConcurrentEvaluation do
       let(:concurrent_evaluation) { loop.concurrent_proc do
         loop.wait(0.0002)
         :result
-      end.call }
+      end.call_detached }
 
       context "when no timeout result is given" do
         before { options.delete :timeout_result }
@@ -112,9 +112,9 @@ describe IOEventLoop::ConcurrentEvaluation do
 
     context "when getting the result of a concurrent proc from to other ones, one with a timeout" do
       subject { concurrent_evaluation.await_result }
-      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0002); :result }.call }
-      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call }
-      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result within: 0.0001, timeout_result: :timeout_result }.call }
+      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0002); :result }.call_detached }
+      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call_detached }
+      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result within: 0.0001, timeout_result: :timeout_result }.call_detached }
 
       it { is_expected.to be :result }
       after { expect(concurrent_evaluation1.await_result).to be :result }
@@ -129,7 +129,7 @@ describe IOEventLoop::ConcurrentEvaluation do
     context "when doing it before requesting the result" do
       subject { concurrent_evaluation.cancel *reason }
 
-      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call_detached }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
@@ -145,9 +145,9 @@ describe IOEventLoop::ConcurrentEvaluation do
     end
 
     context "when doing it after requesting the result" do
-      subject { loop.concurrent_proc{ concurrent_evaluation.cancel *reason }.call.await_result }
+      subject { loop.concurrent_proc{ concurrent_evaluation.cancel *reason }.call_detached.await_result }
 
-      let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001) }.call }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001) }.call_detached }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
@@ -165,7 +165,7 @@ describe IOEventLoop::ConcurrentEvaluation do
     context "when cancelling after it is already evaluated" do
       subject { concurrent_evaluation.cancel }
 
-      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call }
+      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call_detached }
       before { concurrent_evaluation.await_result }
 
       it { is_expected.to raise_error IOEventLoop::Error, "already concluded" }
@@ -179,8 +179,8 @@ describe IOEventLoop::ConcurrentEvaluation do
           loop.concurrent_proc do
             concurrent_evaluation.conclude_with :cancelled
           end
-        end.call.await_result
-      end.call }
+        end.call_detached.await_result
+      end.call_detached }
 
       it { is_expected.not_to raise_error }
     end

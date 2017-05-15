@@ -1,6 +1,6 @@
 describe "using #await_writable in concurrent procs" do
   let(:loop) { IOEventLoop.new }
-  let(:concurrent_evaluation) { loop.concurrent_proc(&wait_proc).call }
+  let(:concurrent_evaluation) { loop.concurrent_proc(&wait_proc).call_detached }
 
   let(:wait_proc) { proc do
     loop.await_writable writer
@@ -16,7 +16,7 @@ describe "using #await_writable in concurrent procs" do
 
   before { loop.concurrent_proc do
     reader.read 65536 # clears the pipe
-  end.call }
+  end.call_detached }
 
   context "when originating inside a concurrently block" do
     subject { @result }
@@ -24,7 +24,7 @@ describe "using #await_writable in concurrent procs" do
 
     # We need a reference concurrent block whose result we can await to
     # ensure we wait long enough for the concurrently block to finish.
-    before { loop.concurrent_proc{ loop.wait 0.0001 }.call.await_result }
+    before { loop.concurrent_proc{ loop.wait 0.0001 }.call_detached.await_result }
 
     it { is_expected.to be 4 }
   end
@@ -53,7 +53,7 @@ describe "using #await_writable in concurrent procs" do
       # Wait after the reader is readable to make sure the concurrent evaluation
       # is not resumed then (i.e. watching the reader is properly cancelled)
       loop.wait 0.0001
-    end.call.await_result }
+    end.call_detached.await_result }
 
     it { is_expected.to be :intercepted }
   end

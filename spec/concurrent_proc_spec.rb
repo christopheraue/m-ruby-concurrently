@@ -26,19 +26,19 @@ describe IOEventLoop::ConcurrentProc do
     end
   end
 
-  describe "#call" do
-    subject(:call) { instance.call *call_args }
+  describe "#call_detached" do
+    subject(:call) { instance.call_detached *call_args }
     let(:call_args) { [] }
     it_behaves_like "evaluating the block of the concurrent proc"
   end
 
-  describe "#.()" do
+  xdescribe "#.()" do
     subject(:call) { instance.(*call_args) }
     let(:call_args) { [] }
     it_behaves_like "evaluating the block of the concurrent proc"
   end
 
-  describe "#[]" do
+  xdescribe "#[]" do
     subject(:call) { instance[*call_args] }
     let(:call_args) { [] }
     it_behaves_like "evaluating the block of the concurrent proc"

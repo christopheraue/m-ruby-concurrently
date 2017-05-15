@@ -17,13 +17,13 @@ describe "using #wait in concurrent procs" do
 
       # We need a reference concurrent block whose result we can await to
       # ensure we wait long enough for the concurrently block to finish.
-      before { loop.concurrent_proc(&wait_proc).call.await_result }
+      before { loop.concurrent_proc(&wait_proc).call_detached.await_result }
 
       it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
     end
 
     context "when originating inside a concurrent proc" do
-      subject { loop.concurrent_proc(&wait_proc).call.await_result }
+      subject { loop.concurrent_proc(&wait_proc).call_detached.await_result }
       it { is_expected.to be_within(0.1*seconds).of(start_time+seconds) }
     end
 
@@ -37,7 +37,7 @@ describe "using #wait in concurrent procs" do
     subject { concurrent_evaluation.await_result }
 
     let(:wait_time) { 0.0001 }
-    let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait wait_time; :completed }.call }
+    let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait wait_time; :completed }.call_detached }
 
     before { loop.concurrent_proc do
       # cancel the concurrent evaluation right away
@@ -47,7 +47,7 @@ describe "using #wait in concurrent procs" do
       # concurrent evaluation is not resumed then (i.e. watching the timeout
       # is properly cancelled)
       loop.wait wait_time
-    end.call.await_result }
+    end.call_detached.await_result }
 
     it { is_expected.to be :intercepted }
   end
@@ -55,10 +55,10 @@ describe "using #wait in concurrent procs" do
   describe "order of multiple deferred concurrent evaluations" do
     subject { concurrent_evaluation.await_result }
 
-    let!(:concurrent_evaluation1) { loop.concurrent_proc{ loop.wait(seconds1); callback1.call }.call }
-    let!(:concurrent_evaluation2) { loop.concurrent_proc{ loop.wait(seconds2); callback2.call }.call }
-    let!(:concurrent_evaluation3) { loop.concurrent_proc{ loop.wait(seconds3); callback3.call }.call }
-    let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0004) }.call }
+    let!(:concurrent_evaluation1) { loop.concurrent_proc{ loop.wait(seconds1); callback1.call }.call_detached }
+    let!(:concurrent_evaluation2) { loop.concurrent_proc{ loop.wait(seconds2); callback2.call }.call_detached }
+    let!(:concurrent_evaluation3) { loop.concurrent_proc{ loop.wait(seconds3); callback3.call }.call_detached }
+    let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0004) }.call_detached }
     let(:seconds1) { 0.0001 }
     let(:seconds2) { 0.0002 }
     let(:seconds3) { 0.0003 }
@@ -166,7 +166,7 @@ describe "using #wait in concurrent procs" do
         callback.call
       end
       :result
-    end.call }
+    end.call_detached }
     let(:callback) { proc{} }
 
     before { expect(callback).to receive(:call).exactly(3).times }
