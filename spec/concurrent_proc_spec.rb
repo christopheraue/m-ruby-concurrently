@@ -22,6 +22,18 @@ describe IOEventLoop::ConcurrentProc do
         let(:block) { proc{ |*args| loop.wait 0.0001; args } }
         it { is_expected.to eq call_args }
       end
+
+      context "when resuming its concurrent block raises an error" do
+        before { allow(Fiber).to receive(:yield).and_raise FiberError, 'fiber error' }
+        it { is_expected.to raise_error FiberError, 'fiber error' }
+      end
+
+      context "when the code inside the block raises an error" do
+        let(:block) { proc{ raise 'error' } }
+        before { expect(loop).to receive(:trigger).with(:error,
+          (be_a(RuntimeError).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error RuntimeError, 'error' }
+      end
     end
 
     it_behaves_like "evaluating a synchronous call"
@@ -44,6 +56,13 @@ describe IOEventLoop::ConcurrentProc do
     context "if the block does not need to wait during evaluation" do
       let(:block) { proc{ |*args| args } }
       it { is_expected.to eq call_args }
+
+      context "when the code inside the block raises an error" do
+        let(:block) { proc{ raise 'error' } }
+        before { expect(loop).to receive(:trigger).with(:error,
+          (be_a(RuntimeError).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error RuntimeError, 'error' }
+      end
     end
 
     context "if the block needs to wait during evaluation" do
@@ -53,6 +72,13 @@ describe IOEventLoop::ConcurrentProc do
       describe "the result of the evaluation" do
         subject { call.await_result }
         it { is_expected.to eq call_args }
+
+        context "when the code inside the block raises an error" do
+          let(:block) { proc{ loop.wait 0.0001; raise 'error' } }
+          before { expect(loop).to receive(:trigger).with(:error,
+            (be_a(RuntimeError).and have_attributes message: 'error')) }
+          it { is_expected.to raise_error RuntimeError, 'error' }
+        end
       end
     end
   end
@@ -71,11 +97,18 @@ describe IOEventLoop::ConcurrentProc do
       it { is_expected.to be_a(custom_evaluation_class).and have_attributes(data: {}) }
     end
 
-    context "when called with arguments" do
+    context "when awaiting its result" do
       subject { call.await_result }
       let(:block) { proc{ |*args| args } }
       let(:call_args) { [:arg1, :arg2] }
       it { is_expected.to eq call_args }
+
+      context "when the code inside the block raises an error" do
+        let(:block) { proc{ raise 'error' } }
+        before { expect(loop).to receive(:trigger).with(:error,
+          (be_a(RuntimeError).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error RuntimeError, 'error' }
+      end
     end
 
     describe "the reuse of concurrent blocks" do
@@ -112,6 +145,15 @@ describe IOEventLoop::ConcurrentProc do
       end
 
       it { is_expected.to eq call_args }
+    end
+
+    context "when the code inside the block raises an error" do
+      subject { instance.call_detached!; loop.wait 0.0001 }
+
+      let(:block) { proc{ raise 'error' } }
+      before { expect(loop).to receive(:trigger).with(:error,
+        (be_a(RuntimeError).and have_attributes message: 'error')) }
+      it { is_expected.to raise_error RuntimeError, 'error' }
     end
 
     describe "the reuse of concurrent blocks" do

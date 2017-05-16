@@ -43,7 +43,7 @@ class IOEventLoop
               # of proc above, we go with begin-raise-rescue.
             rescue Exception => result
               loop.trigger :error, result
-              evaluation[0].conclude_with result if evaluation[0]
+              evaluation[0] ? (evaluation[0].conclude_with result) : (raise result)
             end
           end
 
