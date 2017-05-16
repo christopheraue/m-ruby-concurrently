@@ -1,6 +1,6 @@
 describe "using #await_event in concurrent procs" do
   it_behaves_like "awaiting the result of a deferred evaluation" do
-    let(:wait_proc) { proc{ loop.await_event object, :event } }
+    let(:wait_proc) { proc{ loop.await_event(object, :event, wait_options) } }
 
     let(:object) { Object.new.extend CallbacksAttachable }
 

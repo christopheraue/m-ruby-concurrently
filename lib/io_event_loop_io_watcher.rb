@@ -28,7 +28,7 @@ class IOEventLoop
 
     def process_ready_in(waiting_time)
       @selector.select(waiting_time) do |monitor|
-        monitor.value.send_to_foreground!
+        monitor.value.send_to_foreground! true
       end
     end
   end

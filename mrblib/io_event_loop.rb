@@ -72,26 +72,26 @@ class IOEventLoop
     @run_queue.cancel fiber
   end
 
-  def await_readable(io)
+  def await_readable(io, opts = {})
     fiber = Fiber.current
     @io_watcher.await_reader(io, fiber)
-    await_manual_resume!
+    await_manual_resume! opts
   ensure
     @io_watcher.cancel_reader(io)
   end
 
-  def await_writable(io)
+  def await_writable(io, opts = {})
     fiber = Fiber.current
     @io_watcher.await_writer(io, fiber)
-    await_manual_resume!
+    await_manual_resume! opts
   ensure
     @io_watcher.cancel_writer(io)
   end
 
-  def await_event(subject, event)
+  def await_event(subject, event, opts = {})
     fiber = Fiber.current
     callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
-    await_manual_resume!
+    await_manual_resume! opts
   ensure
     callback.cancel
   end

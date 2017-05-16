@@ -31,7 +31,7 @@ class IOEventLoop
     def process_ready_in(waiting_time)
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
         selected.each do |ios|
-          ios.each{ |io| @fibers[io].send_to_foreground! }
+          ios.each{ |io| @fibers[io].send_to_foreground! true }
         end
       end
     end

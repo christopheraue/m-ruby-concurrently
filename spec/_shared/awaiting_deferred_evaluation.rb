@@ -9,6 +9,35 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   context "when originating inside a concurrent proc" do
     subject { concurrent_evaluation.await_result }
     it { is_expected.to eq result }
+
+    context "when limiting the wait time" do
+      let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
+      let(:timeout_result) { :timeout_result }
+
+      context "when the result arrives in time" do
+        let(:timeout_time) { 2*evaluation_time }
+        it { is_expected.to eq result }
+      end
+
+      context "when evaluation of result is too slow" do
+        let(:timeout_time) { 0.5*evaluation_time }
+
+        context "when no timeout result is given" do
+          before { wait_options.delete :timeout_result }
+          it { is_expected.to raise_error IOEventLoop::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
+        end
+
+        context "when the timeout result is a timeout error" do
+          let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
+          it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+        end
+
+        context "when the timeout result is not an timeout error" do
+          let(:timeout_result) { :timeout_result }
+          it { is_expected.to be :timeout_result }
+        end
+      end
+    end
   end
 
   context "when originating outside a concurrent proc" do
