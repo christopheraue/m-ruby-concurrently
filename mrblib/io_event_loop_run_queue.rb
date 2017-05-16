@@ -40,6 +40,8 @@ class IOEventLoop
     end
 
     def process_pending
+      # Clear the fast track in the beginning so that carts added to it while
+      # processing pending carts will be processed during the next iteration.
       processing = @fast_track
       @fast_track = []
 
