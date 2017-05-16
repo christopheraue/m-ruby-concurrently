@@ -4,7 +4,7 @@ describe "using #await_writable in concurrent procs" do
 
   let(:wait_proc) { proc do
     loop.await_writable writer
-    @result = writer.write 'test'
+    writer.write 'test'
   end }
 
   let(:pipe) { IO.pipe }
@@ -18,24 +18,6 @@ describe "using #await_writable in concurrent procs" do
     loop.wait 0.00001
     reader.read 65536 # clears the pipe
   end.call_detached }
-
-  context "when originating inside a concurrently block" do
-    subject { @result }
-    before { loop.concurrently do
-      loop.await_writable writer
-      @result = writer.write 'test'
-      loop.manually_resume! @spec_fiber
-    end }
-
-    # We need a reference wait to ensure we wait long enough for the
-    # concurrently block to finish.
-    before do
-      @spec_fiber = Fiber.current
-      loop.await_manual_resume!
-    end
-
-    it { is_expected.to be 4 }
-  end
 
   context "when originating inside a concurrent proc" do
     subject { concurrent_evaluation.await_result }

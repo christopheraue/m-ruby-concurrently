@@ -1,7 +1,7 @@
 describe "using #await_event in concurrent procs" do
   let(:loop) { IOEventLoop.new }
   let(:concurrent_evaluation) { loop.concurrent_proc(&wait_proc).call_detached }
-  let(:wait_proc) { proc{ @result = loop.await_event object, :event } }
+  let(:wait_proc) { proc{ loop.await_event object, :event } }
 
   let(:object) { Object.new.extend CallbacksAttachable }
   let(:waiting_time) { 0.001 }
@@ -10,23 +10,6 @@ describe "using #await_event in concurrent procs" do
     loop.wait waiting_time
     object.trigger :event, :result
   end.call_detached }
-
-  context "when originating inside a concurrently block" do
-    subject { @result }
-    before { loop.concurrently do
-      @result = loop.await_event object, :event
-      loop.manually_resume! @spec_fiber
-    end }
-
-    # We need a reference wait to ensure we wait long enough for the
-    # concurrently block to finish.
-    before do
-      @spec_fiber = Fiber.current
-      loop.await_manual_resume!
-    end
-
-    it { is_expected.to be :result }
-  end
 
   context "when originating inside a concurrent proc" do
     subject { concurrent_evaluation.await_result }

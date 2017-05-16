@@ -105,7 +105,7 @@ describe IOEventLoop::ConcurrentProc do
       end }
 
       # We need a reference wait to ensure we wait long enough for the
-      # concurrently block to finish.
+      # concurrent block to finish.
       before do
         @spec_fiber = Fiber.current
         loop.await_manual_resume!
@@ -126,7 +126,7 @@ describe IOEventLoop::ConcurrentProc do
       end.call_detached! }
 
       # We need a reference wait to ensure we wait long enough for the
-      # concurrently block to finish.
+      # concurrent block to finish.
       before do
         @spec_fiber = Fiber.current
         loop.await_manual_resume!
