@@ -18,6 +18,8 @@ class IOEventLoop
           fiber = Fiber.current
           @awaiting_result.store fiber, true
           @loop.await_manual_resume! opts
+        rescue Exception => error
+          error
         ensure
           @awaiting_result.delete fiber
         end

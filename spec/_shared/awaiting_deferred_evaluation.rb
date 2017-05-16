@@ -24,12 +24,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
           it { is_expected.to raise_error IOEventLoop::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
         end
 
-        context "when the timeout result is a timeout error" do
-          let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
-          it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
-        end
-
-        context "when the timeout result is not an timeout error" do
+        context "when a timeout result is given" do
           let(:timeout_result) { :timeout_result }
           it { is_expected.to be :timeout_result }
         end

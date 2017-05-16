@@ -40,7 +40,7 @@ class IOEventLoop
     fiber = Fiber.current
 
     if seconds = opts[:within]
-      timeout_result = opts.fetch(:timeout_result, TimeoutError.new("evaluation timed out after #{seconds} second(s)"))
+      timeout_result = opts.fetch(:timeout_result, TimeoutError)
       @run_queue.schedule(fiber, seconds, timeout_result)
     end
 
@@ -48,8 +48,8 @@ class IOEventLoop
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.
-    if TimeoutError === result
-      raise result
+    if result == TimeoutError
+      raise TimeoutError, "evaluation timed out after #{seconds} second(s)"
     elsif result == fiber
       @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
       raise CancelledConcurrentBlock, '', @empty_call_stack
