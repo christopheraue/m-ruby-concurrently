@@ -4,19 +4,61 @@ describe IOEventLoop::ConcurrentEvaluation do
   describe "#await_result" do
     subject { concurrent_evaluation.await_result(&with_result) }
 
-    let(:concurrent_evaluation) { loop.concurrent_proc{ result }.call_detached }
+    let(:concurrent_evaluation) { loop.concurrent_proc(&wait_proc).call_detached }
     let(:with_result) { nil }
     let(:result) { :result }
 
-    before { expect(concurrent_evaluation).not_to be_concluded }
-    after { expect(concurrent_evaluation).to be_concluded }
+    it_behaves_like "awaiting the result of a deferred evaluation" do
+      let(:wait_proc) { proc do
+        loop.concurrent_proc{ loop.wait evaluation_time; result }.call_detached.await_result wait_options
+      end }
 
-    context "when everything goes fine" do
+      context "when limiting the wait time" do
+        let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
+        let(:timeout_result) { :timeout_result }
+
+        context "when the result arrives in time" do
+          let(:timeout_time) { 2*evaluation_time }
+          it { is_expected.to be result }
+        end
+
+        context "when evaluation of result is too slow" do
+          let(:timeout_time) { 0.5*evaluation_time }
+
+          context "when no timeout result is given" do
+            before { wait_options.delete :timeout_result }
+            it { is_expected.to raise_error IOEventLoop::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
+          end
+
+          context "when the timeout result is a timeout error" do
+            let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
+            it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
+          end
+
+          context "when the timeout result is not an timeout error" do
+            let(:timeout_result) { :timeout_result }
+            it { is_expected.to be :timeout_result }
+          end
+        end
+      end
+    end
+
+    context "when it evaluates to a result" do
+      let(:wait_proc) { proc{ result } }
+
+      before { expect(concurrent_evaluation).not_to be_concluded }
+      after { expect(concurrent_evaluation).to be_concluded }
+
       it { is_expected.to be :result }
 
       context "when requesting the result a second time" do
         before { concurrent_evaluation.await_result }
         it { is_expected.to be :result }
+      end
+
+      context "when the result is an array" do
+        let(:result) { %i(a b c) }
+        it { is_expected.to eq %i(a b c) }
       end
 
       context "when a block to do something with the result is given" do
@@ -30,22 +72,14 @@ describe IOEventLoop::ConcurrentEvaluation do
           it { is_expected.to raise_error RuntimeError, 'transformed result to error' }
         end
       end
-
-      context "when the result is an array" do
-        let(:result) { %i(a b c) }
-        it { is_expected.to eq %i(a b c) }
-      end
     end
 
-    context "when resuming a fiber raises an error" do
-      before { allow(Fiber).to receive(:yield).and_raise FiberError, 'fiber error' }
-      it { is_expected.to raise_error FiberError, 'fiber error' }
-    end
+    context "when it evaluates to an error" do
+      let(:wait_proc) { proc{ raise 'error' } }
 
-    context "when the code inside the fiber raises an error" do
-      let(:concurrent_evaluation) { loop.concurrent_proc{ raise 'error' }.call_detached }
-      before { expect(loop).to receive(:trigger).with(:error,
-        (be_a(RuntimeError).and have_attributes message: 'error')) }
+      before { expect(concurrent_evaluation).not_to be_concluded }
+      after { expect(concurrent_evaluation).to be_concluded }
+
       it { is_expected.to raise_error RuntimeError, 'error' }
 
       context "when requesting the result a second time" do
@@ -66,55 +100,10 @@ describe IOEventLoop::ConcurrentEvaluation do
       end
     end
 
-    context "when getting the result of a concurrent proc from two other once" do
+    context "when getting the result of a concurrent proc from two other ones" do
       let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0001); :result }.call_detached }
       let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call_detached }
-      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call_detached }
-
-      it { is_expected.to be :result }
-      after { expect(concurrent_evaluation1.await_result).to be :result }
-      after { expect(concurrent_evaluation2.await_result).to be :result }
-    end
-  end
-
-  describe "#await_result with a timeout" do
-    subject { concurrent_evaluation.await_result options }
-
-    let(:options) { { within: 0.0001, timeout_result: timeout_result } }
-    let(:timeout_result) { :timeout_result }
-
-    context "when the result arrives in time" do
-      let(:concurrent_evaluation) { loop.concurrent_proc{ :result }.call_detached }
-      it { is_expected.to be :result }
-    end
-
-    context "when evaluation of result is too slow" do
-      let(:concurrent_evaluation) { loop.concurrent_proc do
-        loop.wait(0.0002)
-        :result
-      end.call_detached }
-
-      context "when no timeout result is given" do
-        before { options.delete :timeout_result }
-        it { is_expected.to raise_error IOEventLoop::TimeoutError, "evaluation timed out after #{options[:within]} second(s)" }
-      end
-
-      context "when the timeout result is a timeout error" do
-        let(:timeout_result) { IOEventLoop::TimeoutError.new("Time's up!") }
-        it { is_expected.to raise_error IOEventLoop::TimeoutError, "Time's up!" }
-      end
-
-      context "when the timeout result is not an timeout error" do
-        let(:timeout_result) { :timeout_result }
-        it { is_expected.to be :timeout_result }
-      end
-    end
-
-    context "when getting the result of a concurrent proc from to other ones, one with a timeout" do
-      subject { concurrent_evaluation.await_result }
-      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0002); :result }.call_detached }
-      let!(:concurrent_evaluation1) { loop.concurrent_proc{ concurrent_evaluation.await_result }.call_detached }
-      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result within: 0.0001, timeout_result: :timeout_result }.call_detached }
+      let!(:concurrent_evaluation2) { loop.concurrent_proc{ concurrent_evaluation.await_result within: 0.00005, timeout_result: :timeout_result }.call_detached }
 
       it { is_expected.to be :result }
       after { expect(concurrent_evaluation1.await_result).to be :result }
