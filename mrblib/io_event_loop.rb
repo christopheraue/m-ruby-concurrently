@@ -48,7 +48,9 @@ class IOEventLoop
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.
-    if result == fiber
+    if TimeoutError === result
+      raise result
+    elsif result == fiber
       @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
       raise CancelledConcurrentBlock, '', @empty_call_stack
     else

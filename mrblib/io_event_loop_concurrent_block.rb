@@ -29,6 +29,7 @@ class IOEventLoop
 
             # When this fiber is started because it is next on schedule it will
             # just finish without running the proc.
+            block_pool << self
           else
             raise Error, "concurrent block started with an invalid proc" unless ConcurrentProc === proc
 
@@ -44,10 +45,10 @@ class IOEventLoop
             rescue Exception => result
               loop.trigger :error, result
               evaluation[0] ? (evaluation[0].conclude_with result) : (raise result)
+            ensure
+              block_pool << self
             end
           end
-
-          block_pool << self
 
           # Yield back to the event loop fiber or the fiber evaluating this one
           # and wait for the next proc to evaluate.

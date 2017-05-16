@@ -6,10 +6,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   let(:evaluation_time) { 0.001 }
   let(:result) { :result }
 
-  context "when originating inside a concurrent proc" do
-    subject { concurrent_evaluation.await_result }
-    it { is_expected.to eq result }
-
+  shared_examples_for "waiting with a timeout" do
     context "when limiting the wait time" do
       let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
       let(:timeout_result) { :timeout_result }
@@ -40,9 +37,18 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
     end
   end
 
+  context "when originating inside a concurrent proc" do
+    subject { concurrent_evaluation.await_result }
+    it { is_expected.to eq result }
+
+    include_examples "waiting with a timeout"
+  end
+
   context "when originating outside a concurrent proc" do
     subject { wait_proc.call }
     it { is_expected.to eq result }
+
+    include_examples "waiting with a timeout"
   end
 
   describe "evaluating the concurrent evaluation while it is waiting" do
