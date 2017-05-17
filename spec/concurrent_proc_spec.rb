@@ -178,22 +178,4 @@ describe IOEventLoop::ConcurrentProc do
       after { expect(subject).not_to be @fiber1 }
     end
   end
-
-  describe "the execution order of concurrent procs scheduled to run during a single iteration" do
-    subject { loop.wait 0; @counter += 1 }
-
-    before { @counter = 0 }
-    let!(:concurrent_block1) { loop.concurrent_proc{ loop.wait 0.0001; @counter += 1 }.call_nonblock }
-    let!(:concurrent_block2) { loop.concurrent_proc{ loop.wait 0; @counter += 1 }.call_nonblock }
-    let!(:concurrent_block3) { loop.concurrent_proc{ @counter += 1 }.call_detached }
-    # let the system clock progress so the block waiting non-zero seconds becomes pending
-    before { sleep 0.0001 }
-
-    it { is_expected.to be 4 }
-
-    # scheduled starts come first, then the waiting procs
-    after { expect(concurrent_block1.await_result).to be 3 }
-    after { expect(concurrent_block2.await_result).to be 2 }
-    after { expect(concurrent_block3.await_result).to be 1 }
-  end
 end
