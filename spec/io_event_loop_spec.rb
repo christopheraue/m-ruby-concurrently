@@ -1,6 +1,84 @@
 describe IOEventLoop do
   subject(:instance) { IOEventLoop.new }
 
+  describe "#reinitialize!" do
+    subject(:reinitialize) { instance.reinitialize! }
+
+    it { is_expected.to be true }
+
+    context "when it is waiting for a time interval" do
+      before { instance.concurrent_proc{ instance.wait 0; @result = :waited }.call_nonblock }
+
+      context "when reinitialized after the concurrent proc finished waiting (for control)" do
+        before { instance.wait 0 }
+        before { reinitialize }
+        it { expect(@result).to be :waited  }
+      end
+
+      context "when reinitialized before the concurrent proc finished waiting" do
+        before { reinitialize }
+        before { instance.wait 0 }
+        it { expect(@result).to be nil  }
+      end
+    end
+
+    context "when it is waiting for an IO to be readable" do
+      before { @r, @w = IO.pipe }
+      before { instance.concurrent_proc{ instance.await_readable @r; @result = :waited }.call_nonblock }
+
+      context "when reinitialized after the concurrent proc finished waiting (for control)" do
+        before { @w.write 'waiting over' }
+        before { instance.wait 0.0001 }
+        before { reinitialize }
+        it { expect(@result).to eq :waited  }
+      end
+
+      context "when reinitialized before the concurrent proc finished waiting" do
+        before { reinitialize }
+        before { @w.write 'waiting over' }
+        before { instance.wait 0.0001 }
+        it { expect(@result).to be nil  }
+      end
+    end
+
+    context "when it is waiting for an IO to be writable" do
+      before { @r, @w = IO.pipe }
+      before { @w.write ' ' * 2**16 }
+      before { instance.concurrent_proc{ instance.await_writable @w; @result = :waited }.call_nonblock }
+
+      context "when reinitialized after the concurrent proc finished waiting (for control)" do
+        before { @r.read 2**16 }
+        before { instance.wait 0.0001 }
+        before { reinitialize }
+        it { expect(@result).to eq :waited  }
+      end
+
+      context "when reinitialized before the concurrent proc finished waiting" do
+        before { reinitialize }
+        before { @r.read 2**16 }
+        before { instance.wait 0.0001 }
+        it { expect(@result).to be nil  }
+      end
+    end
+
+    context "when it is waiting for the result of a concurrent proc" do
+      let!(:concurrent_proc) { instance.concurrent_proc{ instance.wait 0 }.call_nonblock }
+      before { instance.concurrent_proc{ concurrent_proc.await_result; @result = :waited }.call_nonblock }
+
+      context "when reinitialized after the concurrent proc finished waiting (for control)" do
+        before { instance.wait 0.0001 }
+        before { reinitialize }
+        it { expect(@result).to eq :waited  }
+      end
+
+      context "when reinitialized before the concurrent proc finished waiting" do
+        before { reinitialize }
+        before { instance.wait 0.0001 }
+        it { expect(@result).to be nil  }
+      end
+    end
+  end
+
   describe "#lifetime" do
     subject { instance.lifetime }
     let!(:creation_time) { instance; Time.now.to_f }

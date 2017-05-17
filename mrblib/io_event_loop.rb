@@ -4,13 +4,17 @@ class IOEventLoop
   include CallbacksAttachable
 
   def initialize
+    reinitialize!
+    @empty_call_stack = [].freeze
+  end
+
+  def reinitialize!
     @start_time = Time.now.to_f
     @run_queue = RunQueue.new self
     @io_watcher = IOWatcher.new
     @event_loop = EventLoop.new(@run_queue, @io_watcher)
-
     @block_pool = []
-    @empty_call_stack = [].freeze
+    true
   end
 
   def lifetime
