@@ -13,8 +13,8 @@ class IOEventLoop
     # The additional cart index exists so carts can be cancelled by their
     # fiber.
 
-    def initialize(wall_clock)
-      @wall_clock = wall_clock
+    def initialize(loop)
+      @loop = loop
       @cart_index = {}
       @cart_track = []
       @fast_track = []
@@ -27,7 +27,7 @@ class IOEventLoop
     end
 
     def schedule(fiber, seconds, result = nil)
-      cart = [true, fiber, @wall_clock.now+seconds, result]
+      cart = [true, fiber, @loop.lifetime+seconds, result]
       @cart_index[fiber.hash] = cart
       index = @cart_track.bisect_left{ |cart_on_track| cart_on_track[TIME] <= cart[TIME] }
       @cart_track.insert(index, cart)
@@ -46,7 +46,7 @@ class IOEventLoop
       @fast_track = []
 
       if @cart_track.any?
-        now = @wall_clock.now
+        now = @loop.lifetime
         index = @cart_track.bisect_left{ |cart| cart[TIME] <= now }
         @cart_track.pop(@cart_track.length-index).reverse_each do |cart|
           processing << cart
@@ -63,7 +63,7 @@ class IOEventLoop
       if @fast_track.any?
         0
       elsif next_cart = @cart_track.reverse_each.find{ |cart| cart[ACTIVE] }
-        waiting_time = next_cart[TIME] - @wall_clock.now
+        waiting_time = next_cart[TIME] - @loop.lifetime
         waiting_time < 0 ? 0 : waiting_time
       end
     end
