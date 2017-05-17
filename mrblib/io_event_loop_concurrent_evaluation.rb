@@ -53,7 +53,7 @@ class IOEventLoop
       :cancelled
     end
 
-    def manually_resume!(result)
+    def manually_resume!(result = nil)
       @loop.manually_resume!(@concurrent_block, result)
     end
   end

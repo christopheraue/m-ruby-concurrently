@@ -150,4 +150,25 @@ describe IOEventLoop::ConcurrentEvaluation do
       it { is_expected.not_to raise_error }
     end
   end
+
+  describe "#manually_resume!" do
+    subject { concurrent_evaluation.await_result }
+
+    let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.await_manual_resume! }.call_detached }
+
+    before { loop.concurrent_proc do
+      loop.wait 0.0001
+      concurrent_evaluation.manually_resume! *result
+    end.call_detached }
+
+    context "when given no result" do
+      let(:result) { [] }
+      it { is_expected.to eq nil }
+    end
+
+    context "when given a result" do
+      let(:result) { :result }
+      it { is_expected.to eq :result }
+    end
+  end
 end
