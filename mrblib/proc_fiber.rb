@@ -3,7 +3,7 @@ module Concurrently
     # should not be rescued accidentally and therefore is an exception
     class Cancelled < Exception; end
 
-    def initialize(loop, fiber_pool)
+    def initialize(fiber_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
       # them reusable:
       # - Each concurrent proc is executed during one iteration of the loop
@@ -33,9 +33,9 @@ module Concurrently
             # When this fiber is started because it is next on schedule it will
             # just finish without running the proc.
             fiber_pool << self
+          elsif not Proc === proc
+            raise Error, "fiber of concurrent proc started with an invalid proc"
           else
-            raise Error, "fiber of concurrent proc started with an invalid proc" unless Proc === proc
-
             begin
               result = proc.__proc_call__ *args
               evaluation[0].conclude_with result if evaluation[0]
@@ -43,15 +43,14 @@ module Concurrently
               # Generally, throw-catch is faster than raise-rescue if the code
               # needs to play back the call stack, i.e. the throw resp. raise
               # is invoked. If not playing back the call stack, a begin block
-              # is faster than a catch block. Since we mostly won't jump out
-              # of proc above, we go with begin-raise-rescue.
-            rescue Exception => result
-              loop.trigger :error, result
+              # is faster than a catch block. Since we won't jump out of the
+              # proc above most of the time, we go with begin-raise-rescue.
+            rescue => result
               evaluation[0] ? (evaluation[0].conclude_with result) : (raise result)
-            ensure
-              fiber_pool << self
             end
           end
+
+          fiber_pool << self
 
           # Yield back to the event loop fiber or the fiber evaluating this one
           # and wait for the next proc to evaluate.

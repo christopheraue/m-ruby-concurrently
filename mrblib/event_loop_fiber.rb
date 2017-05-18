@@ -15,9 +15,8 @@ module Concurrently
             # *await* methods, it is also always returning to them after waiting
             # is complete. Therefore, we never reach this part of the code unless
             # there is a bug or it is messed around with the internals of this gem.
-            raise Error, "Infinitely running event loop detected. There either "\
-            "is a bug in the concurrently gem or you messed around with the "\
-            "internals of said gem."
+            raise Error, "Infinitely running event loop detected: There "\
+            "are no concurrent procs or fibers scheduled and no IOs to await."
           end
         end
       end

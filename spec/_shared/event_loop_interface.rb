@@ -20,9 +20,9 @@ shared_examples_for "EventLoop#concurrently" do
   context "when the code inside the block raises an error" do
     subject { call{ raise 'error' }; loop.wait 0.0001 }
 
-    before { expect(loop).to receive(:trigger).with(:error,
+    before { expect(loop).to receive(:trigger).with(:loop_iteration_error,
       (be_a(RuntimeError).and have_attributes message: 'error')) }
-    it { is_expected.to raise_error RuntimeError, 'error' }
+    it { is_expected.not_to raise_error }
   end
 
   describe "the reuse of proc fibers" do

@@ -30,8 +30,6 @@ describe Concurrently::Proc do
 
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise 'error' } }
-        before { expect(loop).to receive(:trigger).with(:error,
-          (be_a(RuntimeError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error RuntimeError, 'error' }
       end
     end
@@ -59,8 +57,6 @@ describe Concurrently::Proc do
 
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise 'error' } }
-        before { expect(loop).to receive(:trigger).with(:error,
-          (be_a(RuntimeError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error RuntimeError, 'error' }
       end
     end
@@ -75,8 +71,6 @@ describe Concurrently::Proc do
 
         context "when the code inside the block raises an error" do
           let(:block) { proc{ loop.wait 0.0001; raise 'error' } }
-          before { expect(loop).to receive(:trigger).with(:error,
-            (be_a(RuntimeError).and have_attributes message: 'error')) }
           it { is_expected.to raise_error RuntimeError, 'error' }
         end
       end
@@ -105,8 +99,6 @@ describe Concurrently::Proc do
 
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise 'error' } }
-        before { expect(loop).to receive(:trigger).with(:error,
-          (be_a(RuntimeError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error RuntimeError, 'error' }
       end
     end

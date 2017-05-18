@@ -54,8 +54,14 @@ module Concurrently
       end
 
       processing.each do |cart|
-        @cart_index.delete cart[FIBER].hash
-        cart[FIBER].send_to_foreground! cart[RESULT] if cart[ACTIVE]
+        begin
+          @cart_index.delete cart[FIBER].hash
+          cart[FIBER].send_to_foreground! cart[RESULT] if cart[ACTIVE]
+        rescue => error
+          # Keep loop up and running but trigger a callback so the user can
+          # do something in an error case.
+          @loop.trigger :loop_iteration_error, error
+        end
       end
     end
 

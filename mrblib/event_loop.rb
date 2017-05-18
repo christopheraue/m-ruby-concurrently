@@ -27,7 +27,7 @@ module Concurrently
 
     # Concurrently executed block of code
     def proc_fiber!
-      @fiber_pool.pop || Proc::Fiber.new(self, @fiber_pool)
+      @fiber_pool.pop || Proc::Fiber.new(@fiber_pool)
     end
 
     def concurrently(*args) # &block
@@ -55,11 +55,11 @@ module Concurrently
 
       # If result is this very fiber it means this fiber has been evaluated
       # prematurely.
-      if result == Proc::TimeoutError
-        raise Proc::TimeoutError, "evaluation timed out after #{seconds} second(s)"
-      elsif result == fiber
+      if result == fiber
         @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
         raise Proc::Fiber::Cancelled, '', @empty_call_stack
+      elsif result == Proc::TimeoutError
+        raise Proc::TimeoutError, "evaluation timed out after #{seconds} second(s)"
       else
         result
       end

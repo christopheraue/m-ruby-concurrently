@@ -15,7 +15,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
         it { is_expected.to eq result }
       end
 
-      context "when evaluation of result is too slow" do
+      context "when the evaluation of the result is too slow" do
         let(:timeout_time) { 0.5*evaluation_time }
 
         context "when no timeout result is given" do
