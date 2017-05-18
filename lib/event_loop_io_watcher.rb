@@ -1,5 +1,5 @@
 module Concurrently
-  class IOWatcher
+  class EventLoop::IOWatcher
     def initialize
       @selector = NIO::Selector.new
     end
