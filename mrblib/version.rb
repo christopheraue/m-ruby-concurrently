@@ -1,2 +1,3 @@
-class IOEventLoop; end unless Object.const_defined? :IOEventLoop
-IOEventLoop::VERSION = "1.0"
+module Concurrently
+  VERSION = "1.0"
+end

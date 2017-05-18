@@ -1,5 +1,5 @@
-class IOEventLoop
-  class IOWatcher
+module Concurrently
+  class EventLoop::IOWatcher
     def initialize
       @readers = {}
       @writers = {}

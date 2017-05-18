@@ -1,4 +1,4 @@
-class IOEventLoop
+module Concurrently
   class EventWatcher
     def initialize(loop, subject, event, opts = {})
       @loop = loop

@@ -1,5 +1,5 @@
 shared_examples_for "awaiting the result of a deferred evaluation" do
-  let(:loop) { IOEventLoop.new }
+  let(:loop) { Concurrently::EventLoop.new }
   let(:evaluation) { loop.concurrent_proc(&wait_proc).call_detached }
 
   let(:wait_options) { {} }
@@ -21,7 +21,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
         context "when no timeout result is given" do
           before { wait_options.delete :timeout_result }
-          it { is_expected.to raise_error IOEventLoop::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
+          it { is_expected.to raise_error Concurrently::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
         end
 
         context "when a timeout result is given" do

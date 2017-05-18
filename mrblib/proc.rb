@@ -1,4 +1,4 @@
-class IOEventLoop
+module Concurrently
   class Proc < ::Proc
     def initialize(loop, evaluation_class = Evaluation)
       @loop = loop

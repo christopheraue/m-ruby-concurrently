@@ -1,6 +1,6 @@
-describe IOEventLoop::Proc do
+describe Concurrently::Proc do
   subject(:instance) { described_class.new(loop, *args, &block) }
-  let(:loop) { IOEventLoop.new }
+  let(:loop) { Concurrently::EventLoop.new }
 
   let(:args) { [] }
   let(:block) { proc{} }
@@ -67,7 +67,7 @@ describe IOEventLoop::Proc do
 
     context "if the block needs to wait during evaluation" do
       let(:block) { proc{ |*args| loop.wait 0.0001; args } }
-      it { is_expected.to be_a(IOEventLoop::Proc::Evaluation) }
+      it { is_expected.to be_a(Concurrently::Proc::Evaluation) }
 
       describe "the result of the evaluation" do
         subject { call.await_result }
@@ -88,12 +88,12 @@ describe IOEventLoop::Proc do
     let(:call_args) { [] }
 
     context "when it configures no custom evaluation" do
-      it { is_expected.to be_a(IOEventLoop::Proc::Evaluation).and have_attributes(data: {}) }
+      it { is_expected.to be_a(Concurrently::Proc::Evaluation).and have_attributes(data: {}) }
     end
 
     context "when it configures a custom evaluation" do
       let(:args) { [custom_evaluation_class] }
-      let(:custom_evaluation_class) { Class.new(IOEventLoop::Proc::Evaluation) }
+      let(:custom_evaluation_class) { Class.new(Concurrently::Proc::Evaluation) }
       it { is_expected.to be_a(custom_evaluation_class).and have_attributes(data: {}) }
     end
 

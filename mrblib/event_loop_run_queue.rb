@@ -1,5 +1,5 @@
-class IOEventLoop
-  class RunQueue
+module Concurrently
+  class EventLoop::RunQueue
     # The items of the run queue are called carts. Carts are simple arrays
     # with the following layout: [active, fiber, time, result]
     ACTIVE = 0; FIBER = 1; TIME = 2; RESULT = 3

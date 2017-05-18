@@ -1,5 +1,5 @@
-class IOEventLoop
-  class EventLoop < Fiber
+module Concurrently
+  class EventLoop::Fiber < ::Fiber
     def initialize(run_queue, io_watcher)
       super() do
         while true
@@ -16,7 +16,7 @@ class IOEventLoop
             # is complete. Therefore, we never reach this part of the code unless
             # there is a bug or it is messed around with the internals of this gem.
             raise Error, "Infinitely running event loop detected. There either "\
-            "is a bug in the io_event_loop gem or you messed around with the "\
+            "is a bug in the concurrently gem or you messed around with the "\
             "internals of said gem."
           end
         end

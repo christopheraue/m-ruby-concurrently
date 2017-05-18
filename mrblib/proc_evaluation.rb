@@ -1,7 +1,7 @@
-class IOEventLoop
+module Concurrently
   class Proc::Evaluation
-    Error = IOEventLoop::Error
-    CancelledError = IOEventLoop::CancelledError
+    Error = Concurrently::Error
+    CancelledError = Concurrently::CancelledError
 
     def initialize(loop, proc_fiber)
       @loop = loop

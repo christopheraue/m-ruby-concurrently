@@ -1,4 +1,4 @@
-class IOEventLoop
+module Concurrently
   class IOWatcher
     def initialize
       @selector = NIO::Selector.new

@@ -1,11 +1,11 @@
 require_relative 'mrblib/version'
 
-MRuby::Gem::Specification.new('mruby-io_event_loop') do |spec|
-  spec.version      = IOEventLoop::VERSION
+MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
+  spec.version      = Concurrently::VERSION
   spec.summary      = %q{Comfortably manage IO objects polled by an event loop.}
   spec.description  = spec.summary
 
-  spec.homepage     = "https://github.com/christopheraue/m-ruby-io_event_loop"
+  spec.homepage     = "https://github.com/christopheraue/m-ruby-concurrently"
   spec.license      = 'MIT'
   spec.authors      = ['Christopher Aue']
 

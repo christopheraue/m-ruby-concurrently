@@ -1,13 +1,13 @@
 # coding: utf-8
-load './mrblib/version.rb'
+require_relative 'mrblib/version'
 
 Gem::Specification.new do |spec|
-  spec.name         = "io_event_loop"
-  spec.version      = IOEventLoop::VERSION
+  spec.name         = "concurrently"
+  spec.version      = Concurrently::VERSION
   spec.summary      = %q{Comfortably manage IO objects polled by an event loop.}
   spec.description  = spec.summary
 
-  spec.homepage      = "https://github.com/christopheraue/m-ruby-io_event_loop"
+  spec.homepage      = "https://github.com/christopheraue/m-ruby-concurrently"
   spec.license       = "MIT"
   spec.authors       = ["Christopher Aue"]
   spec.email         = ["rubygems@christopheraue.net"]

@@ -1,4 +1,4 @@
-class IOEventLoop
+module Concurrently
   class Error < StandardError; end
   class CancelledError < Error; end
   class TimeoutError < CancelledError; end

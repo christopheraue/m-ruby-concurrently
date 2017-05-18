@@ -1,4 +1,4 @@
-class IOEventLoop
+module Concurrently
   class Proc::Fiber < ::Fiber
     def initialize(loop, fiber_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
