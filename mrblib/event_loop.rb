@@ -2,10 +2,8 @@ module Concurrently
   class EventLoop
     include CallbacksAttachable
 
-    @current = new
-
-    class << self
-      attr_reader :current
+    def self.current
+      @current ||= new
     end
 
     def initialize
@@ -17,7 +15,7 @@ module Concurrently
       @start_time = Time.now.to_f
       @run_queue = RunQueue.new self
       @io_watcher = IOWatcher.new
-      @event_loop = Fiber.new(@run_queue, @io_watcher)
+      @loop_fiber = Fiber.new(@run_queue, @io_watcher)
       @fiber_pool = []
       true
     end
@@ -53,7 +51,7 @@ module Concurrently
         @run_queue.schedule(fiber, seconds, timeout_result)
       end
 
-      result = fiber.send_to_background! @event_loop
+      result = fiber.send_to_background! @loop_fiber
 
       # If result is this very fiber it means this fiber has been evaluated
       # prematurely.
