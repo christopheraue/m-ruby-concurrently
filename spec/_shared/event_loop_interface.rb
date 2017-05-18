@@ -143,6 +143,10 @@ shared_examples_for "EventLoop#await_readable" do
     let(:evaluation_time) { 0.001 }
     let(:result) { true }
 
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
     let!(:resume_proc) { loop.concurrent_proc do
       loop.wait evaluation_time
       writer.write result
@@ -159,6 +163,10 @@ shared_examples_for "EventLoop#await_writable" do
 
     let(:evaluation_time) { 0.001 }
     let(:result) { true }
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
 
     # jam pipe: default pipe buffer size on linux is 65536
     before { writer.write('a' * 65536) }

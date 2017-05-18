@@ -5,6 +5,8 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   let(:evaluation_time) { 0.001 }
   let(:result) { :result }
 
+  let(:resume_proc) { loop.concurrent_proc{}.call_detached }
+
   shared_examples_for "waiting with a timeout" do
     context "when limiting the wait time" do
       let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
@@ -16,8 +18,8 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
       end
 
       context "when the evaluation of the result is too slow" do
-        let(:timeout_time) { 0.5*evaluation_time }
-        after { resume_proc.cancel } if method_defined? :resume_proc
+        let(:timeout_time) { 0.0 }
+        after { resume_proc.cancel unless resume_proc.concluded? }
 
         context "when no timeout result is given" do
           before { wait_options.delete :timeout_result }

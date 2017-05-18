@@ -269,10 +269,6 @@ describe Concurrently::EventLoop do
       instance.await_readable reader, options
     end
 
-    let(:pipe) { IO.pipe }
-    let(:reader) { pipe[0] }
-    let(:writer) { pipe[1] }
-
     it_behaves_like "EventLoop#await_readable"
   end
 
@@ -280,10 +276,6 @@ describe Concurrently::EventLoop do
     def call(options)
       instance.await_writable writer, options
     end
-
-    let(:pipe) { IO.pipe }
-    let(:reader) { pipe[0] }
-    let(:writer) { pipe[1] }
 
     it_behaves_like "EventLoop#await_writable"
   end
