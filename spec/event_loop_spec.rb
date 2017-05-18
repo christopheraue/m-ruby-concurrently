@@ -294,7 +294,7 @@ describe Concurrently::EventLoop do
 
       let(:object) { Object.new.extend CallbacksAttachable }
 
-      before { loop.concurrent_proc do
+      let!(:resume_proc) { loop.concurrent_proc do
         loop.wait evaluation_time
         object.trigger :event, result
       end.call_detached }

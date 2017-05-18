@@ -68,7 +68,7 @@ shared_examples_for "EventLoop#await_manual_resume!" do
       call wait_options
     end }
 
-    before { loop.concurrent_proc do
+    let!(:resume_proc) { loop.concurrent_proc do
       loop.wait evaluation_time
       loop.manually_resume! @spec_fiber, :result
     end.call_detached }
@@ -143,7 +143,7 @@ shared_examples_for "EventLoop#await_readable" do
     let(:evaluation_time) { 0.001 }
     let(:result) { true }
 
-    before { loop.concurrent_proc do
+    let!(:resume_proc) { loop.concurrent_proc do
       loop.wait evaluation_time
       writer.write result
       writer.close
@@ -163,7 +163,7 @@ shared_examples_for "EventLoop#await_writable" do
     # jam pipe: default pipe buffer size on linux is 65536
     before { writer.write('a' * 65536) }
 
-    before { loop.concurrent_proc do
+    let!(:resume_proc) { loop.concurrent_proc do
       loop.wait evaluation_time
       reader.read 65536 # clears the pipe
     end.call_detached }

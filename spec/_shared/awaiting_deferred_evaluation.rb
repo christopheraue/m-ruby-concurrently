@@ -17,6 +17,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
       context "when the evaluation of the result is too slow" do
         let(:timeout_time) { 0.5*evaluation_time }
+        after { resume_proc.cancel } if method_defined? :resume_proc
 
         context "when no timeout result is given" do
           before { wait_options.delete :timeout_result }
