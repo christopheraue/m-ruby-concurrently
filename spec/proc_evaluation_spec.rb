@@ -152,9 +152,12 @@ describe Concurrently::Proc::Evaluation do
   end
 
   describe "#manually_resume!" do
-    it_behaves_like "EventLoop#manually_resume!" do
-      subject { to_be_resumed.await_result }
-      let!(:to_be_resumed) { loop.concurrent_proc{ loop.await_manual_resume! }.call_detached }
+    subject { evaluation.await_result }
+    def call(*args)
+      evaluation.manually_resume! *args
     end
+    let!(:evaluation) { loop.concurrent_proc{ loop.await_manual_resume! }.call_detached }
+
+    it_behaves_like "EventLoop#manually_resume!"
   end
 end

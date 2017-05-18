@@ -32,9 +32,9 @@ module Concurrently
       @fiber_pool.pop || Proc::Fiber.new(self, @fiber_pool)
     end
 
-    def concurrently # &block
+    def concurrently(*args) # &block
       # Concurrently::Proc.new claims the method's block just like Proc.new does
-      Proc.new(self).call_detached!
+      Proc.new(self).call_detached! *args
     end
 
     def concurrent_proc(evaluation_class = Proc::Evaluation) # &block

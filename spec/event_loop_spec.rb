@@ -1,5 +1,6 @@
 describe Concurrently::EventLoop do
   subject(:instance) { Concurrently::EventLoop.new }
+  let(:loop) { instance }
 
   describe ".current" do
     subject { described_class.current }
@@ -92,8 +93,27 @@ describe Concurrently::EventLoop do
     it { is_expected.to be_within(0.0001).of(Time.now.to_f - creation_time) }
   end
 
+  describe "#concurrently" do
+    def call(*args, &block)
+      instance.concurrently(*args, &block)
+    end
+
+    it_behaves_like "EventLoop#concurrently"
+  end
+
+  describe "#concurrent_proc" do
+    def call(*args, &block)
+      instance.concurrent_proc(*args, &block)
+    end
+
+    it_behaves_like "EventLoop#concurrent_proc"
+  end
+
   describe "#wait" do
-    let(:loop) { instance }
+    def call(seconds)
+      instance.wait(seconds)
+    end
+
     it_behaves_like "EventLoop#wait"
 
     describe "order of multiple deferred concurrent evaluations" do
@@ -237,30 +257,38 @@ describe Concurrently::EventLoop do
   end
 
   describe "#await_manual_resume!" do
-    let(:loop) { instance }
+    def call(options)
+      instance.await_manual_resume! options
+    end
+
     it_behaves_like "EventLoop#await_manual_resume!"
   end
 
   describe "#await_readable" do
-    it_behaves_like "EventLoop#await_readable" do
-      let(:loop) { instance }
-      let(:pipe) { IO.pipe }
-      let(:reader) { pipe[0] }
-      let(:writer) { pipe[1] }
+    def call(options)
+      instance.await_readable reader, options
     end
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
+    it_behaves_like "EventLoop#await_readable"
   end
 
   describe "#await_writable" do
-    it_behaves_like "EventLoop#await_writable" do
-      let(:loop) { instance }
-      let(:pipe) { IO.pipe }
-      let(:reader) { pipe[0] }
-      let(:writer) { pipe[1] }
+    def call(options)
+      instance.await_writable writer, options
     end
+
+    let(:pipe) { IO.pipe }
+    let(:reader) { pipe[0] }
+    let(:writer) { pipe[1] }
+
+    it_behaves_like "EventLoop#await_writable"
   end
 
   describe "#await_event" do
-    let(:loop) { instance }
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc{ loop.await_event(object, :event, wait_options) } }
 

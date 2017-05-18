@@ -1,10 +1,8 @@
 shared_examples_for "EventLoop#concurrently" do
-  let(:call_args) { [:arg1, :arg2] }
-
   context "when called with arguments" do
     subject { @result }
 
-    before { call do |*args|
+    before { call(:arg1, :arg2) do |*args|
       @result = args
       loop.manually_resume! @spec_fiber
     end }
@@ -16,7 +14,7 @@ shared_examples_for "EventLoop#concurrently" do
       loop.await_manual_resume!
     end
 
-    it { is_expected.to eq call_args }
+    it { is_expected.to eq [:arg1, :arg2] }
   end
 
   context "when the code inside the block raises an error" do
@@ -30,7 +28,7 @@ shared_examples_for "EventLoop#concurrently" do
   describe "the reuse of proc fibers" do
     subject { @fiber3 }
 
-    let!(:evaluation1) { call{ @fiber1 = Fiber.current } }
+    let!(:evaluation1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
     let!(:evaluation2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
     before { evaluation2.await_result } # let the two blocks finish
     let!(:evaluation3) { call do
@@ -51,14 +49,23 @@ shared_examples_for "EventLoop#concurrently" do
 end
 
 shared_examples_for "EventLoop#concurrent_proc" do
-  it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(Concurrently::Proc::Evaluation)) }
+  context "when it configures no custom evaluation" do
+    subject { call{} }
+    it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(Concurrently::Proc::Evaluation)) }
+  end
+
+  context "when it configures a custom evaluation" do
+    subject { call(custom_evaluation_class){} }
+    let(:custom_evaluation_class) { Class.new(Concurrently::Proc::Evaluation) }
+    it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(custom_evaluation_class)) }
+  end
 end
 
 shared_examples_for "EventLoop#await_manual_resume!" do
   it_behaves_like "awaiting the result of a deferred evaluation" do
     let(:wait_proc) { proc do
       @spec_fiber = Fiber.current
-      loop.await_manual_resume! wait_options
+      call wait_options
     end }
 
     before { loop.concurrent_proc do
@@ -71,7 +78,7 @@ end
 shared_examples_for "EventLoop#manually_resume!" do
   before { loop.concurrent_proc do
     loop.wait 0.0001
-    to_be_resumed.manually_resume! *result
+    call *result
   end.call_detached }
 
   context "when given no result" do
@@ -90,7 +97,7 @@ shared_examples_for "EventLoop#wait" do
     let(:seconds) { 0.01 }
 
     let(:wait_proc) { proc do
-      loop.wait(seconds)
+      call seconds
       Time.now.to_f
     end }
 
@@ -111,7 +118,7 @@ shared_examples_for "EventLoop#wait" do
     subject { evaluation.await_result }
 
     let(:wait_time) { 0.0001 }
-    let!(:evaluation) { loop.concurrent_proc{ loop.wait wait_time; :completed }.call_detached }
+    let!(:evaluation) { loop.concurrent_proc{ call wait_time; :completed }.call_detached }
 
     before { loop.concurrent_proc do
       # cancel the concurrent evaluation right away
@@ -130,7 +137,7 @@ end
 shared_examples_for "EventLoop#await_readable" do
   it_behaves_like "awaiting the result of a deferred evaluation" do
     let(:wait_proc) { proc do
-      loop.await_readable(reader, wait_options)
+      call wait_options
     end }
 
     let(:evaluation_time) { 0.001 }
@@ -147,7 +154,7 @@ end
 shared_examples_for "EventLoop#await_writable" do
   it_behaves_like "awaiting the result of a deferred evaluation" do
     let(:wait_proc) { proc do
-      loop.await_writable(writer, wait_options)
+      call wait_options
     end }
 
     let(:evaluation_time) { 0.001 }
