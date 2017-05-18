@@ -94,13 +94,13 @@ describe Concurrently::Proc::Evaluation do
       context "when giving no explicit reason" do
         let(:reason) { nil }
         it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::CancelledError, "evaluation cancelled" }
+        after { expect{ evaluation.await_result }.to raise_error Concurrently::Proc::CancelledError, "evaluation cancelled" }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
         it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::CancelledError, "cancel reason" }
+        after { expect{ evaluation.await_result }.to raise_error Concurrently::Proc::CancelledError, "cancel reason" }
       end
     end
 
@@ -112,13 +112,13 @@ describe Concurrently::Proc::Evaluation do
       context "when giving no explicit reason" do
         let(:reason) { nil }
         it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::CancelledError, "evaluation cancelled" }
+        after { expect{ evaluation.await_result }.to raise_error Concurrently::Proc::CancelledError, "evaluation cancelled" }
       end
 
       context "when giving a reason" do
         let(:reason) { 'cancel reason' }
         it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::CancelledError, "cancel reason" }
+        after { expect{ evaluation.await_result }.to raise_error Concurrently::Proc::CancelledError, "cancel reason" }
       end
     end
 
@@ -128,7 +128,7 @@ describe Concurrently::Proc::Evaluation do
       let(:evaluation) { loop.concurrent_proc{ :result }.call_detached }
       before { evaluation.await_result }
 
-      it { is_expected.to raise_error Concurrently::Error, "already concluded" }
+      it { is_expected.to raise_error Concurrently::Proc::Error, "already concluded" }
     end
 
     context "when concluding an evaluation from a nested proc" do

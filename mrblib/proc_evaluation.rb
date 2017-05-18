@@ -1,7 +1,6 @@
 module Concurrently
   class Proc::Evaluation
-    Error = Concurrently::Error
-    CancelledError = Concurrently::CancelledError
+    Error = Proc::Error
 
     def initialize(loop, proc_fiber)
       @loop = loop
@@ -52,7 +51,7 @@ module Concurrently
     end
 
     def cancel(reason = "evaluation cancelled")
-      conclude_with self.class::CancelledError.new(reason)
+      conclude_with Proc::CancelledError.new(reason)
       :cancelled
     end
 

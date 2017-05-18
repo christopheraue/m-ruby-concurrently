@@ -43,7 +43,7 @@ module Concurrently
       fiber = Fiber.current
 
       if seconds = opts[:within]
-        timeout_result = opts.fetch(:timeout_result, TimeoutError)
+        timeout_result = opts.fetch(:timeout_result, Proc::TimeoutError)
         @run_queue.schedule(fiber, seconds, timeout_result)
       end
 
@@ -51,11 +51,11 @@ module Concurrently
 
       # If result is this very fiber it means this fiber has been evaluated
       # prematurely.
-      if result == TimeoutError
-        raise TimeoutError, "evaluation timed out after #{seconds} second(s)"
+      if result == Proc::TimeoutError
+        raise Proc::TimeoutError, "evaluation timed out after #{seconds} second(s)"
       elsif result == fiber
         @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
-        raise ProcFiberCancelled, '', @empty_call_stack
+        raise Proc::Fiber::Cancelled, '', @empty_call_stack
       else
         result
       end

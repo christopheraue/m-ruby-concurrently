@@ -32,7 +32,7 @@ describe Concurrently::EventWatcher do
 
         context "when we only want to watch for one event" do
           let(:opts) { [max_events: 1] }
-          it { is_expected.to raise_error Concurrently::CancelledError,
+          it { is_expected.to raise_error Concurrently::EventWatcher::CancelledError,
             'only interested in 1 event(s)' }
         end
       end
@@ -46,7 +46,7 @@ describe Concurrently::EventWatcher do
 
     context "when the watcher has already been cancelled" do
       before { instance.cancel('cancel reason') }
-      it { is_expected.to raise_error Concurrently::CancelledError, 'cancel reason' }
+      it { is_expected.to raise_error Concurrently::EventWatcher::CancelledError, 'cancel reason' }
     end
   end
 
@@ -58,12 +58,12 @@ describe Concurrently::EventWatcher do
 
     context "when the watcher is cancelled after starting to wait" do
       before { loop.concurrent_proc{ subject }.call }
-      it { expect{ instance.await }.to raise_error Concurrently::CancelledError, 'cancel reason' }
+      it { expect{ instance.await }.to raise_error Concurrently::EventWatcher::CancelledError, 'cancel reason' }
     end
 
     context "when the watched has already been cancelled" do
       before { instance.cancel('cancel reason') }
-      it { is_expected.to raise_error Concurrently::EventWatcherError, 'already cancelled' }
+      it { is_expected.to raise_error Concurrently::EventWatcher::Error, 'already cancelled' }
     end
   end
 end

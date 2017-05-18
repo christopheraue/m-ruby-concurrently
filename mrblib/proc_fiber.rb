@@ -1,5 +1,8 @@
 module Concurrently
   class Proc::Fiber < ::Fiber
+    # should not be rescued accidentally and therefore is an exception
+    class Cancelled < Exception; end
+
     def initialize(loop, fiber_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
       # them reusable:
@@ -36,7 +39,7 @@ module Concurrently
             begin
               result = proc.__proc_call__ *args
               evaluation[0].conclude_with result if evaluation[0]
-            rescue ProcFiberCancelled
+            rescue Cancelled
               # Generally, throw-catch is faster than raise-rescue if the code
               # needs to play back the call stack, i.e. the throw resp. raise
               # is invoked. If not playing back the call stack, a begin block

@@ -33,7 +33,7 @@ module Concurrently
     end
 
     def cancel(reason)
-      raise EventWatcherError, 'already cancelled' if @cancel_reason
+      raise Error, 'already cancelled' if @cancel_reason
 
       @cancel_reason = reason
       @callback.cancel
