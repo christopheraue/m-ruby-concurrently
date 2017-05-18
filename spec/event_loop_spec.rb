@@ -1,6 +1,12 @@
 describe Concurrently::EventLoop do
   subject(:instance) { Concurrently::EventLoop.new }
 
+  describe ".current" do
+    subject { described_class.current }
+    it { is_expected.to be_a described_class }
+    it { is_expected.to be described_class.current } # same object for different calls
+  end
+
   describe "#reinitialize!" do
     subject(:reinitialize) { instance.reinitialize! }
 

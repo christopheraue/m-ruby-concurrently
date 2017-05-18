@@ -2,6 +2,12 @@ module Concurrently
   class EventLoop
     include CallbacksAttachable
 
+    @current = new
+
+    class << self
+      attr_reader :current
+    end
+
     def initialize
       reinitialize!
       @empty_call_stack = [].freeze

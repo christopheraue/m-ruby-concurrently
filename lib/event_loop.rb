@@ -1,5 +1,9 @@
 module Concurrently
   class EventLoop
+    def self.current
+      Thread.current.__concurrently_event_loop__
+    end
+
     time_module = Module.new do
       def initialize
         super
