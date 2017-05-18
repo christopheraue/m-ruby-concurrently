@@ -152,23 +152,9 @@ describe Concurrently::Proc::Evaluation do
   end
 
   describe "#manually_resume!" do
-    subject { evaluation.await_result }
-
-    let!(:evaluation) { loop.concurrent_proc{ loop.await_manual_resume! }.call_detached }
-
-    before { loop.concurrent_proc do
-      loop.wait 0.0001
-      evaluation.manually_resume! *result
-    end.call_detached }
-
-    context "when given no result" do
-      let(:result) { [] }
-      it { is_expected.to eq nil }
-    end
-
-    context "when given a result" do
-      let(:result) { :result }
-      it { is_expected.to eq :result }
+    it_behaves_like "EventLoop#manually_resume!" do
+      subject { to_be_resumed.await_result }
+      let!(:to_be_resumed) { loop.concurrent_proc{ loop.await_manual_resume! }.call_detached }
     end
   end
 end

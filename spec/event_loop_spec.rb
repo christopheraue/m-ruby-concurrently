@@ -93,47 +93,8 @@ describe Concurrently::EventLoop do
   end
 
   describe "#wait" do
-    subject(:loop) { Concurrently::EventLoop.new }
-
-    describe "waiting for given seconds" do
-      let(:seconds) { 0.01 }
-
-      let(:wait_proc) { proc do
-        loop.wait(seconds)
-        Time.now.to_f
-      end }
-
-      let!(:start_time) { Time.now.to_f }
-
-      context "when originating inside a concurrent proc" do
-        subject { loop.concurrent_proc(&wait_proc).call }
-        it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
-      end
-
-      context "when originating outside a concurrent proc" do
-        subject { wait_proc.call }
-        it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
-      end
-    end
-
-    describe "evaluating/cancelling the concurrent evaluation while it is waiting" do
-      subject { evaluation.await_result }
-
-      let(:wait_time) { 0.0001 }
-      let!(:evaluation) { loop.concurrent_proc{ loop.wait wait_time; :completed }.call_detached }
-
-      before { loop.concurrent_proc do
-        # cancel the concurrent evaluation right away
-        evaluation.conclude_with :intercepted
-
-        # Wait after the timer would have been triggered to make sure the
-        # concurrent evaluation is not resumed then (i.e. watching the timeout
-        # is properly cancelled)
-        loop.wait wait_time
-      end.call }
-
-      it { is_expected.to be :intercepted }
-    end
+    let(:loop) { instance }
+    it_behaves_like "EventLoop#wait"
 
     describe "order of multiple deferred concurrent evaluations" do
       subject { evaluation.await_result }
@@ -276,64 +237,30 @@ describe Concurrently::EventLoop do
   end
 
   describe "#await_manual_resume!" do
-    it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:wait_proc) { proc do
-        @spec_fiber = Fiber.current
-        loop.await_manual_resume! wait_options
-      end }
-
-      before { loop.concurrent_proc do
-        loop.wait evaluation_time
-        loop.manually_resume! @spec_fiber, :result
-      end.call_detached }
-    end
+    let(:loop) { instance }
+    it_behaves_like "EventLoop#await_manual_resume!"
   end
 
   describe "#await_readable" do
-    it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:wait_proc) { proc do
-        loop.await_readable(reader, wait_options)
-      end }
-
+    it_behaves_like "EventLoop#await_readable" do
+      let(:loop) { instance }
       let(:pipe) { IO.pipe }
       let(:reader) { pipe[0] }
       let(:writer) { pipe[1] }
-
-      let(:evaluation_time) { 0.001 }
-      let(:result) { true }
-
-      before { loop.concurrent_proc do
-        loop.wait evaluation_time
-        writer.write result
-        writer.close
-      end.call_detached }
     end
   end
 
   describe "#await_writable" do
-    it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:wait_proc) { proc do
-        loop.await_writable(writer, wait_options)
-      end }
-
+    it_behaves_like "EventLoop#await_writable" do
+      let(:loop) { instance }
       let(:pipe) { IO.pipe }
       let(:reader) { pipe[0] }
       let(:writer) { pipe[1] }
-
-      let(:evaluation_time) { 0.001 }
-      let(:result) { true }
-
-      # jam pipe: default pipe buffer size on linux is 65536
-      before { writer.write('a' * 65536) }
-
-      before { loop.concurrent_proc do
-        loop.wait evaluation_time
-        reader.read 65536 # clears the pipe
-      end.call_detached }
     end
   end
 
   describe "#await_event" do
+    let(:loop) { instance }
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc{ loop.await_event(object, :event, wait_options) } }
 

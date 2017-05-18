@@ -1,5 +1,4 @@
 shared_examples_for "awaiting the result of a deferred evaluation" do
-  let(:loop) { Concurrently::EventLoop.new }
   let(:evaluation) { loop.concurrent_proc(&wait_proc).call_detached }
 
   let(:wait_options) { {} }

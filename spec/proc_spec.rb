@@ -126,56 +126,10 @@ describe Concurrently::Proc do
   end
 
   describe "#call_detached!" do
-    context "when called with arguments" do
-      subject { @result }
-
-      before { instance.call_detached! *call_args }
-      let(:call_args) { [:arg1, :arg2] }
-
-      let(:block) { proc do |*args|
-        @result = args
-        loop.manually_resume! @spec_fiber
-      end }
-
-      # We need a reference wait to ensure we wait long enough for the
-      # evaluation to finish.
-      before do
-        @spec_fiber = Fiber.current
-        loop.await_manual_resume!
+    it_behaves_like "EventLoop#concurrently" do
+      def call(&block)
+        loop.concurrent_proc(&block).call_detached! *call_args
       end
-
-      it { is_expected.to eq call_args }
-    end
-
-    context "when the code inside the block raises an error" do
-      subject { instance.call_detached!; loop.wait 0.0001 }
-
-      let(:block) { proc{ raise 'error' } }
-      before { expect(loop).to receive(:trigger).with(:error,
-        (be_a(RuntimeError).and have_attributes message: 'error')) }
-      it { is_expected.to raise_error RuntimeError, 'error' }
-    end
-
-    describe "the reuse of proc fibers" do
-      subject { @fiber3 }
-
-      let!(:evaluation1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
-      let!(:evaluation2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
-      before { evaluation2.await_result } # let the two blocks finish
-      let!(:evaluation3) { loop.concurrent_proc do
-        @fiber3 = Fiber.current
-        loop.manually_resume! @spec_fiber
-      end.call_detached! }
-
-      # We need a reference wait to ensure we wait long enough for the
-      # evaluation to finish.
-      before do
-        @spec_fiber = Fiber.current
-        loop.await_manual_resume!
-      end
-
-      it { is_expected.to be @fiber2 }
-      after { expect(subject).not_to be @fiber1 }
     end
   end
 end
