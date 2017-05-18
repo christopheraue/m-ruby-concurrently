@@ -13,7 +13,7 @@ class IOEventLoop
     @run_queue = RunQueue.new self
     @io_watcher = IOWatcher.new
     @event_loop = EventLoop.new(@run_queue, @io_watcher)
-    @block_pool = []
+    @fiber_pool = []
     true
   end
 
@@ -23,18 +23,18 @@ class IOEventLoop
 
 
   # Concurrently executed block of code
-  def concurrent_block!
-    @block_pool.pop || ConcurrentBlock.new(self, @block_pool)
+  def proc_fiber!
+    @fiber_pool.pop || Proc::Fiber.new(self, @fiber_pool)
   end
 
   def concurrently # &block
-    # ConcurrentProc.new claims the method's block just like Proc.new does
-    ConcurrentProc.new(self).call_detached!
+    # IOEventLoop::Proc.new claims the method's block just like Proc.new does
+    Proc.new(self).call_detached!
   end
 
-  def concurrent_proc(evaluation_class = ConcurrentEvaluation) # &block
-    # ConcurrentProc.new claims the method's block just like Proc.new does
-    ConcurrentProc.new(self, evaluation_class)
+  def concurrent_proc(evaluation_class = Proc::Evaluation) # &block
+    # IOEventLoop::Proc.new claims the method's block just like Proc.new does
+    Proc.new(self, evaluation_class)
   end
 
 
@@ -56,7 +56,7 @@ class IOEventLoop
       raise TimeoutError, "evaluation timed out after #{seconds} second(s)"
     elsif result == fiber
       @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
-      raise CancelledConcurrentBlock, '', @empty_call_stack
+      raise ProcFiberCancelled, '', @empty_call_stack
     else
       result
     end

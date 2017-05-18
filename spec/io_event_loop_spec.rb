@@ -111,14 +111,14 @@ describe IOEventLoop do
     end
 
     describe "evaluating/cancelling the concurrent evaluation while it is waiting" do
-      subject { concurrent_evaluation.await_result }
+      subject { evaluation.await_result }
 
       let(:wait_time) { 0.0001 }
-      let!(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait wait_time; :completed }.call_detached }
+      let!(:evaluation) { loop.concurrent_proc{ loop.wait wait_time; :completed }.call_detached }
 
       before { loop.concurrent_proc do
         # cancel the concurrent evaluation right away
-        concurrent_evaluation.conclude_with :intercepted
+        evaluation.conclude_with :intercepted
 
         # Wait after the timer would have been triggered to make sure the
         # concurrent evaluation is not resumed then (i.e. watching the timeout
@@ -130,12 +130,12 @@ describe IOEventLoop do
     end
 
     describe "order of multiple deferred concurrent evaluations" do
-      subject { concurrent_evaluation.await_result }
+      subject { evaluation.await_result }
 
-      let!(:concurrent_evaluation1) { loop.concurrent_proc{ loop.wait(seconds1); callback1.call }.call_detached }
-      let!(:concurrent_evaluation2) { loop.concurrent_proc{ loop.wait(seconds2); callback2.call }.call_detached }
-      let!(:concurrent_evaluation3) { loop.concurrent_proc{ loop.wait(seconds3); callback3.call }.call_detached }
-      let(:concurrent_evaluation) { loop.concurrent_proc{ loop.wait(0.0004) }.call_detached }
+      let!(:evaluation1) { loop.concurrent_proc{ loop.wait(seconds1); callback1.call }.call_detached }
+      let!(:evaluation2) { loop.concurrent_proc{ loop.wait(seconds2); callback2.call }.call_detached }
+      let!(:evaluation3) { loop.concurrent_proc{ loop.wait(seconds3); callback3.call }.call_detached }
+      let(:evaluation) { loop.concurrent_proc{ loop.wait(0.0004) }.call_detached }
       let(:seconds1) { 0.0001 }
       let(:seconds2) { 0.0002 }
       let(:seconds3) { 0.0003 }
@@ -149,73 +149,73 @@ describe IOEventLoop do
         before { expect(callback3).to receive(:call).ordered.and_call_original }
 
         it { is_expected.not_to raise_error }
-        after { expect(concurrent_evaluation1.await_result).to be :result1 }
-        after { expect(concurrent_evaluation2.await_result).to be :result2 }
-        after { expect(concurrent_evaluation3.await_result).to be :result3 }
+        after { expect(evaluation1.await_result).to be :result1 }
+        after { expect(evaluation2.await_result).to be :result2 }
+        after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when the first block has been cancelled" do
-        before { concurrent_evaluation1.cancel }
+        before { evaluation1.cancel }
 
         before { expect(callback1).not_to receive(:call) }
         before { expect(callback2).to receive(:call).ordered.and_call_original }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect{ concurrent_evaluation1.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect(concurrent_evaluation2.await_result).to be :result2 }
-        after { expect(concurrent_evaluation3.await_result).to be :result3 }
+        after { expect{ evaluation1.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect(evaluation2.await_result).to be :result2 }
+        after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when the first and second block have been cancelled" do
-        before { concurrent_evaluation1.cancel }
-        before { concurrent_evaluation2.cancel }
+        before { evaluation1.cancel }
+        before { evaluation2.cancel }
 
         before { expect(callback1).not_to receive(:call) }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect{ concurrent_evaluation1.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect{ concurrent_evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect(concurrent_evaluation3.await_result).to be :result3 }
+        after { expect{ evaluation1.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect{ evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when all evaluations have been cancelled" do
-        before { concurrent_evaluation1.cancel }
-        before { concurrent_evaluation2.cancel }
-        before { concurrent_evaluation3.cancel }
+        before { evaluation1.cancel }
+        before { evaluation2.cancel }
+        before { evaluation3.cancel }
 
         before { expect(callback1).not_to receive(:call) }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).not_to receive(:call) }
         it { is_expected.not_to raise_error }
-        after { expect{ concurrent_evaluation1.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect{ concurrent_evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect{ concurrent_evaluation3.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect{ evaluation1.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect{ evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect{ evaluation3.await_result }.to raise_error IOEventLoop::CancelledError }
       end
 
       context "when the second block has been cancelled" do
-        before { concurrent_evaluation2.cancel }
+        before { evaluation2.cancel }
 
         before { expect(callback1).to receive(:call).ordered.and_call_original }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect(concurrent_evaluation1.await_result).to be :result1 }
-        after { expect{ concurrent_evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect(concurrent_evaluation3.await_result).to be :result3 }
+        after { expect(evaluation1.await_result).to be :result1 }
+        after { expect{ evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when the second and last block have been cancelled" do
-        before { concurrent_evaluation2.cancel }
-        before { concurrent_evaluation3.cancel }
+        before { evaluation2.cancel }
+        before { evaluation3.cancel }
 
         before { expect(callback1).to receive(:call).ordered.and_call_original }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).not_to receive(:call) }
         it { is_expected.not_to raise_error }
-        after { expect(concurrent_evaluation1.await_result).to be :result1 }
-        after { expect{ concurrent_evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
-        after { expect{ concurrent_evaluation3.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect(evaluation1.await_result).to be :result1 }
+        after { expect{ evaluation2.await_result }.to raise_error IOEventLoop::CancelledError }
+        after { expect{ evaluation3.await_result }.to raise_error IOEventLoop::CancelledError }
       end
 
       context "when all timers are triggered in one go" do
@@ -227,17 +227,17 @@ describe IOEventLoop do
         before { expect(callback2).to receive(:call).ordered.and_call_original }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect(concurrent_evaluation1.await_result).to be :result1 }
-        after { expect(concurrent_evaluation2.await_result).to be :result2 }
-        after { expect(concurrent_evaluation3.await_result).to be :result3 }
+        after { expect(evaluation1.await_result).to be :result1 }
+        after { expect(evaluation2.await_result).to be :result2 }
+        after { expect(evaluation3.await_result).to be :result3 }
       end
     end
 
     describe "repeated execution in a fixed interval" do
-      subject { concurrent_evaluation.await_result }
+      subject { evaluation.await_result }
 
       before { @count = 0 }
-      let(:concurrent_evaluation) { loop.concurrent_proc do
+      let(:evaluation) { loop.concurrent_proc do
         while (@count += 1) < 4
           loop.wait(0.0001)
           callback.call
@@ -254,18 +254,18 @@ describe IOEventLoop do
       subject { loop.wait 0; @counter += 1 }
 
       before { @counter = 0 }
-      let!(:concurrent_block1) { loop.concurrent_proc{ loop.wait 0.0001; @counter += 1 }.call_nonblock }
-      let!(:concurrent_block2) { loop.concurrent_proc{ loop.wait 0; @counter += 1 }.call_nonblock }
-      let!(:concurrent_block3) { loop.concurrent_proc{ @counter += 1 }.call_detached }
+      let!(:evaluation1) { loop.concurrent_proc{ loop.wait 0.0001; @counter += 1 }.call_nonblock }
+      let!(:evaluation2) { loop.concurrent_proc{ loop.wait 0; @counter += 1 }.call_nonblock }
+      let!(:evaluation3) { loop.concurrent_proc{ @counter += 1 }.call_detached }
       # let the system clock progress so the block waiting non-zero seconds becomes pending
       before { sleep 0.0001 }
 
       it { is_expected.to be 4 }
 
       # scheduled starts come first, then the waiting procs
-      after { expect(concurrent_block1.await_result).to be 3 }
-      after { expect(concurrent_block2.await_result).to be 2 }
-      after { expect(concurrent_block3.await_result).to be 1 }
+      after { expect(evaluation1.await_result).to be 3 }
+      after { expect(evaluation2.await_result).to be 2 }
+      after { expect(evaluation3.await_result).to be 1 }
     end
   end
 

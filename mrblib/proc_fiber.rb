@@ -1,13 +1,13 @@
 class IOEventLoop
-  class ConcurrentBlock < Fiber
-    def initialize(loop, block_pool)
+  class Proc::Fiber < ::Fiber
+    def initialize(loop, fiber_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
-      # concurrent blocks reusable:
-      # - Each concurrent block of code is executed during one iteration
-      #   of the loop inside the fiber.
-      # - At the end of each iteration we put the concurrent block back into
-      #   a block pool.
-      # - Taking a block out of the pool and resuming it will enter the
+      # them reusable:
+      # - Each concurrent proc is executed during one iteration of the loop
+      #   inside a fiber.
+      # - At the end of each iteration we put the fiber back into the fiber
+      #   pool of the event loop.
+      # - Taking a fiber out of the pool and resuming it will enter the
       #   next iteration.
       super() do |proc, args, evaluation|
         # The fiber's proc, arguments to call the proc with and evaluation
@@ -22,21 +22,21 @@ class IOEventLoop
           result = nil
 
           if proc == self
-            # If we are given this very fiber when starting the concurrent block
-            # it means this fiber is evaluated right before its start. In this
-            # case just yield back to the evaluating fiber.
+            # If we are given this very fiber when starting itself it means it
+            # has been evaluated right before its start. In this case just
+            # yield back to the evaluating fiber.
             Fiber.yield
 
             # When this fiber is started because it is next on schedule it will
             # just finish without running the proc.
-            block_pool << self
+            fiber_pool << self
           else
-            raise Error, "concurrent block started with an invalid proc" unless ConcurrentProc === proc
+            raise Error, "fiber of concurrent proc started with an invalid proc" unless Proc === proc
 
             begin
               result = proc.__proc_call__ *args
               evaluation[0].conclude_with result if evaluation[0]
-            rescue CancelledConcurrentBlock
+            rescue ProcFiberCancelled
               # Generally, throw-catch is faster than raise-rescue if the code
               # needs to play back the call stack, i.e. the throw resp. raise
               # is invoked. If not playing back the call stack, a begin block
@@ -46,7 +46,7 @@ class IOEventLoop
               loop.trigger :error, result
               evaluation[0] ? (evaluation[0].conclude_with result) : (raise result)
             ensure
-              block_pool << self
+              fiber_pool << self
             end
           end
 

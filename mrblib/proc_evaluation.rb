@@ -1,8 +1,11 @@
 class IOEventLoop
-  class ConcurrentEvaluation
-    def initialize(loop, concurrent_block)
+  class Proc::Evaluation
+    Error = IOEventLoop::Error
+    CancelledError = IOEventLoop::CancelledError
+
+    def initialize(loop, proc_fiber)
       @loop = loop
-      @concurrent_block = concurrent_block
+      @proc_fiber = proc_fiber
       @concluded = false
       @awaiting_result = {}
       @data = {}
@@ -42,7 +45,7 @@ class IOEventLoop
       @result = result
       @concluded = true
 
-      @concurrent_block.cancel!
+      @proc_fiber.cancel!
 
       @awaiting_result.each_key{ |fiber| @loop.manually_resume!(fiber, result) }
       :concluded
@@ -54,7 +57,7 @@ class IOEventLoop
     end
 
     def manually_resume!(result = nil)
-      @loop.manually_resume!(@concurrent_block, result)
+      @loop.manually_resume!(@proc_fiber, result)
     end
   end
 end

@@ -1,4 +1,4 @@
-describe IOEventLoop::ConcurrentProc do
+describe IOEventLoop::Proc do
   subject(:instance) { described_class.new(loop, *args, &block) }
   let(:loop) { IOEventLoop.new }
 
@@ -23,7 +23,7 @@ describe IOEventLoop::ConcurrentProc do
         it { is_expected.to eq call_args }
       end
 
-      context "when resuming its concurrent block raises an error" do
+      context "when resuming its fiber raises an error" do
         before { allow(Fiber).to receive(:yield).and_raise FiberError, 'fiber error' }
         it { is_expected.to raise_error FiberError, 'fiber error' }
       end
@@ -67,7 +67,7 @@ describe IOEventLoop::ConcurrentProc do
 
     context "if the block needs to wait during evaluation" do
       let(:block) { proc{ |*args| loop.wait 0.0001; args } }
-      it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation) }
+      it { is_expected.to be_a(IOEventLoop::Proc::Evaluation) }
 
       describe "the result of the evaluation" do
         subject { call.await_result }
@@ -88,12 +88,12 @@ describe IOEventLoop::ConcurrentProc do
     let(:call_args) { [] }
 
     context "when it configures no custom evaluation" do
-      it { is_expected.to be_a(IOEventLoop::ConcurrentEvaluation).and have_attributes(data: {}) }
+      it { is_expected.to be_a(IOEventLoop::Proc::Evaluation).and have_attributes(data: {}) }
     end
 
     context "when it configures a custom evaluation" do
       let(:args) { [custom_evaluation_class] }
-      let(:custom_evaluation_class) { Class.new(IOEventLoop::ConcurrentEvaluation) }
+      let(:custom_evaluation_class) { Class.new(IOEventLoop::Proc::Evaluation) }
       it { is_expected.to be_a(custom_evaluation_class).and have_attributes(data: {}) }
     end
 
@@ -111,14 +111,14 @@ describe IOEventLoop::ConcurrentProc do
       end
     end
 
-    describe "the reuse of concurrent blocks" do
+    describe "the reuse of proc fibers" do
       subject { @fiber3 }
 
-      let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
-      let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
-      before { concurrent_block2.await_result } # let the two blocks finish
-      let!(:concurrent_block3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
-      before { concurrent_block3.await_result } # let the third block finish
+      let!(:evaluation1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
+      let!(:evaluation2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+      before { evaluation2.await_result } # let the two blocks finish
+      let!(:evaluation3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
+      before { evaluation3.await_result } # let the third block finish
 
       it { is_expected.to be @fiber2 }
       after { expect(subject).not_to be @fiber1 }
@@ -138,7 +138,7 @@ describe IOEventLoop::ConcurrentProc do
       end }
 
       # We need a reference wait to ensure we wait long enough for the
-      # concurrent block to finish.
+      # evaluation to finish.
       before do
         @spec_fiber = Fiber.current
         loop.await_manual_resume!
@@ -156,19 +156,19 @@ describe IOEventLoop::ConcurrentProc do
       it { is_expected.to raise_error RuntimeError, 'error' }
     end
 
-    describe "the reuse of concurrent blocks" do
+    describe "the reuse of proc fibers" do
       subject { @fiber3 }
 
-      let!(:concurrent_block1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
-      let!(:concurrent_block2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
-      before { concurrent_block2.await_result } # let the two blocks finish
-      let!(:concurrent_block3) { loop.concurrent_proc do
+      let!(:evaluation1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
+      let!(:evaluation2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+      before { evaluation2.await_result } # let the two blocks finish
+      let!(:evaluation3) { loop.concurrent_proc do
         @fiber3 = Fiber.current
         loop.manually_resume! @spec_fiber
       end.call_detached! }
 
       # We need a reference wait to ensure we wait long enough for the
-      # concurrent block to finish.
+      # evaluation to finish.
       before do
         @spec_fiber = Fiber.current
         loop.await_manual_resume!
