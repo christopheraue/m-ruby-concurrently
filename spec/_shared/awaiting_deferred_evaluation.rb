@@ -13,7 +13,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
-        let(:timeout_time) { 2*evaluation_time }
+        let(:timeout_time) { Float::INFINITY }
         it { is_expected.to eq result }
       end
 

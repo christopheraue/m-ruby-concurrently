@@ -74,7 +74,7 @@ describe Concurrently::Proc::Evaluation do
     context "when getting the result of a concurrent proc from two other ones" do
       let!(:evaluation) { concurrent_proc{ wait(0.0001); :result }.call_detached }
       let!(:evaluation1) { concurrent_proc{ evaluation.await_result }.call_detached }
-      let!(:evaluation2) { concurrent_proc{ evaluation.await_result within: 0.00005, timeout_result: :timeout_result }.call_detached }
+      let!(:evaluation2) { concurrent_proc{ evaluation.await_result within: 0, timeout_result: :timeout_result }.call_detached }
 
       it { is_expected.to be :result }
       after { expect(evaluation1.await_result).to be :result }
