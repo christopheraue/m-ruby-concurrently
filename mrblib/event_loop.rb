@@ -17,7 +17,7 @@ module Concurrently
       @io_watcher = IOWatcher.new
       @loop_fiber = Fiber.new(@run_queue, @io_watcher)
       @fiber_pool = []
-      true
+      self
     end
 
     def lifetime

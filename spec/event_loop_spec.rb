@@ -11,7 +11,7 @@ describe Concurrently::EventLoop do
   describe "#reinitialize!" do
     subject(:reinitialize) { instance.reinitialize! }
 
-    it { is_expected.to be true }
+    it { is_expected.to be instance }
 
     context "when it is waiting for a time interval" do
       before { instance.concurrent_proc{ instance.wait 0; @result = :waited }.call_nonblock }
