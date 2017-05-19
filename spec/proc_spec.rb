@@ -118,7 +118,7 @@ describe Concurrently::Proc do
   end
 
   describe "#call_detached!" do
-    it_behaves_like "EventLoop#concurrently" do
+    it_behaves_like "#concurrently" do
       def call(*args, &block)
         concurrent_proc(&block).call_detached! *args
       end

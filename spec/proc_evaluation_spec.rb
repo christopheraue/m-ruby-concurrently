@@ -158,6 +158,6 @@ describe Concurrently::Proc::Evaluation do
     end
     let!(:evaluation) { concurrent_proc{ await_manual_resume! }.call_detached }
 
-    it_behaves_like "EventLoop#manually_resume!"
+    it_behaves_like "#manually_resume!"
   end
 end

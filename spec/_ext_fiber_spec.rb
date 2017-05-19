@@ -8,6 +8,6 @@ describe Fiber do
     end
     let!(:fiber) { Fiber.new{ await_manual_resume! } }
 
-    it_behaves_like "EventLoop#manually_resume!"
+    it_behaves_like "#manually_resume!"
   end
 end

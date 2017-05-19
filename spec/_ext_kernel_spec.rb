@@ -6,23 +6,62 @@ describe Kernel do
       concurrently(*args, &block)
     end
 
-    it_behaves_like "EventLoop#concurrently"
+    it_behaves_like "#concurrently"
   end
 
   describe "#concurrent_proc" do
-    def call(*args, &block)
-      concurrent_proc(*args, &block)
+    context "when it configures no custom evaluation" do
+      subject { concurrent_proc{} }
+      it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(Concurrently::Proc::Evaluation)) }
     end
 
-    it_behaves_like "EventLoop#concurrent_proc"
+    context "when it configures a custom evaluation" do
+      subject { concurrent_proc(custom_evaluation_class){} }
+      let(:custom_evaluation_class) { Class.new(Concurrently::Proc::Evaluation) }
+      it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(custom_evaluation_class)) }
+    end
   end
 
   describe "#wait" do
-    def call(seconds)
-      wait(seconds)
+    describe "waiting for given seconds" do
+      let(:seconds) { 0.01 }
+
+      let(:wait_proc) { proc do
+        wait seconds
+        Time.now.to_f
+      end }
+
+      let!(:start_time) { Time.now.to_f }
+
+      context "when originating inside a concurrent proc" do
+        subject { concurrent_proc(&wait_proc).call }
+        it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
+      end
+
+      context "when originating outside a concurrent proc" do
+        subject { wait_proc.call }
+        it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
+      end
     end
 
-    it_behaves_like "EventLoop#wait"
+    describe "evaluating/cancelling the concurrent evaluation while it is waiting" do
+      subject { evaluation.await_result }
+
+      let(:wait_time) { 0.0001 }
+      let!(:evaluation) { concurrent_proc{ wait wait_time; :completed }.call_detached }
+
+      before { concurrent_proc do
+        # cancel the concurrent evaluation right away
+        evaluation.conclude_with :intercepted
+
+        # Wait after the timer would have been triggered to make sure the
+        # concurrent evaluation is not resumed then (i.e. watching the timeout
+        # is properly cancelled)
+        wait wait_time
+      end.call }
+
+      it { is_expected.to be :intercepted }
+    end
 
     describe "order of multiple deferred concurrent evaluations" do
       subject { evaluation.await_result }
@@ -165,10 +204,16 @@ describe Kernel do
   end
 
   describe "#await_manual_resume!" do
-    def call(options)
-      await_manual_resume! options
-    end
+    it_behaves_like "awaiting the result of a deferred evaluation" do
+      let(:wait_proc) { proc do
+        @spec_fiber = Fiber.current
+        await_manual_resume! wait_options
+      end }
 
-    it_behaves_like "EventLoop#await_manual_resume!"
+      let!(:resume_proc) { concurrent_proc do
+        wait evaluation_time
+        @spec_fiber.manually_resume! :result
+      end.call_detached }
+    end
   end
 end
