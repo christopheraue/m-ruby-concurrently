@@ -1,11 +1,11 @@
 shared_examples_for "awaiting the result of a deferred evaluation" do
-  let(:evaluation) { loop.concurrent_proc(&wait_proc).call_detached }
+  let(:evaluation) { concurrent_proc(&wait_proc).call_detached }
 
   let(:wait_options) { {} }
   let(:evaluation_time) { 0.001 }
   let(:result) { :result }
 
-  let(:resume_proc) { loop.concurrent_proc{}.call_detached }
+  let(:resume_proc) { concurrent_proc{}.call_detached }
 
   shared_examples_for "waiting with a timeout" do
     context "when limiting the wait time" do
@@ -55,7 +55,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
       evaluation
     end
 
-    before { loop.concurrent_proc do
+    before { concurrent_proc do
       # cancel the concurrent evaluation right away
       evaluation.conclude_with :intercepted
 

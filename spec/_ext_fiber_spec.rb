@@ -1,5 +1,5 @@
 describe Fiber do
-  let(:loop) { Concurrently::EventLoop.current }
+  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#manually_resume!" do
     subject { fiber.resume }

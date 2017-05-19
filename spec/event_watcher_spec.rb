@@ -1,7 +1,7 @@
 describe Concurrently::EventWatcher do
   let!(:instance) { described_class.new loop, object, event, *opts }
 
-  let(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
   let(:object) { Object.new.extend CallbacksAttachable }
   let(:event) { :event }
   let(:opts) { nil }
@@ -39,7 +39,7 @@ describe Concurrently::EventWatcher do
     end
 
     context "when the event happens later" do
-      before { loop.concurrent_proc{ loop.wait(0.0001); object.trigger(event, event_result) }.call_detached }
+      before { concurrent_proc{ loop.wait(0.0001); object.trigger(event, event_result) }.call_detached }
       it { is_expected.to be event_result }
       after { expect(instance.received).to be 1 }
     end
@@ -57,7 +57,7 @@ describe Concurrently::EventWatcher do
     after { expect(instance.cancelled?).to be true }
 
     context "when the watcher is cancelled after starting to wait" do
-      before { loop.concurrent_proc{ subject }.call }
+      before { concurrent_proc{ subject }.call }
       it { expect{ instance.await }.to raise_error Concurrently::EventWatcher::CancelledError, 'cancel reason' }
     end
 

@@ -1,6 +1,6 @@
 describe Concurrently::Proc do
   subject(:instance) { described_class.new(*args, &block) }
-  let(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
 
   let(:args) { [] }
   let(:block) { proc{} }
@@ -106,10 +106,10 @@ describe Concurrently::Proc do
     describe "the reuse of proc fibers" do
       subject { @fiber3 }
 
-      let!(:evaluation1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
-      let!(:evaluation2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+      let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
+      let!(:evaluation2) { concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
       before { evaluation2.await_result } # let the two blocks finish
-      let!(:evaluation3) { loop.concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
+      let!(:evaluation3) { concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
       before { evaluation3.await_result } # let the third block finish
 
       it { is_expected.to be @fiber2 }
@@ -120,7 +120,7 @@ describe Concurrently::Proc do
   describe "#call_detached!" do
     it_behaves_like "EventLoop#concurrently" do
       def call(*args, &block)
-        loop.concurrent_proc(&block).call_detached! *args
+        concurrent_proc(&block).call_detached! *args
       end
     end
   end

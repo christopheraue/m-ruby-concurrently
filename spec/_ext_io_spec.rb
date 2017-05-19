@@ -1,6 +1,5 @@
 describe IO do
-  let(:loop) { Concurrently::EventLoop.current }
-  before { loop.reinitialize! } # in case the loop is exited due to an error
+  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#await_readable" do
     def call(options)

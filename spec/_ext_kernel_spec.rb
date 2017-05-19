@@ -1,6 +1,5 @@
 describe Kernel do
-  let(:loop) { Concurrently::EventLoop.current }
-  before { loop.reinitialize! } # in case the loop is exited due to an error
+  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#concurrently" do
     def call(*args, &block)

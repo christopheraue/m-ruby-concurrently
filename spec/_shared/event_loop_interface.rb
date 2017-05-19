@@ -28,8 +28,8 @@ shared_examples_for "EventLoop#concurrently" do
   describe "the reuse of proc fibers" do
     subject { @fiber3 }
 
-    let!(:evaluation1) { loop.concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
-    let!(:evaluation2) { loop.concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
+    let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
+    let!(:evaluation2) { concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
     before { evaluation2.await_result } # let the two blocks finish
     let!(:evaluation3) { call do
       @fiber3 = Fiber.current
@@ -68,7 +68,7 @@ shared_examples_for "EventLoop#await_manual_resume!" do
       call wait_options
     end }
 
-    let!(:resume_proc) { loop.concurrent_proc do
+    let!(:resume_proc) { concurrent_proc do
       loop.wait evaluation_time
       @spec_fiber.manually_resume! :result
     end.call_detached }
@@ -76,7 +76,7 @@ shared_examples_for "EventLoop#await_manual_resume!" do
 end
 
 shared_examples_for "EventLoop#manually_resume!" do
-  before { loop.concurrent_proc do
+  before { concurrent_proc do
     loop.wait 0.0001
     call *result
   end.call_detached }
@@ -104,7 +104,7 @@ shared_examples_for "EventLoop#wait" do
     let!(:start_time) { Time.now.to_f }
 
     context "when originating inside a concurrent proc" do
-      subject { loop.concurrent_proc(&wait_proc).call }
+      subject { concurrent_proc(&wait_proc).call }
       it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
     end
 
@@ -118,9 +118,9 @@ shared_examples_for "EventLoop#wait" do
     subject { evaluation.await_result }
 
     let(:wait_time) { 0.0001 }
-    let!(:evaluation) { loop.concurrent_proc{ call wait_time; :completed }.call_detached }
+    let!(:evaluation) { concurrent_proc{ call wait_time; :completed }.call_detached }
 
-    before { loop.concurrent_proc do
+    before { concurrent_proc do
       # cancel the concurrent evaluation right away
       evaluation.conclude_with :intercepted
 
@@ -147,7 +147,7 @@ shared_examples_for "EventLoop#await_readable" do
     let(:reader) { pipe[0] }
     let(:writer) { pipe[1] }
 
-    let!(:resume_proc) { loop.concurrent_proc do
+    let!(:resume_proc) { concurrent_proc do
       loop.wait evaluation_time
       writer.write result
       writer.close
@@ -171,7 +171,7 @@ shared_examples_for "EventLoop#await_writable" do
     # jam pipe: default pipe buffer size on linux is 65536
     before { writer.write('a' * 65536) }
 
-    let!(:resume_proc) { loop.concurrent_proc do
+    let!(:resume_proc) { concurrent_proc do
       loop.wait evaluation_time
       reader.read 65536 # clears the pipe
     end.call_detached }

@@ -1,5 +1,5 @@
 describe Concurrently::EventLoop do
-  let(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
   subject(:instance) { loop }
 
   describe ".current" do
@@ -14,7 +14,7 @@ describe Concurrently::EventLoop do
     it { is_expected.to be instance }
 
     context "when it is waiting for a time interval" do
-      before { instance.concurrent_proc{ instance.wait 0; @result = :waited }.call_nonblock }
+      before { concurrent_proc{ instance.wait 0; @result = :waited }.call_nonblock }
 
       context "when reinitialized after the concurrent proc finished waiting (for control)" do
         before { instance.wait 0 }
@@ -31,7 +31,7 @@ describe Concurrently::EventLoop do
 
     context "when it is waiting for an IO to be readable" do
       before { @r, @w = IO.pipe }
-      before { instance.concurrent_proc{ instance.await_readable @r; @result = :waited }.call_nonblock }
+      before { concurrent_proc{ instance.await_readable @r; @result = :waited }.call_nonblock }
 
       context "when reinitialized after the concurrent proc finished waiting (for control)" do
         before { @w.write 'waiting over' }
@@ -51,7 +51,7 @@ describe Concurrently::EventLoop do
     context "when it is waiting for an IO to be writable" do
       before { @r, @w = IO.pipe }
       before { @w.write ' ' * 2**16 }
-      before { instance.concurrent_proc{ instance.await_writable @w; @result = :waited }.call_nonblock }
+      before { concurrent_proc{ instance.await_writable @w; @result = :waited }.call_nonblock }
 
       context "when reinitialized after the concurrent proc finished waiting (for control)" do
         before { @r.read 2**16 }
@@ -69,8 +69,8 @@ describe Concurrently::EventLoop do
     end
 
     context "when it is waiting for the result of a concurrent proc" do
-      let!(:concurrent_proc) { instance.concurrent_proc{ instance.wait 0 }.call_nonblock }
-      before { instance.concurrent_proc{ concurrent_proc.await_result; @result = :waited }.call_nonblock }
+      let!(:evaluation) { concurrent_proc{ instance.wait 0 }.call_nonblock }
+      before { concurrent_proc{ evaluation.await_result; @result = :waited }.call_nonblock }
 
       context "when reinitialized after the concurrent proc finished waiting (for control)" do
         before { instance.wait 0.0001 }
@@ -93,22 +93,6 @@ describe Concurrently::EventLoop do
     it { is_expected.to be_within(0.0001).of(Time.now.to_f - creation_time) }
   end
 
-  describe "#concurrently" do
-    def call(*args, &block)
-      instance.concurrently(*args, &block)
-    end
-
-    it_behaves_like "EventLoop#concurrently"
-  end
-
-  describe "#concurrent_proc" do
-    def call(*args, &block)
-      instance.concurrent_proc(*args, &block)
-    end
-
-    it_behaves_like "EventLoop#concurrent_proc"
-  end
-
   describe "#wait" do
     def call(seconds)
       instance.wait(seconds)
@@ -119,10 +103,10 @@ describe Concurrently::EventLoop do
     describe "order of multiple deferred concurrent evaluations" do
       subject { evaluation.await_result }
 
-      let!(:evaluation1) { loop.concurrent_proc{ loop.wait(seconds1); callback1.call }.call_detached }
-      let!(:evaluation2) { loop.concurrent_proc{ loop.wait(seconds2); callback2.call }.call_detached }
-      let!(:evaluation3) { loop.concurrent_proc{ loop.wait(seconds3); callback3.call }.call_detached }
-      let(:evaluation) { loop.concurrent_proc{ loop.wait(0.0004) }.call_detached }
+      let!(:evaluation1) { concurrent_proc{ loop.wait(seconds1); callback1.call }.call_detached }
+      let!(:evaluation2) { concurrent_proc{ loop.wait(seconds2); callback2.call }.call_detached }
+      let!(:evaluation3) { concurrent_proc{ loop.wait(seconds3); callback3.call }.call_detached }
+      let(:evaluation) { concurrent_proc{ loop.wait(0.0004) }.call_detached }
       let(:seconds1) { 0.0001 }
       let(:seconds2) { 0.0002 }
       let(:seconds3) { 0.0003 }
@@ -224,7 +208,7 @@ describe Concurrently::EventLoop do
       subject { evaluation.await_result }
 
       before { @count = 0 }
-      let(:evaluation) { loop.concurrent_proc do
+      let(:evaluation) { concurrent_proc do
         while (@count += 1) < 4
           loop.wait(0.0001)
           callback.call
@@ -241,9 +225,9 @@ describe Concurrently::EventLoop do
       subject { loop.wait 0; @counter += 1 }
 
       before { @counter = 0 }
-      let!(:evaluation1) { loop.concurrent_proc{ loop.wait 0.0001; @counter += 1 }.call_nonblock }
-      let!(:evaluation2) { loop.concurrent_proc{ loop.wait 0; @counter += 1 }.call_nonblock }
-      let!(:evaluation3) { loop.concurrent_proc{ @counter += 1 }.call_detached }
+      let!(:evaluation1) { concurrent_proc{ loop.wait 0.0001; @counter += 1 }.call_nonblock }
+      let!(:evaluation2) { concurrent_proc{ loop.wait 0; @counter += 1 }.call_nonblock }
+      let!(:evaluation3) { concurrent_proc{ @counter += 1 }.call_detached }
       # let the system clock progress so the block waiting non-zero seconds becomes pending
       before { sleep 0.0001 }
 
@@ -286,7 +270,7 @@ describe Concurrently::EventLoop do
 
       let(:object) { Object.new.extend CallbacksAttachable }
 
-      let!(:resume_proc) { loop.concurrent_proc do
+      let!(:resume_proc) { concurrent_proc do
         loop.wait evaluation_time
         object.trigger :event, result
       end.call_detached }
