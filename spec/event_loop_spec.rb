@@ -248,22 +248,6 @@ describe Concurrently::EventLoop do
     it_behaves_like "EventLoop#await_manual_resume!"
   end
 
-  describe "#await_readable" do
-    def call(options)
-      instance.await_readable reader, options
-    end
-
-    it_behaves_like "EventLoop#await_readable"
-  end
-
-  describe "#await_writable" do
-    def call(options)
-      instance.await_writable writer, options
-    end
-
-    it_behaves_like "EventLoop#await_writable"
-  end
-
   describe "#await_event" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc{ loop.await_event(object, :event, wait_options) } }

@@ -20,6 +20,8 @@ module Concurrently
       self
     end
 
+    attr_reader :io_watcher
+
     def lifetime
       Time.now.to_f - @start_time
     end
@@ -73,22 +75,6 @@ module Concurrently
       await_manual_resume!
     ensure
       @run_queue.cancel fiber
-    end
-
-    def await_readable(io, opts = {})
-      fiber = Fiber.current
-      @io_watcher.await_reader(io, fiber)
-      await_manual_resume! opts
-    ensure
-      @io_watcher.cancel_reader(io)
-    end
-
-    def await_writable(io, opts = {})
-      fiber = Fiber.current
-      @io_watcher.await_writer(io, fiber)
-      await_manual_resume! opts
-    ensure
-      @io_watcher.cancel_writer(io)
     end
 
     def await_event(subject, event, opts = {})
