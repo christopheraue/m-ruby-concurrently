@@ -1,7 +1,7 @@
 describe Concurrently::EventWatcher do
   let!(:instance) { described_class.new loop, object, event, *opts }
 
-  let(:loop) { Concurrently::EventLoop.new }
+  let(:loop) { Concurrently::EventLoop.current.reinitialize! }
   let(:object) { Object.new.extend CallbacksAttachable }
   let(:event) { :event }
   let(:opts) { nil }

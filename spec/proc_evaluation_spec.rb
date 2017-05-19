@@ -1,5 +1,5 @@
 describe Concurrently::Proc::Evaluation do
-  let(:loop) { Concurrently::EventLoop.new }
+  let(:loop) { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#await_result" do
     subject { evaluation.await_result(&with_result) }

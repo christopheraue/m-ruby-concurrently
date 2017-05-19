@@ -1,6 +1,6 @@
 describe Concurrently::EventLoop do
-  subject(:instance) { Concurrently::EventLoop.new }
-  let(:loop) { instance }
+  let(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  subject(:instance) { loop }
 
   describe ".current" do
     subject { described_class.current }

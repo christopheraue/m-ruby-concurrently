@@ -5,9 +5,9 @@ module Concurrently
     end
 
     time_module = Module.new do
-      def initialize
-        super
+      def reinitialize!
         @clock = Hitimes::Interval.new.tap(&:start)
+        super
       end
 
       def lifetime
