@@ -21,7 +21,7 @@ module Concurrently
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation_holder = []
-      result = proc_fiber.send_to_foreground! [self, args, evaluation_holder]
+      result = proc_fiber.resume [self, args, evaluation_holder]
 
       if result == proc_fiber
         evaluation = @evaluation_class.new(proc_fiber)
@@ -36,14 +36,14 @@ module Concurrently
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
-      proc_fiber.manually_resume! [self, args, [evaluation]]
+      proc_fiber.schedule_resume! [self, args, [evaluation]]
       evaluation
     end
 
     def call_detached!(*args)
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
-      proc_fiber.manually_resume! [self, args]
+      proc_fiber.schedule_resume! [self, args]
       nil
     end
   end

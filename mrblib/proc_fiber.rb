@@ -73,6 +73,6 @@ module Concurrently
       Fiber.yield self
     end
 
-    alias_method :send_to_foreground!, :resume
+    alias_method :resume_from_event_loop!, :resume
   end
 end

@@ -203,16 +203,16 @@ describe Kernel do
     end
   end
 
-  describe "#await_manual_resume!" do
+  describe "#await_scheduled_resume!" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc do
         @spec_fiber = Fiber.current
-        await_manual_resume! wait_options
+        await_scheduled_resume! wait_options
       end }
 
       let!(:resume_proc) { concurrent_proc do
         wait evaluation_time
-        @spec_fiber.manually_resume! :result
+        @spec_fiber.schedule_resume! :result
       end.call_detached }
     end
   end

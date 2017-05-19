@@ -151,13 +151,13 @@ describe Concurrently::Proc::Evaluation do
     end
   end
 
-  describe "#manually_resume!" do
+  describe "#schedule_resume!" do
     subject { evaluation.await_result }
     def call(*args)
-      evaluation.manually_resume! *args
+      evaluation.schedule_resume! *args
     end
-    let!(:evaluation) { concurrent_proc{ await_manual_resume! }.call_detached }
+    let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_detached }
 
-    it_behaves_like "#manually_resume!"
+    it_behaves_like "#schedule_resume!"
   end
 end

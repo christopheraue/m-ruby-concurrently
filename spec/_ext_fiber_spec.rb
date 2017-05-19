@@ -1,13 +1,13 @@
 describe Fiber do
   before { Concurrently::EventLoop.current.reinitialize! }
 
-  describe "#manually_resume!" do
+  describe "#schedule_resume!" do
     subject { fiber.resume }
     def call(*args)
-      fiber.manually_resume! *args
+      fiber.schedule_resume! *args
     end
-    let!(:fiber) { Fiber.new{ await_manual_resume! } }
+    let!(:fiber) { Fiber.new{ await_scheduled_resume! } }
 
-    it_behaves_like "#manually_resume!"
+    it_behaves_like "#schedule_resume!"
   end
 end

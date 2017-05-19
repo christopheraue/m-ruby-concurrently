@@ -28,7 +28,7 @@ module Concurrently
 
     def process_ready_in(waiting_time)
       @selector.select(waiting_time) do |monitor|
-        monitor.value.send_to_foreground! true
+        monitor.value.resume_from_event_loop! true
       end
     end
   end

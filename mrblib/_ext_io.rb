@@ -3,7 +3,7 @@ class IO
     io_watcher = Concurrently::EventLoop.current.io_watcher
     fiber = Fiber.current
     io_watcher.await_reader(self, fiber)
-    await_manual_resume! opts
+    await_scheduled_resume! opts
   ensure
     io_watcher.cancel_reader(self)
   end
@@ -12,7 +12,7 @@ class IO
     io_watcher = Concurrently::EventLoop.current.io_watcher
     fiber = Fiber.current
     io_watcher.await_writer(self, fiber)
-    await_manual_resume! opts
+    await_scheduled_resume! opts
   ensure
     io_watcher.cancel_writer(self)
   end

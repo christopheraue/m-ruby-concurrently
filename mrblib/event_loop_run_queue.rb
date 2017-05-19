@@ -56,7 +56,7 @@ module Concurrently
       processing.each do |cart|
         begin
           @cart_index.delete cart[FIBER].hash
-          cart[FIBER].send_to_foreground! cart[RESULT] if cart[FIBER]
+          cart[FIBER].resume_from_event_loop! cart[RESULT] if cart[FIBER]
         rescue => error
           # Keep loop up and running but trigger a callback so the user can
           # do something in an error case.

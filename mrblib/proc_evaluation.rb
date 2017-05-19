@@ -18,7 +18,7 @@ module Concurrently
         result = begin
           fiber = Fiber.current
           @awaiting_result.store fiber, true
-          await_manual_resume! opts
+          await_scheduled_resume! opts
         rescue Exception => error
           error
         ensure
@@ -45,7 +45,7 @@ module Concurrently
 
       @proc_fiber.cancel!
 
-      @awaiting_result.each_key{ |fiber| fiber.manually_resume! result }
+      @awaiting_result.each_key{ |fiber| fiber.schedule_resume! result }
       :concluded
     end
 
@@ -54,8 +54,8 @@ module Concurrently
       :cancelled
     end
 
-    def manually_resume!(result = nil)
-      @proc_fiber.manually_resume! result
+    def schedule_resume!(result = nil)
+      @proc_fiber.schedule_resume! result
     end
   end
 end

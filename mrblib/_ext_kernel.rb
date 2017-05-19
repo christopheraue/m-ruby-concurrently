@@ -9,7 +9,7 @@ module Kernel
     Concurrently::Proc.new(evaluation_class)
   end
 
-  def await_manual_resume!(opts = {})
+  def await_scheduled_resume!(opts = {})
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
 
@@ -40,7 +40,7 @@ module Kernel
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
     run_queue.schedule(fiber, seconds)
-    await_manual_resume!
+    await_scheduled_resume!
   ensure
     run_queue.cancel fiber
   end

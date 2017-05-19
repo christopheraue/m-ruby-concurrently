@@ -22,8 +22,8 @@ module Concurrently
 
         begin
           fiber = Fiber.current
-          callback = @subject.on(@event) { fiber.manually_resume! @results.pop }
-          await_manual_resume! opts
+          callback = @subject.on(@event) { fiber.schedule_resume! @results.pop }
+          await_scheduled_resume! opts
         ensure
           callback.cancel
         end

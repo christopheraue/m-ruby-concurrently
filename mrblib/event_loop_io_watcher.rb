@@ -31,7 +31,7 @@ module Concurrently
     def process_ready_in(waiting_time)
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
         selected.each do |ios|
-          ios.each{ |io| @fibers[io].send_to_foreground! true }
+          ios.each{ |io| @fibers[io].resume_from_event_loop! true }
         end
       end
     end
