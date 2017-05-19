@@ -205,13 +205,10 @@ describe Kernel do
 
   describe "#await_scheduled_resume!" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:wait_proc) { proc do
-        @spec_fiber = Fiber.current
-        await_scheduled_resume! wait_options
-      end }
+      let(:wait_proc) { proc{ await_scheduled_resume! wait_options } }
 
       def resume
-        @spec_fiber.schedule_resume! result
+        evaluation.schedule_resume! result
       end
     end
   end

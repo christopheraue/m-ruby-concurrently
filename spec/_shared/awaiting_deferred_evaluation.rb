@@ -54,30 +54,35 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   context "when originating inside a concurrent proc" do
     subject { evaluation.await_result }
     include_examples "waiting", inside_concurrent_proc: true
+
+    describe "evaluating the concurrent evaluation while it is waiting" do
+      subject { evaluation.await_result }
+
+      # make sure the concurrent evaluation is started before evaluating it
+      before { evaluation }
+
+      before { concurrent_proc do
+        # cancel the concurrent evaluation right away
+        evaluation.conclude_with :intercepted
+
+        # Wait after the event is triggered to make sure the concurrent evaluation
+        # is not resumed then (i.e. watching the event is properly cancelled)
+        wait evaluation_time
+      end.call }
+
+      it { is_expected.to be :intercepted }
+    end
+
+    describe "resumption before the concurrent proc has been started" do
+      before { resume }
+      it { is_expected.to be result }
+    end
   end
 
   context "when originating outside a concurrent proc" do
     subject { wait_proc.call }
+    let!(:evaluation) { Fiber.current }
     include_examples "waiting"
-  end
-
-  describe "evaluating the concurrent evaluation while it is waiting" do
-    subject { evaluation.await_result }
-
-    before do # make sure the concurrent evaluation is started before evaluating it
-      evaluation
-    end
-
-    before { concurrent_proc do
-      # cancel the concurrent evaluation right away
-      evaluation.conclude_with :intercepted
-
-      # Wait after the event is triggered to make sure the concurrent evaluation
-      # is not resumed then (i.e. watching the event is properly cancelled)
-      wait evaluation_time
-    end.call }
-
-    it { is_expected.to be :intercepted }
   end
 end
 
