@@ -1,5 +1,7 @@
 module Concurrently
   class Proc < ::Proc
+    include CallbacksAttachable
+
     def initialize(evaluation_class = Evaluation)
       @evaluation_class = evaluation_class
     end
@@ -27,6 +29,8 @@ module Concurrently
         evaluation = @evaluation_class.new(proc_fiber)
         evaluation_holder << evaluation
         evaluation
+      elsif Exception === result
+        raise result
       else
         result
       end

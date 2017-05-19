@@ -1,7 +1,5 @@
 module Concurrently
   class EventLoop
-    include CallbacksAttachable
-
     def self.current
       @current ||= new
     end

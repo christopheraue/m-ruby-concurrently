@@ -23,14 +23,12 @@ describe Concurrently::Proc do
         it { is_expected.to eq call_args }
       end
 
-      xcontext "when resuming its fiber raises an error" do
-        before { allow(Fiber).to receive(:yield).and_raise FiberError, 'fiber error' }
-        it { is_expected.to raise_error FiberError, 'fiber error' }
-      end
-
       context "when the code inside the block raises an error" do
-        let(:block) { proc{ raise 'error' } }
-        it { is_expected.to raise_error RuntimeError, 'error' }
+        let(:block) { proc{ raise Exception, 'error' } }
+
+        before { expect(instance).to receive(:trigger).with(:error,
+          (be_a(Exception).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error Exception, 'error' }
       end
     end
 
@@ -56,13 +54,16 @@ describe Concurrently::Proc do
       it { is_expected.to eq call_args }
 
       context "when the code inside the block raises an error" do
-        let(:block) { proc{ raise 'error' } }
-        it { is_expected.to raise_error RuntimeError, 'error' }
+        let(:block) { proc{ raise Exception, 'error' } }
+
+        before { expect(instance).to receive(:trigger).with(:error,
+          (be_a(Exception).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error Exception, 'error' }
       end
     end
 
     context "if the block needs to wait during evaluation" do
-      let(:block) { proc{ |*args| wait 0.0001; args } }
+      let(:block) { proc{ |*args| wait 0; args } }
       it { is_expected.to be_a(Concurrently::Proc::Evaluation) }
 
       describe "the result of the evaluation" do
@@ -70,8 +71,11 @@ describe Concurrently::Proc do
         it { is_expected.to eq call_args }
 
         context "when the code inside the block raises an error" do
-          let(:block) { proc{ wait 0.0001; raise 'error' } }
-          it { is_expected.to raise_error RuntimeError, 'error' }
+          let(:block) { proc{ wait 0; raise Exception, 'error' } }
+
+          before { expect(instance).to receive(:trigger).with(:error,
+            (be_a(Exception).and have_attributes message: 'error')) }
+          it { is_expected.to raise_error Exception, 'error' }
         end
       end
     end
@@ -99,7 +103,10 @@ describe Concurrently::Proc do
 
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise 'error' } }
-        it { is_expected.to raise_error RuntimeError, 'error' }
+
+        before { expect(instance).to receive(:trigger).with(:error,
+          (be_a(Exception).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error Exception, 'error' }
       end
     end
 
