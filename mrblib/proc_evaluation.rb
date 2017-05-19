@@ -2,8 +2,7 @@ module Concurrently
   class Proc::Evaluation
     Error = Proc::Error
 
-    def initialize(loop, proc_fiber)
-      @loop = loop
+    def initialize(proc_fiber)
       @proc_fiber = proc_fiber
       @concluded = false
       @awaiting_result = {}
@@ -19,7 +18,7 @@ module Concurrently
         result = begin
           fiber = Fiber.current
           @awaiting_result.store fiber, true
-          @loop.await_manual_resume! opts
+          await_manual_resume! opts
         rescue Exception => error
           error
         ensure
@@ -46,7 +45,7 @@ module Concurrently
 
       @proc_fiber.cancel!
 
-      @awaiting_result.each_key{ |fiber| @loop.manually_resume!(fiber, result) }
+      @awaiting_result.each_key{ |fiber| fiber.manually_resume! result }
       :concluded
     end
 
@@ -56,7 +55,7 @@ module Concurrently
     end
 
     def manually_resume!(result = nil)
-      @loop.manually_resume!(@proc_fiber, result)
+      @proc_fiber.manually_resume! result
     end
   end
 end

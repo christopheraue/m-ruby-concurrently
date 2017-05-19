@@ -28,6 +28,11 @@ module Concurrently
       @fiber.resume
     end
 
+    def schedule_now(fiber, result = nil)
+      @run_queue.schedule_now(fiber, result)
+    end
+
+
     # Concurrently executed block of code
     def proc_fiber!
       @fiber_pool.pop || Proc::Fiber.new(@fiber_pool)
@@ -70,10 +75,6 @@ module Concurrently
       if seconds
         @run_queue.cancel fiber
       end
-    end
-
-    def manually_resume!(fiber, result = nil)
-      @run_queue.schedule_now(fiber, result)
     end
 
     def wait(seconds)

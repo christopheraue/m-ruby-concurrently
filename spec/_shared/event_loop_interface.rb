@@ -4,7 +4,7 @@ shared_examples_for "EventLoop#concurrently" do
 
     before { call(:arg1, :arg2) do |*args|
       @result = args
-      loop.manually_resume! @spec_fiber
+      @spec_fiber.manually_resume!
     end }
 
     # We need a reference wait to ensure we wait long enough for the
@@ -33,7 +33,7 @@ shared_examples_for "EventLoop#concurrently" do
     before { evaluation2.await_result } # let the two blocks finish
     let!(:evaluation3) { call do
       @fiber3 = Fiber.current
-      loop.manually_resume! @spec_fiber
+      @spec_fiber.manually_resume!
     end }
 
     # We need a reference wait to ensure we wait long enough for the
@@ -70,7 +70,7 @@ shared_examples_for "EventLoop#await_manual_resume!" do
 
     let!(:resume_proc) { loop.concurrent_proc do
       loop.wait evaluation_time
-      loop.manually_resume! @spec_fiber, :result
+      @spec_fiber.manually_resume! :result
     end.call_detached }
   end
 end
