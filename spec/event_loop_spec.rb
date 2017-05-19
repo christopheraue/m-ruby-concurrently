@@ -93,14 +93,6 @@ describe Concurrently::EventLoop do
     it { is_expected.to be_within(0.0001).of(Time.now.to_f - creation_time) }
   end
 
-  describe "#await_manual_resume!" do
-    def call(options)
-      instance.await_manual_resume! options
-    end
-
-    it_behaves_like "EventLoop#await_manual_resume!"
-  end
-
   describe "#await_event" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc{ loop.await_event(object, :event, wait_options) } }

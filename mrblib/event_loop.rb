@@ -8,7 +8,6 @@ module Concurrently
 
     def initialize
       reinitialize!
-      @empty_call_stack = [].freeze
     end
 
     def reinitialize!
@@ -42,32 +41,6 @@ module Concurrently
 
 
     # Awaiting stuff
-
-    def await_manual_resume!(opts = {})
-      fiber = Fiber.current
-
-      if seconds = opts[:within]
-        timeout_result = opts.fetch(:timeout_result, Proc::TimeoutError)
-        @run_queue.schedule(fiber, seconds, timeout_result)
-      end
-
-      result = fiber.yield_to_event_loop!
-
-      # If result is this very fiber it means this fiber has been evaluated
-      # prematurely.
-      if result == fiber
-        @run_queue.cancel fiber # in case the fiber has already been scheduled to resume
-        raise Proc::Fiber::Cancelled, '', @empty_call_stack
-      elsif result == Proc::TimeoutError
-        raise Proc::TimeoutError, "evaluation timed out after #{seconds} second(s)"
-      else
-        result
-      end
-    ensure
-      if seconds
-        @run_queue.cancel fiber
-      end
-    end
 
     def await_event(subject, event, opts = {})
       fiber = Fiber.current
