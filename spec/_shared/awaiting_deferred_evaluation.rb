@@ -1,5 +1,6 @@
 shared_examples_for "awaiting the result of a deferred evaluation" do
-  let(:evaluation) { concurrent_proc(&wait_proc).call_detached }
+  let(:conproc) { concurrent_proc(&wait_proc) }
+  let(:evaluation) { conproc.call_detached }
 
   let(:wait_options) { {} }
   let(:evaluation_time) { 0.001 }
@@ -7,7 +8,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
   let(:resume_proc) { concurrent_proc{}.call_detached }
 
-  shared_examples_for "waiting with a timeout" do
+  shared_examples_for "waiting with a timeout" do |inside_concurrent_proc: false|
     context "when limiting the wait time" do
       let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
       let(:timeout_result) { :timeout_result }
@@ -23,6 +24,11 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
         context "when no timeout result is given" do
           before { wait_options.delete :timeout_result }
+
+          if inside_concurrent_proc
+            before { expect(conproc).to receive(:trigger).with(:error, (be_a(Concurrently::Proc::TimeoutError).
+             and have_attributes message: "evaluation timed out after #{wait_options[:within]} second(s)")) }
+          end
           it { is_expected.to raise_error Concurrently::Proc::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
         end
 
@@ -38,7 +44,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
     subject { evaluation.await_result }
     it { is_expected.to eq result }
 
-    include_examples "waiting with a timeout"
+    include_examples "waiting with a timeout", inside_concurrent_proc: true
   end
 
   context "when originating outside a concurrent proc" do

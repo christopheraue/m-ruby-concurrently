@@ -4,7 +4,8 @@ describe Concurrently::Proc::Evaluation do
   describe "#await_result" do
     subject { evaluation.await_result(&with_result) }
 
-    let(:evaluation) { concurrent_proc(&wait_proc).call_detached }
+    let(:conproc) { concurrent_proc(&wait_proc) }
+    let(:evaluation) { conproc.call_detached }
     let(:with_result) { nil }
     let(:result) { :result }
 
@@ -51,6 +52,8 @@ describe Concurrently::Proc::Evaluation do
       before { expect(evaluation).not_to be_concluded }
       after { expect(evaluation).to be_concluded }
 
+      before { expect(conproc).to receive(:trigger).with(:error, (be_a(RuntimeError).
+        and have_attributes message: "error")) }
       it { is_expected.to raise_error RuntimeError, 'error' }
 
       context "when requesting the result a second time" do
