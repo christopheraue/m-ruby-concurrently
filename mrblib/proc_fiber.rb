@@ -22,9 +22,7 @@ module Concurrently
         while true
           evaluation ||= empty_evaluation_holder
 
-          result = nil
-
-          if proc == self
+          result = if proc == self
             # If we are given this very fiber when starting itself it means it
             # has been evaluated right before its start. In this case just
             # yield back to the evaluating fiber.
@@ -32,21 +30,21 @@ module Concurrently
 
             # When this fiber is started because it is next on schedule it will
             # just finish without running the proc.
-            fiber_pool << self
+
+            :cancelled
           elsif not Proc === proc
             raise Error, "fiber of concurrent proc started with an invalid proc"
           else
             begin
               result = proc.__proc_call__ *args
               evaluation[0].conclude_with result if evaluation[0]
+              result
             rescue Cancelled
-              # Generally, throw-catch is faster than raise-rescue if the code
-              # needs to play back the call stack, i.e. the throw resp. raise
-              # is invoked. If not playing back the call stack, a begin block
-              # is faster than a catch block. Since we won't jump out of the
-              # proc above most of the time, we go with begin-raise-rescue.
-            rescue => result
-              evaluation[0] ? (evaluation[0].conclude_with result) : (raise result)
+              # raised in Kernel#await_scheduled_resume!
+              :cancelled
+            rescue => error
+              evaluation[0] ? (evaluation[0].conclude_with error) : (raise error)
+              error
             end
           end
 
