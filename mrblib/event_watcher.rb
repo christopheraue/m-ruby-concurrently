@@ -22,7 +22,7 @@ module Concurrently
 
         begin
           fiber = Fiber.current
-          callback = @subject.on(@event) { EventLoop.current.schedule_now(fiber, @results.pop) }
+          callback = @subject.on(@event) { fiber.manually_resume! @results.pop }
           await_manual_resume! opts
         ensure
           callback.cancel

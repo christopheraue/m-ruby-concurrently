@@ -1,6 +1,6 @@
 class Fiber
   def yield_to_event_loop!
-    Concurrently::EventLoop.current.start
+    Concurrently::EventLoop.current.fiber.resume
   end
 
   def send_to_foreground!(result = nil)
@@ -8,6 +8,6 @@ class Fiber
   end
 
   def manually_resume!(result = nil)
-    Concurrently::EventLoop.current.schedule_now(self, result)
+    Concurrently::EventLoop.current.run_queue.schedule_now(self, result)
   end
 end

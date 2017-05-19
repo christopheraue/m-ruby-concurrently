@@ -19,18 +19,10 @@ module Concurrently
       self
     end
 
-    attr_reader :run_queue, :io_watcher, :proc_fiber_pool
+    attr_reader :run_queue, :io_watcher, :fiber, :proc_fiber_pool
 
     def lifetime
       Time.now.to_f - @start_time
-    end
-
-    def start
-      @fiber.resume
-    end
-
-    def schedule_now(fiber, result = nil)
-      @run_queue.schedule_now(fiber, result)
     end
 
 
