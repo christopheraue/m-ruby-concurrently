@@ -6,21 +6,32 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   let(:evaluation_time) { 0.001 }
   let(:result) { :result }
 
-  let(:resume_proc) { concurrent_proc{}.call_detached }
+  shared_examples_for "waiting" do |inside_concurrent_proc: false|
+    context "when it is allowed to wait forever" do
+      before { concurrently do
+        wait evaluation_time
+        resume
+      end }
+      it { is_expected.to eq result }
+    end
 
-  shared_examples_for "waiting with a timeout" do |inside_concurrent_proc: false|
     context "when limiting the wait time" do
       let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
         let(:timeout_time) { Float::INFINITY }
+
+        before { concurrently do
+          wait evaluation_time
+          resume
+        end }
+
         it { is_expected.to eq result }
       end
 
       context "when the evaluation of the result is too slow" do
         let(:timeout_time) { 0.0 }
-        after { resume_proc.cancel unless resume_proc.concluded? }
 
         context "when no timeout result is given" do
           before { wait_options.delete :timeout_result }
@@ -42,21 +53,16 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
   context "when originating inside a concurrent proc" do
     subject { evaluation.await_result }
-    it { is_expected.to eq result }
-
-    include_examples "waiting with a timeout", inside_concurrent_proc: true
+    include_examples "waiting", inside_concurrent_proc: true
   end
 
   context "when originating outside a concurrent proc" do
     subject { wait_proc.call }
-    it { is_expected.to eq result }
-
-    include_examples "waiting with a timeout"
+    include_examples "waiting"
   end
 
   describe "evaluating the concurrent evaluation while it is waiting" do
     subject { evaluation.await_result }
-    before { resume_proc.cancel }
 
     before do # make sure the concurrent evaluation is started before evaluating it
       evaluation

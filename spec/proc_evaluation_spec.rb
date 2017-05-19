@@ -10,9 +10,12 @@ describe Concurrently::Proc::Evaluation do
     let(:result) { :result }
 
     it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:wait_proc) { proc do
-        concurrent_proc{ wait evaluation_time; result }.call_detached.await_result wait_options
-      end }
+      let(:inner_evaluation) { concurrent_proc{ await_scheduled_resume! }.call_detached }
+      let(:wait_proc) { proc{ inner_evaluation.await_result wait_options } }
+
+      def resume
+        inner_evaluation.schedule_resume! result
+      end
     end
 
     context "when it evaluates to a result" do

@@ -42,10 +42,9 @@ describe Concurrently::EventWatcher do
       it_behaves_like "awaiting the result of a deferred evaluation" do
         let(:wait_proc) { proc{ instance.await wait_options } }
 
-        let!(:resume_proc) { concurrent_proc do
-          wait evaluation_time
+        def resume
           object.trigger event, result
-        end.call_detached }
+        end
       end
     end
 

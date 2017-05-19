@@ -210,10 +210,9 @@ describe Kernel do
         await_scheduled_resume! wait_options
       end }
 
-      let!(:resume_proc) { concurrent_proc do
-        wait evaluation_time
-        @spec_fiber.schedule_resume! :result
-      end.call_detached }
+      def resume
+        @spec_fiber.schedule_resume! result
+      end
     end
   end
 end

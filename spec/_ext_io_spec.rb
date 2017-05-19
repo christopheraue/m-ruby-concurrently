@@ -14,11 +14,10 @@ describe IO do
       let(:reader) { pipe[0] }
       let(:writer) { pipe[1] }
 
-      let!(:resume_proc) { concurrent_proc do
-        wait evaluation_time
-        writer.write result
+      def resume
+        writer.write 'something'
         writer.close
-      end.call_detached }
+      end
     end
   end
 
@@ -38,10 +37,9 @@ describe IO do
       # jam pipe: default pipe buffer size on linux is 65536
       before { writer.write('a' * 65536) }
 
-      let!(:resume_proc) { concurrent_proc do
-        wait evaluation_time
+      def resume
         reader.read 65536 # clears the pipe
-      end.call_detached }
+      end
     end
   end
 end
