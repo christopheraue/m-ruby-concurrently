@@ -14,6 +14,11 @@ module Kernel
   end
 
   def wait(seconds)
-    Concurrently::EventLoop.current.wait seconds
+    run_queue = Concurrently::EventLoop.current.run_queue
+    fiber = Fiber.current
+    run_queue.schedule(fiber, seconds)
+    await_manual_resume!
+  ensure
+    run_queue.cancel fiber
   end
 end

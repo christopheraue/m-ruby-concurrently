@@ -20,7 +20,7 @@ module Concurrently
       self
     end
 
-    attr_reader :io_watcher
+    attr_reader :run_queue, :io_watcher
 
     def lifetime
       Time.now.to_f - @start_time
@@ -67,14 +67,6 @@ module Concurrently
       if seconds
         @run_queue.cancel fiber
       end
-    end
-
-    def wait(seconds)
-      fiber = Fiber.current
-      @run_queue.schedule(fiber, seconds)
-      await_manual_resume!
-    ensure
-      @run_queue.cancel fiber
     end
 
     def await_event(subject, event, opts = {})
