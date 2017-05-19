@@ -15,14 +15,14 @@ describe Concurrently::EventWatcher do
   describe "#await" do
     subject { instance.await }
 
-    let(:event_result) { :event_result }
+    let(:result) { :result }
     after { expect(instance.pending?).to be false }
 
     context "when the event has already happened since creating the watcher" do
-      before { object.trigger(event, event_result) }
+      before { object.trigger(event, result) }
 
       before { expect(instance.pending?).to be true }
-      it { is_expected.to be event_result }
+      it { is_expected.to be result }
 
       context "when already happened two times" do
         before { object.trigger(event, :event_result2) }
@@ -39,9 +39,14 @@ describe Concurrently::EventWatcher do
     end
 
     context "when the event happens later" do
-      before { concurrent_proc{ wait(0.0001); object.trigger(event, event_result) }.call_detached }
-      it { is_expected.to be event_result }
-      after { expect(instance.received).to be 1 }
+      it_behaves_like "awaiting the result of a deferred evaluation" do
+        let(:wait_proc) { proc{ instance.await wait_options } }
+
+        let!(:resume_proc) { concurrent_proc do
+          wait evaluation_time
+          object.trigger event, result
+        end.call_detached }
+      end
     end
 
     context "when the watcher has already been cancelled" do

@@ -50,6 +50,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
   describe "evaluating the concurrent evaluation while it is waiting" do
     subject { evaluation.await_result }
+    before { resume_proc.cancel }
 
     before do # make sure the concurrent evaluation is started before evaluating it
       evaluation

@@ -16,11 +16,17 @@ module Concurrently
 
     attr_reader :loop, :subject, :event, :received
 
-    def await
+    def await(opts = {})
       @results.pop or begin
         raise CancelledError, @cancel_reason if @cancel_reason
-        @loop.await_event(@subject, @event)
-        await
+
+        begin
+          fiber = Fiber.current
+          callback = @subject.on(@event) { EventLoop.current.schedule_now(fiber, @results.pop) }
+          await_manual_resume! opts
+        ensure
+          callback.cancel
+        end
       end
     end
 

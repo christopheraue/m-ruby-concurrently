@@ -40,17 +40,6 @@ module Concurrently
     end
 
 
-    # Awaiting stuff
-
-    def await_event(subject, event, opts = {})
-      fiber = Fiber.current
-      callback = subject.on(event) { |_,result| @run_queue.schedule_now(fiber, result) }
-      await_manual_resume! opts
-    ensure
-      callback.cancel
-    end
-
-
     # Watching events
 
     def watch_events(*args)
