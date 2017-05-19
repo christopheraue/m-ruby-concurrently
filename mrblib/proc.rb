@@ -18,7 +18,8 @@ module Concurrently
     alias [] call
 
     def call_nonblock(*args)
-      proc_fiber = EventLoop.current.proc_fiber!
+      proc_fiber_pool = EventLoop.current.proc_fiber_pool
+      proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation_holder = []
       result = proc_fiber.send_to_foreground! [self, args, evaluation_holder]
 
@@ -32,14 +33,17 @@ module Concurrently
     end
 
     def call_detached(*args)
-      proc_fiber = EventLoop.current.proc_fiber!
+      proc_fiber_pool = EventLoop.current.proc_fiber_pool
+      proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
       proc_fiber.manually_resume! [self, args, [evaluation]]
       evaluation
     end
 
     def call_detached!(*args)
-      EventLoop.current.proc_fiber!.manually_resume! [self, args]
+      proc_fiber_pool = EventLoop.current.proc_fiber_pool
+      proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
+      proc_fiber.manually_resume! [self, args]
       nil
     end
   end

@@ -15,11 +15,11 @@ module Concurrently
       @run_queue = RunQueue.new self
       @io_watcher = IOWatcher.new
       @fiber = Fiber.new(@run_queue, @io_watcher)
-      @fiber_pool = []
+      @proc_fiber_pool = []
       self
     end
 
-    attr_reader :run_queue, :io_watcher
+    attr_reader :run_queue, :io_watcher, :proc_fiber_pool
 
     def lifetime
       Time.now.to_f - @start_time
@@ -31,12 +31,6 @@ module Concurrently
 
     def schedule_now(fiber, result = nil)
       @run_queue.schedule_now(fiber, result)
-    end
-
-
-    # Concurrently executed block of code
-    def proc_fiber!
-      @fiber_pool.pop || Proc::Fiber.new(@fiber_pool)
     end
 
 
