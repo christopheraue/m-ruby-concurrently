@@ -39,7 +39,7 @@ describe Concurrently::EventWatcher do
     end
 
     context "when the event happens later" do
-      before { concurrent_proc{ loop.wait(0.0001); object.trigger(event, event_result) }.call_detached }
+      before { concurrent_proc{ wait(0.0001); object.trigger(event, event_result) }.call_detached }
       it { is_expected.to be event_result }
       after { expect(instance.received).to be 1 }
     end

@@ -1,5 +1,5 @@
 describe IO do
-  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  before { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#await_readable" do
     def call(options)

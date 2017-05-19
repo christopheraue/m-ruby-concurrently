@@ -1,6 +1,6 @@
 describe Concurrently::Proc do
   subject(:instance) { described_class.new(*args, &block) }
-  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  before { Concurrently::EventLoop.current.reinitialize! }
 
   let(:args) { [] }
   let(:block) { proc{} }
@@ -19,7 +19,7 @@ describe Concurrently::Proc do
       end
 
       context "if the block needs to wait during evaluation" do
-        let(:block) { proc{ |*args| loop.wait 0.0001; args } }
+        let(:block) { proc{ |*args| wait 0.0001; args } }
         it { is_expected.to eq call_args }
       end
 
@@ -62,7 +62,7 @@ describe Concurrently::Proc do
     end
 
     context "if the block needs to wait during evaluation" do
-      let(:block) { proc{ |*args| loop.wait 0.0001; args } }
+      let(:block) { proc{ |*args| wait 0.0001; args } }
       it { is_expected.to be_a(Concurrently::Proc::Evaluation) }
 
       describe "the result of the evaluation" do
@@ -70,7 +70,7 @@ describe Concurrently::Proc do
         it { is_expected.to eq call_args }
 
         context "when the code inside the block raises an error" do
-          let(:block) { proc{ loop.wait 0.0001; raise 'error' } }
+          let(:block) { proc{ wait 0.0001; raise 'error' } }
           it { is_expected.to raise_error RuntimeError, 'error' }
         end
       end

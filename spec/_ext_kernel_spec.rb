@@ -1,5 +1,5 @@
 describe Kernel do
-  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  before { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#concurrently" do
     def call(*args, &block)

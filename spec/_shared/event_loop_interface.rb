@@ -11,16 +11,16 @@ shared_examples_for "EventLoop#concurrently" do
     # evaluation to finish.
     before do
       @spec_fiber = Fiber.current
-      loop.await_manual_resume!
+      await_manual_resume!
     end
 
     it { is_expected.to eq [:arg1, :arg2] }
   end
 
   context "when the code inside the block raises an error" do
-    subject { call{ raise 'error' }; loop.wait 0.0001 }
+    subject { call{ raise 'error' }; wait 0.0001 }
 
-    before { expect(loop).to receive(:trigger).with(:loop_iteration_error,
+    before { expect(Concurrently::EventLoop.current).to receive(:trigger).with(:loop_iteration_error,
       (be_a(RuntimeError).and have_attributes message: 'error')) }
     it { is_expected.not_to raise_error }
   end
@@ -40,7 +40,7 @@ shared_examples_for "EventLoop#concurrently" do
     # evaluation to finish.
     before do
       @spec_fiber = Fiber.current
-      loop.await_manual_resume!
+      await_manual_resume!
     end
 
     it { is_expected.to be @fiber2 }
@@ -69,7 +69,7 @@ shared_examples_for "EventLoop#await_manual_resume!" do
     end }
 
     let!(:resume_proc) { concurrent_proc do
-      loop.wait evaluation_time
+      wait evaluation_time
       @spec_fiber.manually_resume! :result
     end.call_detached }
   end
@@ -77,7 +77,7 @@ end
 
 shared_examples_for "EventLoop#manually_resume!" do
   before { concurrent_proc do
-    loop.wait 0.0001
+    wait 0.0001
     call *result
   end.call_detached }
 
@@ -127,7 +127,7 @@ shared_examples_for "EventLoop#wait" do
       # Wait after the timer would have been triggered to make sure the
       # concurrent evaluation is not resumed then (i.e. watching the timeout
       # is properly cancelled)
-      loop.wait wait_time
+      wait wait_time
     end.call }
 
     it { is_expected.to be :intercepted }
@@ -148,7 +148,7 @@ shared_examples_for "EventLoop#await_readable" do
     let(:writer) { pipe[1] }
 
     let!(:resume_proc) { concurrent_proc do
-      loop.wait evaluation_time
+      wait evaluation_time
       writer.write result
       writer.close
     end.call_detached }
@@ -172,7 +172,7 @@ shared_examples_for "EventLoop#await_writable" do
     before { writer.write('a' * 65536) }
 
     let!(:resume_proc) { concurrent_proc do
-      loop.wait evaluation_time
+      wait evaluation_time
       reader.read 65536 # clears the pipe
     end.call_detached }
   end

@@ -61,7 +61,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
       # Wait after the event is triggered to make sure the concurrent evaluation
       # is not resumed then (i.e. watching the event is properly cancelled)
-      loop.wait evaluation_time
+      wait evaluation_time
     end.call }
 
     it { is_expected.to be :intercepted }

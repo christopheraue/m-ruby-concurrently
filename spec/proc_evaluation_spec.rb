@@ -1,5 +1,5 @@
 describe Concurrently::Proc::Evaluation do
-  let!(:loop) { Concurrently::EventLoop.current.reinitialize! }
+  before { Concurrently::EventLoop.current.reinitialize! }
 
   describe "#await_result" do
     subject { evaluation.await_result(&with_result) }
@@ -10,7 +10,7 @@ describe Concurrently::Proc::Evaluation do
 
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc do
-        concurrent_proc{ loop.wait evaluation_time; result }.call_detached.await_result wait_options
+        concurrent_proc{ wait evaluation_time; result }.call_detached.await_result wait_options
       end }
     end
 
@@ -72,7 +72,7 @@ describe Concurrently::Proc::Evaluation do
     end
 
     context "when getting the result of a concurrent proc from two other ones" do
-      let!(:evaluation) { concurrent_proc{ loop.wait(0.0001); :result }.call_detached }
+      let!(:evaluation) { concurrent_proc{ wait(0.0001); :result }.call_detached }
       let!(:evaluation1) { concurrent_proc{ evaluation.await_result }.call_detached }
       let!(:evaluation2) { concurrent_proc{ evaluation.await_result within: 0.00005, timeout_result: :timeout_result }.call_detached }
 
@@ -107,7 +107,7 @@ describe Concurrently::Proc::Evaluation do
     context "when doing it after requesting the result" do
       subject { concurrent_proc{ evaluation.cancel *reason }.call }
 
-      let(:evaluation) { concurrent_proc{ loop.wait(0.0001) }.call_detached }
+      let(:evaluation) { concurrent_proc{ wait(0.0001) }.call_detached }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
@@ -156,7 +156,7 @@ describe Concurrently::Proc::Evaluation do
     def call(*args)
       evaluation.manually_resume! *args
     end
-    let!(:evaluation) { concurrent_proc{ loop.await_manual_resume! }.call_detached }
+    let!(:evaluation) { concurrent_proc{ await_manual_resume! }.call_detached }
 
     it_behaves_like "EventLoop#manually_resume!"
   end
