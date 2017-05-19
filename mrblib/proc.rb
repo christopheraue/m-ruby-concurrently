@@ -1,7 +1,6 @@
 module Concurrently
   class Proc < ::Proc
-    def initialize(loop, evaluation_class = Evaluation)
-      @loop = loop
+    def initialize(evaluation_class = Evaluation)
       @evaluation_class = evaluation_class
     end
 
@@ -19,12 +18,13 @@ module Concurrently
     alias [] call
 
     def call_nonblock(*args)
-      proc_fiber = @loop.proc_fiber!
+      loop = EventLoop.current
+      proc_fiber = loop.proc_fiber!
       evaluation_holder = []
       result = proc_fiber.send_to_foreground! [self, args, evaluation_holder]
 
       if result == proc_fiber
-        evaluation = @evaluation_class.new(@loop, proc_fiber)
+        evaluation = @evaluation_class.new(loop, proc_fiber)
         evaluation_holder << evaluation
         evaluation
       else
@@ -33,15 +33,17 @@ module Concurrently
     end
 
     def call_detached(*args)
-      proc_fiber = @loop.proc_fiber!
-      evaluation = @evaluation_class.new(@loop, proc_fiber)
-      @loop.manually_resume! proc_fiber, [self, args, [evaluation]]
+      loop = EventLoop.current
+      proc_fiber = loop.proc_fiber!
+      evaluation = @evaluation_class.new(loop, proc_fiber)
+      loop.manually_resume! proc_fiber, [self, args, [evaluation]]
       evaluation
     end
 
     def call_detached!(*args)
-      proc_fiber = @loop.proc_fiber!
-      @loop.manually_resume! proc_fiber, [self, args]
+      loop = EventLoop.current
+      proc_fiber = loop.proc_fiber!
+      loop.manually_resume! proc_fiber, [self, args]
       nil
     end
   end
