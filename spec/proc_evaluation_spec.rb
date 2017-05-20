@@ -165,5 +165,11 @@ describe Concurrently::Proc::Evaluation do
     let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_detached }
 
     it_behaves_like "#schedule_resume!"
+
+    context "when resumed without being waiting" do
+      let!(:evaluation) { concurrent_proc{ :no_await }.call_detached }
+      before { call }
+      it { is_expected.to raise_error Concurrently::Error, "concurrent proc fiber started with an invalid concurrent proc" }
+    end
   end
 end
