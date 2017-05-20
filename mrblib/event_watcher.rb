@@ -1,7 +1,6 @@
 module Concurrently
   class EventWatcher
-    def initialize(loop, subject, event, opts = {})
-      @loop = loop
+    def initialize(subject, event, opts = {})
       @subject = subject
       @event = event
       @max_events = opts.fetch(:max_events, Float::INFINITY)
@@ -14,7 +13,7 @@ module Concurrently
       end
     end
 
-    attr_reader :loop, :subject, :event, :received
+    attr_reader :subject, :event, :received
 
     def await(opts = {})
       @results.pop or begin

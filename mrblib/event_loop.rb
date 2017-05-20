@@ -27,7 +27,7 @@ module Concurrently
     # Watching events
 
     def watch_events(*args)
-      EventWatcher.new(self, *args)
+      EventWatcher.new(*args)
     end
   end
 end

@@ -97,7 +97,7 @@ describe Concurrently::EventLoop do
 
     let(:object) { Object.new.extend CallbacksAttachable }
 
-    it { is_expected.to be_a(Concurrently::EventWatcher).and having_attributes(loop: instance,
-      subject: object, event: :event)}
+    it { is_expected.to be_a(Concurrently::EventWatcher).and having_attributes(subject: object,
+      event: :event)}
   end
 end

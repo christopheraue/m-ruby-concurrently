@@ -1,12 +1,10 @@
 describe Concurrently::EventWatcher do
-  let!(:instance) { described_class.new loop, object, event, *opts }
+  let!(:instance) { described_class.new object, event, *opts }
 
-  let!(:loop) { Concurrently::EventLoop.current }
   let(:object) { Object.new.extend CallbacksAttachable }
   let(:event) { :event }
   let(:opts) { nil }
 
-  it { expect(instance.loop).to be loop }
   it { expect(instance.subject).to be object }
   it { expect(instance.event).to be :event }
   it { expect(instance.received).to be 0 }
