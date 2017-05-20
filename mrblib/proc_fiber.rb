@@ -3,6 +3,8 @@ module Concurrently
     # should not be rescued accidentally and therefore is an exception
     class Cancelled < Exception; end
 
+    EMPTY_EVALUATION_BUCKET = [].freeze
+
     def initialize(fiber_pool)
       # Creation of fibers is quite expensive. To reduce the cost we make
       # them reusable:
@@ -12,15 +14,13 @@ module Concurrently
       #   pool of the event loop.
       # - Taking a fiber out of the pool and resuming it will enter the
       #   next iteration.
-      super() do |proc, args, evaluation|
+      super() do |proc, args, evaluation_bucket|
         # The fiber's proc, arguments to call the proc with and evaluation
         # are passed when scheduled right after creation or taking it out of
         # the pool.
 
-        empty_evaluation_holder = [].freeze
-
         while true
-          evaluation ||= empty_evaluation_holder
+          evaluation_bucket ||= EMPTY_EVALUATION_BUCKET
 
           result = if proc == self
             # If we are given this very fiber when starting itself it means it
@@ -38,7 +38,7 @@ module Concurrently
           else
             begin
               result = proc.__proc_call__ *args
-              evaluation[0].conclude_with result if evaluation[0]
+              (evaluation = evaluation_bucket[0]) and evaluation.conclude_with result
               result
             rescue Cancelled
               # raised in Kernel#await_scheduled_resume!
@@ -47,7 +47,7 @@ module Concurrently
               # Rescue all exceptions and let none leak to the loop to keep it
               # up and running at all times.
               proc.trigger :error, error
-              evaluation[0].conclude_with error if evaluation[0]
+              (evaluation = evaluation_bucket[0]) and evaluation.conclude_with error
               error
             end
           end
@@ -56,7 +56,7 @@ module Concurrently
 
           # Yield back to the event loop fiber or the fiber evaluating this one
           # and wait for the next proc to evaluate.
-          proc, args, evaluation = Fiber.yield result
+          proc, args, evaluation_bucket = Fiber.yield result
         end
       end
     end

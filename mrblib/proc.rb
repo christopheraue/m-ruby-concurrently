@@ -22,12 +22,14 @@ module Concurrently
     def call_nonblock(*args)
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
-      evaluation_holder = []
-      result = proc_fiber.resume [self, args, evaluation_holder]
+      evaluation_bucket = []
+      result = proc_fiber.resume [self, args, evaluation_bucket]
 
       if result == proc_fiber
+        # Only create an evaluation object and inject it into the proc fiber
+        # if the proc cannot be evaluated without waiting.
         evaluation = @evaluation_class.new(proc_fiber)
-        evaluation_holder << evaluation
+        evaluation_bucket << evaluation
         evaluation
       elsif Exception === result
         raise result
