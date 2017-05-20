@@ -13,6 +13,8 @@ module Concurrently
     # The additional cart index exists so carts can be cancelled by their
     # fiber. Cancelled carts have their fiber set to false.
 
+    DEFAULT_CANCEL_OPTS = { deferred_only: false }.freeze
+
     def initialize(loop)
       @loop = loop
       @cart_index = {}
@@ -33,8 +35,8 @@ module Concurrently
       @deferred_track.insert(index, cart)
     end
 
-    def cancel(fiber)
-      if cart = @cart_index.delete(fiber.hash)
+    def cancel(fiber, opts = DEFAULT_CANCEL_OPTS)
+      if (cart = @cart_index[fiber.hash]) and (not opts[:deferred_only] or cart[TIME])
         cart[FIBER] = false
       end
     end

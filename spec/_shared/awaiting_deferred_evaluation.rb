@@ -20,14 +20,19 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
-        let(:timeout_time) { Float::INFINITY }
+        let(:timeout_time) { 2*evaluation_time }
 
         before { concurrently do
           wait evaluation_time
           resume
         end }
 
+        let!(:after_timeout) { concurrent_proc{ wait timeout_time }.call_detached }
+
         it { is_expected.to eq result }
+
+        # will raise an error if the timeout is not cancelled
+        after { expect{ after_timeout.await_result }.not_to raise_error }
       end
 
       context "when the evaluation of the result is too slow" do
