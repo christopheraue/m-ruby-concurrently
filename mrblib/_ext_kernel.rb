@@ -15,7 +15,7 @@ module Kernel
 
     if seconds = opts[:within]
       timeout_result = opts.fetch(:timeout_result, Concurrently::Proc::TimeoutError)
-      run_queue.schedule(fiber, seconds, timeout_result)
+      run_queue.schedule_deferred(fiber, seconds, timeout_result)
     end
 
     result = fiber.yield_to_event_loop!
@@ -45,7 +45,7 @@ module Kernel
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
-    run_queue.schedule(fiber, seconds)
+    run_queue.schedule_deferred(fiber, seconds)
     await_scheduled_resume!
   ensure
     run_queue.cancel fiber

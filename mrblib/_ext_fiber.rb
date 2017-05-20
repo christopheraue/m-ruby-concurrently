@@ -8,6 +8,6 @@ class Fiber
   end
 
   def schedule_resume!(result = nil)
-    Concurrently::EventLoop.current.run_queue.schedule_now(self, result)
+    Concurrently::EventLoop.current.run_queue.schedule_immediately(self, result)
   end
 end

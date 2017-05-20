@@ -16,21 +16,21 @@ module Concurrently
     def initialize(loop)
       @loop = loop
       @cart_index = {}
-      @cart_track = []
-      @fast_track = []
+      @deferred_track = []
+      @immediate_track = []
     end
 
-    def schedule_now(fiber, result = nil)
-      cart = [fiber, nil, result]
+    def schedule_immediately(fiber, result = nil)
+      cart = [fiber, false, result]
       @cart_index[fiber.hash] = cart
-      @fast_track << cart
+      @immediate_track << cart
     end
 
-    def schedule(fiber, seconds, result = nil)
+    def schedule_deferred(fiber, seconds, result = nil)
       cart = [fiber, @loop.lifetime+seconds, result]
       @cart_index[fiber.hash] = cart
-      index = @cart_track.bisect_left{ |cart_on_track| cart_on_track[TIME] <= cart[TIME] }
-      @cart_track.insert(index, cart)
+      index = @deferred_track.bisect_left{ |cart_on_track| cart_on_track[TIME] <= cart[TIME] }
+      @deferred_track.insert(index, cart)
     end
 
     def cancel(fiber)
@@ -42,13 +42,13 @@ module Concurrently
     def process_pending
       # Clear the fast track in the beginning so that carts added to it while
       # processing pending carts will be processed during the next iteration.
-      processing = @fast_track
-      @fast_track = []
+      processing = @immediate_track
+      @immediate_track = []
 
-      if @cart_track.any?
+      if @deferred_track.any?
         now = @loop.lifetime
-        index = @cart_track.bisect_left{ |cart| cart[TIME] <= now }
-        @cart_track.pop(@cart_track.length-index).reverse_each do |cart|
+        index = @deferred_track.bisect_left{ |cart| cart[TIME] <= now }
+        @deferred_track.pop(@deferred_track.length-index).reverse_each do |cart|
           processing << cart
         end
       end
@@ -60,9 +60,9 @@ module Concurrently
     end
 
     def waiting_time
-      if @fast_track.any?
+      if @immediate_track.any?
         0
-      elsif next_cart = @cart_track.reverse_each.find{ |cart| cart[FIBER] }
+      elsif next_cart = @deferred_track.reverse_each.find{ |cart| cart[FIBER] }
         waiting_time = next_cart[TIME] - @loop.lifetime
         waiting_time < 0 ? 0 : waiting_time
       end
