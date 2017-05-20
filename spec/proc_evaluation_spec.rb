@@ -1,6 +1,4 @@
 describe Concurrently::Proc::Evaluation do
-  before { Concurrently::EventLoop.current.reinitialize! }
-
   describe "#await_result" do
     subject { evaluation.await_result(&with_result) }
 

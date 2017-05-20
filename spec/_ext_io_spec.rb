@@ -1,6 +1,4 @@
 describe IO do
-  before { Concurrently::EventLoop.current.reinitialize! }
-
   let(:pipe) { IO.pipe }
   let(:reader) { pipe[0] }
   let(:writer) { pipe[1] }

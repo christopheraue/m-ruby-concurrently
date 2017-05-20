@@ -1,6 +1,5 @@
 describe Concurrently::Proc do
   subject(:instance) { described_class.new(*args, &block) }
-  before { Concurrently::EventLoop.current.reinitialize! }
 
   let(:args) { [] }
   let(:block) { proc{} }

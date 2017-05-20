@@ -1,6 +1,4 @@
 describe Fiber do
-  before { Concurrently::EventLoop.current.reinitialize! }
-
   describe "#schedule_resume!" do
     subject { fiber.resume }
     def call(*args)
