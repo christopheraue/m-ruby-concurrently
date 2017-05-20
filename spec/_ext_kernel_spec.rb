@@ -188,11 +188,11 @@ describe Kernel do
       subject { wait 0; @counter += 1 }
 
       before { @counter = 0 }
-      let!(:evaluation1) { concurrent_proc{ wait 0.001; @counter += 1 }.call_nonblock }
+      let!(:evaluation1) { concurrent_proc{ wait 0.01; @counter += 1 }.call_nonblock }
       let!(:evaluation2) { concurrent_proc{ wait 0; @counter += 1 }.call_nonblock }
       let!(:evaluation3) { concurrent_proc{ @counter += 1 }.call_detached }
       # let the system clock progress so the block waiting non-zero seconds becomes pending
-      before { sleep 0.001 }
+      before { sleep 0.01 }
 
       it { is_expected.to be 4 }
 
