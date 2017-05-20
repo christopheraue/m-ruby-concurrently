@@ -91,13 +91,4 @@ describe Concurrently::EventLoop do
     before { wait 0.001 }
     it { is_expected.to be_within(0.0001).of(Time.now.to_f - creation_time) }
   end
-
-  describe "#watch_events" do
-    subject { instance.watch_events(object, :event) }
-
-    let(:object) { Object.new.extend CallbacksAttachable }
-
-    it { is_expected.to be_a(Concurrently::EventWatcher).and having_attributes(subject: object,
-      event: :event)}
-  end
 end

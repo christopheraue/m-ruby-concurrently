@@ -22,12 +22,5 @@ module Concurrently
     def lifetime
       Time.now.to_f - @start_time
     end
-
-
-    # Watching events
-
-    def watch_events(*args)
-      EventWatcher.new(*args)
-    end
   end
 end
