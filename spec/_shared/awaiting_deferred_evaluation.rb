@@ -6,7 +6,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   let(:evaluation_time) { 0.001 }
   let(:result) { :result }
 
-  shared_examples_for "waiting" do |inside_concurrent_proc: false|
+  shared_examples_for "awaiting resumption" do |inside_concurrent_proc: false|
     context "when it is allowed to wait forever" do
       before { concurrently do
         wait evaluation_time
@@ -58,11 +58,9 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
   context "when originating inside a concurrent proc" do
     subject { evaluation.await_result }
-    include_examples "waiting", inside_concurrent_proc: true
+    include_examples "awaiting resumption", inside_concurrent_proc: true
 
     describe "evaluating the concurrent evaluation while it is waiting" do
-      subject { evaluation.await_result }
-
       # make sure the concurrent evaluation is started before evaluating it
       before { evaluation }
 
@@ -87,7 +85,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
   context "when originating outside a concurrent proc" do
     subject { wait_proc.call }
     let!(:evaluation) { Fiber.current }
-    include_examples "waiting"
+    include_examples "awaiting resumption"
   end
 end
 
