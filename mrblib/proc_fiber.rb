@@ -33,7 +33,8 @@ module Concurrently
 
             :cancelled
           elsif not Proc === proc
-            raise Error, "concurrent proc fiber started with an invalid concurrent proc"
+            raise Proc::Error, "Concurrently::Proc#schedule_resume! called " <<
+              "without an earlier call to Kernel#await_scheduled_resume!"
           else
             begin
               result = proc.__proc_call__ *args
@@ -43,7 +44,7 @@ module Concurrently
               # raised in Kernel#await_scheduled_resume!
               :cancelled
             rescue Exception => error
-              # rescue all exceptions and let none leak to the loop to keep it
+              # Rescue all exceptions and let none leak to the loop to keep it
               # up and running at all times.
               proc.trigger :error, error
               evaluation[0].conclude_with error if evaluation[0]

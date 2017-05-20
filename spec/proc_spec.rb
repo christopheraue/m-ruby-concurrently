@@ -23,6 +23,18 @@ describe Concurrently::Proc do
         it { is_expected.to eq call_args }
       end
 
+      context "when starting/resuming the fiber raises an error" do
+        let(:fiber) { instance_double(Fiber) }
+        before { allow(fiber).to receive(:resume).and_raise(FiberError, 'resume error') }
+        before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return([fiber]) }
+
+        it { is_expected.to raise_error FiberError, 'resume error' }
+
+        # recover from the teared down event loop caused by the error for further
+        # tests
+        after { Concurrently::EventLoop.current.reinitialize! }
+      end
+
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise Exception, 'error' } }
 
@@ -100,6 +112,20 @@ describe Concurrently::Proc do
       let(:block) { proc{ |*args| args } }
       let(:call_args) { [:arg1, :arg2] }
       it { is_expected.to eq call_args }
+
+      context "when starting/resuming the fiber raises an error" do
+        let(:fiber_pool) { [] }
+        let!(:fiber) { Concurrently::Proc::Fiber.new(fiber_pool) }
+        before { allow(fiber).to receive(:resume_from_event_loop!).and_raise(FiberError, 'resume error') }
+        before { allow(Concurrently::Proc::Fiber).to receive(:new).and_return(fiber) }
+        before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
+
+        it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (FiberError: resume error)") }
+
+        # recover from the teared down event loop caused by the error for further
+        # tests
+        after { Concurrently::EventLoop.current.reinitialize! }
+      end
 
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise 'error' } }

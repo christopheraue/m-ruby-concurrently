@@ -108,6 +108,21 @@ shared_examples_for "#concurrently" do
     it { is_expected.to eq [:arg1, :arg2] }
   end
 
+  context "when starting/resuming the fiber raises an error" do
+    subject { call{}; wait 0 }
+    let(:fiber_pool) { [] }
+    let!(:fiber) { Concurrently::Proc::Fiber.new(fiber_pool) }
+    before { allow(fiber).to receive(:resume_from_event_loop!).and_raise(FiberError, 'resume error') }
+    before { allow(Concurrently::Proc::Fiber).to receive(:new).and_return(fiber) }
+    before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
+
+    it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (FiberError: resume error)") }
+
+    # recover from the teared down event loop caused by the error for further
+    # tests
+    after { Concurrently::EventLoop.current.reinitialize! }
+  end
+
   context "when the code inside the block raises an error" do
     subject { call{ raise Exception, 'error' }; wait 0 }
 
