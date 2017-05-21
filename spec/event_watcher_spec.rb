@@ -11,8 +11,9 @@ describe Concurrently::EventWatcher do
   it { expect(instance).not_to be_cancelled }
 
   describe "#await" do
-    subject { instance.await }
+    subject { instance.await wait_options }
 
+    let(:wait_options) { {} }
     let(:result) { :result }
     after { expect(instance.pending?).to be false }
 
@@ -37,11 +38,48 @@ describe Concurrently::EventWatcher do
     end
 
     context "when the event happens later" do
-      it_behaves_like "awaiting the result of a deferred evaluation" do
-        let(:wait_proc) { proc{ instance.await wait_options } }
+      let(:evaluation_time) { 0.001 }
 
-        def resume
+      context "when it is allowed to wait forever" do
+        before { concurrently do
+          wait evaluation_time
           object.trigger event, result
+        end }
+        it { is_expected.to eq result }
+      end
+
+      context "when limiting the wait time" do
+        let(:wait_options) { { within: timeout_time, timeout_result: timeout_result } }
+        let(:timeout_result) { :timeout_result }
+
+        context "when the result arrives in time" do
+          let(:timeout_time) { 2*evaluation_time }
+
+          before { concurrently do
+            wait evaluation_time
+            object.trigger event, result
+          end }
+
+          let!(:after_timeout) { concurrent_proc{ wait timeout_time }.call_detached }
+
+          it { is_expected.to eq result }
+
+          # will raise an error if the timeout is not cancelled
+          after { expect{ after_timeout.await_result }.not_to raise_error }
+        end
+
+        context "when the evaluation of the result is too slow" do
+          let(:timeout_time) { 0.0 }
+
+          context "when no timeout result is given" do
+            before { wait_options.delete :timeout_result }
+            it { is_expected.to raise_error Concurrently::Proc::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
+          end
+
+          context "when a timeout result is given" do
+            let(:timeout_result) { :timeout_result }
+            it { is_expected.to be :timeout_result }
+          end
         end
       end
     end
