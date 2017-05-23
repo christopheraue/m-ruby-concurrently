@@ -7,6 +7,14 @@ module Concurrently
             waiting_time = run_queue.waiting_time
 
             if waiting_time == 0
+              # Check ready IOs although fibers are ready to run to not neglect
+              # IO operations. Otherwise, IOs might become jammed since they
+              # are constantly written to but not read from.
+              # This behavior is not covered in the test suite. It becomes
+              # apparent only in situations of heavy load where this event loop
+              # has not much time to breathe.
+              io_watcher.process_ready_in waiting_time if io_watcher.awaiting?
+
               run_queue.process_pending
             elsif io_watcher.awaiting? or waiting_time
               io_watcher.process_ready_in waiting_time
