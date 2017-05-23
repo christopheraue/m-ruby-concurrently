@@ -22,23 +22,24 @@ describe Kernel do
 
   describe "#wait" do
     describe "waiting for given seconds" do
+      subject { @end_time - @start_time }
+
       let(:seconds) { 0.01 }
 
       let(:wait_proc) { proc do
+        @start_time = Time.now.to_f
         wait seconds
-        Time.now.to_f
+        @end_time = Time.now.to_f
       end }
 
-      let!(:start_time) { Time.now.to_f }
-
       context "when originating inside a concurrent proc" do
-        subject { concurrent_proc(&wait_proc).call }
-        it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
+        before { concurrent_proc(&wait_proc).call }
+        it { is_expected.to be_within(0.1*seconds).of(seconds) }
       end
 
       context "when originating outside a concurrent proc" do
-        subject { wait_proc.call }
-        it { is_expected.to be_within(0.2*seconds).of(start_time+seconds) }
+        before { wait_proc.call }
+        it { is_expected.to be_within(0.1*seconds).of(seconds) }
       end
     end
 

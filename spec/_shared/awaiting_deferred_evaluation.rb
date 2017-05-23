@@ -20,7 +20,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
       let(:timeout_result) { :timeout_result }
 
       context "when the result arrives in time" do
-        let(:timeout_time) { 2*evaluation_time }
+        let(:timeout_time) { 5*evaluation_time }
 
         before { concurrently do
           wait evaluation_time
