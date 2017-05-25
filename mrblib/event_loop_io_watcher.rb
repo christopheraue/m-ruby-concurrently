@@ -29,6 +29,7 @@ module Concurrently
     end
 
     def process_ready_in(waiting_time)
+      waiting_time = nil if waiting_time == Float::INFINITY
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
         selected.each do |ios|
           ios.each{ |io| @fibers[io].resume_from_event_loop! true }
