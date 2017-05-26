@@ -1,9 +1,4 @@
 class IO
-  include(Kernel.dup.class_eval do
-    (instance_methods - %i(hash)).each{ |m| remove_method m }
-    self
-  end)
-
   unless const_defined? :EAGAIN
     class EAGAIN < Exception; end
   end
