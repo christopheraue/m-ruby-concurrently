@@ -1,12 +1,20 @@
 module Concurrently
-  class Proc < ::Proc
+  if Object.const_defined? :MRUBY_VERSION
+    # mruby's Proc does not support instance variables. So, whe have to make
+    # it a normal class that does not inherit from Proc :(
+    class Proc; end
+  else
+    class Proc < ::Proc
+      alias_method :__proc_call__, :call
+    end
+  end
+
+  class Proc
     include CallbacksAttachable
 
     def initialize(evaluation_class = Evaluation)
       @evaluation_class = evaluation_class
     end
-
-    alias_method :__proc_call__, :call
 
     def call(*args)
       case immediate_result = call_nonblock(*args)
