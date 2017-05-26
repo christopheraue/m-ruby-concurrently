@@ -1,3 +1,5 @@
+Fiber.current # let mruby created the root fiber with the correct class
+
 class Fiber
   def yield_to_event_loop!
     Concurrently::EventLoop.current.fiber.resume
