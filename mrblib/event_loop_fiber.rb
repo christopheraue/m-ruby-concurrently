@@ -1,4 +1,5 @@
 module Concurrently
+  # @api private
   class EventLoop::Fiber < ::Fiber
     def initialize(run_queue, io_watcher)
       super() do

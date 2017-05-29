@@ -1,4 +1,5 @@
 module Concurrently
+  # @api private
   class EventLoop::IOWatcher
     def initialize
       @readers = {}
