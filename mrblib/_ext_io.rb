@@ -11,6 +11,8 @@ class IO
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
   #
+  # @return [true]
+  #
   # @example Waiting inside a concurrent proc
   #   r,w = IO.pipe
   #
@@ -53,6 +55,8 @@ class IO
   #
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
+  #
+  # @return [true]
   #
   # @example Waiting inside a concurrent proc
   #   r,w = IO.pipe
