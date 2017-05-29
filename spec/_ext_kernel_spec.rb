@@ -28,9 +28,11 @@ describe Kernel do
 
       let(:wait_proc) { proc do
         @start_time = Time.now.to_f
-        wait seconds
+        @wait_result = wait seconds
         @end_time = Time.now.to_f
       end }
+
+      after { expect(@wait_result).to be true }
 
       context "when originating inside a concurrent proc" do
         before { concurrent_proc(&wait_proc).call }

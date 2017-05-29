@@ -82,6 +82,8 @@ module Kernel
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
   #
+  # @return [true]
+  #
   # @example Waiting inside a concurrent proc
   #   wait_proc = concurrent_proc do |seconds|
   #      wait seconds
@@ -110,7 +112,7 @@ module Kernel
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
-    run_queue.schedule_deferred(fiber, seconds)
+    run_queue.schedule_deferred(fiber, seconds, true)
     await_scheduled_resume!
   ensure
     run_queue.cancel fiber
