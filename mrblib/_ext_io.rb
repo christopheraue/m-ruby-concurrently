@@ -48,7 +48,47 @@ class IO
     io_watcher.cancel_reader(self)
   end
 
-  # Suspends the current concurrent proc or fiber until IO is writable
+  # Suspends the current concurrent proc until IO is writable. It can also be
+  # used outside of concurrent procs.
+  #
+  # While waiting, the code jumps to the event loop and executes other
+  # concurrent procs that are ready to run in the meantime.
+  #
+  # @example Waiting inside a concurrent proc
+  #   r,w = IO.pipe
+  #
+  #   # jam the pipe with x's, assuming the pipe's max capacity is 2^16 bytes
+  #   w.write 'x'*65536
+  #
+  #   wait_proc = concurrent_proc do
+  #      w.await_writable
+  #      w.write 'I can write again!'
+  #      :written
+  #   end
+  #
+  #   concurrently do
+  #     r.read 65536 # clear the pipe
+  #   end
+  #
+  #   wait_proc.call # => :written
+  #
+  #   r.close; w.close
+  #
+  # @example Waiting outside a concurrent proc
+  #   r,w = IO.pipe
+  #
+  #   # jam the pipe with x's, assuming the pipe's max capacity is 2^16 bytes
+  #   w.write 'x'*65536
+  #
+  #   concurrently do
+  #     puts "I'm running while the outside is waiting!"
+  #     r.read 65536 # clear the pipe
+  #   end
+  #
+  #   w.await_writable
+  #
+  #   # prints: "I'm running while the outside is waiting!"
+  #   # then continues since w is writable again
   def await_writable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
     fiber = Fiber.current
