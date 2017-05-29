@@ -5,7 +5,18 @@
 #
 # @api public
 module Kernel
-  # Executes code concurrently in the background
+  # @!method concurrently(*args, &block)
+  #
+  # Executes code concurrently in the background.
+  #
+  # This is a shortcut for {Concurrently::Proc#call_detached!}.
+  #
+  # @return [nil]
+  #
+  # @example
+  #   concurrently(a,b,c) do |a,b,c|
+  #     # ...
+  #   end
   def concurrently(*args)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new.call_detached! *args
