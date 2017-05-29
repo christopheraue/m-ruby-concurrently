@@ -22,7 +22,21 @@ module Kernel
     Concurrently::Proc.new.call_detached! *args
   end
 
-  # Creates a concurrent proc to execute code concurrently
+  # @!method concurrent_proc(&block)
+  #
+  # Creates a concurrent proc to execute code concurrently.
+  #
+  # This a shortcut for {Concurrently::Proc}.new like +proc(&block)+
+  # is a shortcut for +Proc.new(&block)+.
+  #
+  # @return [Concurrently::Proc]
+  #
+  # @example
+  #   wait_proc = concurrent_proc do |seconds|
+  #      wait seconds
+  #   end
+  #
+  #   wait_proc.call 2 # waits 2 seconds and then resumes
   def concurrent_proc(evaluation_class = Concurrently::Proc::Evaluation) # &block
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new(evaluation_class)
