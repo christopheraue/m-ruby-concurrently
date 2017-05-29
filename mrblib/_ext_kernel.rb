@@ -76,8 +76,37 @@ module Kernel
     end
   end
 
-  # Suspends the current concurrent proc or fiber for the given number of
-  # seconds
+  # Suspends a concurrent proc for the given number of seconds. It can also be
+  # used outside of concurrent procs.
+  #
+  # While waiting, the code jumps to the event loop and executes other
+  # concurrent procs that are ready to run in the meantime.
+  #
+  # @example Waiting inside a concurrent proc
+  #   wait_proc = concurrent_proc do |seconds|
+  #      wait seconds
+  #   end
+  #
+  #   concurrently do
+  #     puts "I'm running while the other proc is waiting!"
+  #   end
+  #
+  #   wait_proc.call 1
+  #
+  #   # prints: "I'm running while the other proc is waiting!"
+  #
+  #   # resumes after 1 second
+  #
+  # @example Waiting outside a concurrent proc
+  #   concurrently do
+  #     puts "I'm running while the outside is waiting!"
+  #   end
+  #
+  #   wait 1
+  #
+  #   # prints: "I'm running while the outside is waiting!"
+  #
+  #   # resumes after 1 second
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
