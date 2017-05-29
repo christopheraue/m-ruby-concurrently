@@ -1,5 +1,9 @@
+# Concurrently adds a few methods to "IO" which make them available
+# for every IO instance.
+#
+# This is part of the main API of Concurrently.
+#
 # @api public
-# The general IO class
 class IO
   # Suspends the current concurrent proc or fiber until IO is readable
   def await_readable(opts = {})

@@ -1,5 +1,7 @@
+# The namespace this library lives in
+#
+# @api public
 module Concurrently
-  # @api public
-  # Version on this gem
+  # The version
   VERSION = "1.0"
 end

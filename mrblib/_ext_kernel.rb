@@ -1,5 +1,9 @@
+# Concurrently adds a few methods to "Kernel" which makes them available
+# for every object.
+#
+# This is part of the main API of Concurrently.
+#
 # @api public
-# The general Kernel module included in every Object
 module Kernel
   # Executes code concurrently in the background
   def concurrently(*args)

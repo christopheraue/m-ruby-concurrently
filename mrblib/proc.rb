@@ -1,5 +1,3 @@
-# @api public
-# Top level namespace
 module Concurrently
   if Object.const_defined? :MRUBY_VERSION
     # @api mruby
