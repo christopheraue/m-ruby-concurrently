@@ -1,4 +1,3 @@
-# @private
 # @api mruby
 #
 # mruby does not support Proc.new without a block. We have to re-implement the

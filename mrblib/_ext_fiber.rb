@@ -9,8 +9,11 @@ class Fiber
     Fiber.yield result # yields to the fiber from the event loop
   end
 
+  # @api private
   DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
 
+  # @api public
+  # Schedules the fiber to be resumed
   def schedule_resume!(result = nil)
     run_queue = Concurrently::EventLoop.current.run_queue
 

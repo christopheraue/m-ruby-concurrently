@@ -1,7 +1,9 @@
 module Concurrently
+  # @api private
   class Proc::Fiber < ::Fiber
-    # should not be rescued accidentally and therefore is an exception
-    class Cancelled < Exception; end
+    class Cancelled < Exception
+      # should not be rescued accidentally and therefore is an exception
+    end
 
     EMPTY_EVALUATION_BUCKET = [].freeze
 

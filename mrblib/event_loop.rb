@@ -1,4 +1,5 @@
 module Concurrently
+  # @api private
   class EventLoop
     def self.current
       @current ||= new

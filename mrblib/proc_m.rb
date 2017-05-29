@@ -1,9 +1,8 @@
-# @private
-# @api mruby
-#
-# mruby's Proc does not support instance variables. So, whe have to make
-# it a normal class that does not inherit from Proc :(
 module Concurrently
+  # @api mruby
+  #
+  # mruby's Proc does not support instance variables. So, whe have to make
+  # it a normal class that does not inherit from Proc :(
   class Proc
     def initialize(evaluation_class = Evaluation, &proc)
       @evaluation_class = evaluation_class

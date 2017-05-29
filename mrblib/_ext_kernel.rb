@@ -1,14 +1,19 @@
+# @api public
+# The general Kernel module included in every Object
 module Kernel
+  # Executes code concurrently in the background
   def concurrently(*args)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new.call_detached! *args
   end
 
+  # Creates a concurrent proc to execute code concurrently
   def concurrent_proc(evaluation_class = Concurrently::Proc::Evaluation) # &block
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new(evaluation_class)
   end
 
+  # Suspends the current concurrent proc or fiber until it is resumed manually
   def await_scheduled_resume!(opts = {})
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
@@ -42,6 +47,8 @@ module Kernel
     end
   end
 
+  # Suspends the current concurrent proc or fiber for the given number of
+  # seconds
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
