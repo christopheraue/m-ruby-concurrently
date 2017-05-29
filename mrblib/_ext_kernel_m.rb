@@ -1,6 +1,9 @@
+# @private
+# @api mruby
+#
+# mruby does not support Proc.new without a block. We have to re-implement the
+# following methods with an explicit block argument.
 module Kernel
-  # mruby does not support Proc.new without a block
-
   def concurrently(*args, &block)
     Concurrently::Proc.new(&block).call_detached! *args
   end
