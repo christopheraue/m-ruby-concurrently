@@ -26,7 +26,7 @@ module Concurrently
         result = begin
           evaluation = Concurrently::Evaluation.current
           @awaiting_result.store evaluation, true
-          await_scheduled_resume! opts
+          await_resume! opts
         rescue Exception => error
           error
         ensure
@@ -62,7 +62,7 @@ module Concurrently
         @fiber.resume @fiber
       end
 
-      @awaiting_result.each_key{ |evaluation| evaluation.schedule_resume! result }
+      @awaiting_result.each_key{ |evaluation| evaluation.resume! result }
       :concluded
     end
 

@@ -13,7 +13,7 @@ module Concurrently
     DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
     
     # Schedules the evaluation of the concurrent proc to be resumed
-    def schedule_resume!(result = nil)
+    def resume!(result = nil)
       run_queue = Concurrently::EventLoop.current.run_queue
 
       # Cancel running the fiber if it has already been scheduled to run; but

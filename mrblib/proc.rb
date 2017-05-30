@@ -60,7 +60,7 @@ module Concurrently
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
-      evaluation.schedule_resume! [self, args, [evaluation]]
+      evaluation.resume! [self, args, [evaluation]]
       evaluation
     end
 
@@ -69,7 +69,7 @@ module Concurrently
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
-      evaluation.schedule_resume! [self, args]
+      evaluation.resume! [self, args]
       nil
     end
   end

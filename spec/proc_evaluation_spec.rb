@@ -8,11 +8,11 @@ describe Concurrently::Proc::Evaluation do
     let(:result) { :result }
 
     it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:inner_evaluation) { concurrent_proc{ await_scheduled_resume! }.call_nonblock }
+      let(:inner_evaluation) { concurrent_proc{ await_resume! }.call_nonblock }
       let(:wait_proc) { proc{ inner_evaluation.await_result wait_options } }
 
       def resume
-        inner_evaluation.schedule_resume! result
+        inner_evaluation.resume! result
       end
     end
 
@@ -155,15 +155,15 @@ describe Concurrently::Proc::Evaluation do
     end
   end
 
-  describe "#schedule_resume!" do
+  describe "#resume!" do
     subject { evaluation.await_result }
-    let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_nonblock }
+    let!(:evaluation) { concurrent_proc{ await_resume! }.call_nonblock }
 
     def call(*args)
-      evaluation.schedule_resume! *args
+      evaluation.resume! *args
     end
 
-    it_behaves_like "#schedule_resume!"
+    it_behaves_like "#resume!"
 
     context "when resumed without being waiting" do
       let!(:evaluation) { concurrent_proc{ :no_await }.call_detached }
@@ -171,8 +171,8 @@ describe Concurrently::Proc::Evaluation do
 
       it { is_expected.to raise_error(Concurrently::Error,
         "Event loop teared down (Concurrently::Proc::Error: " <<
-          "Concurrently::Proc::Evaluation#schedule_resume! called " <<
-          "without an earlier call to Kernel#await_scheduled_resume!)") }
+          "Concurrently::Proc::Evaluation#resume! called " <<
+          "without an earlier call to Kernel#await_resume!)") }
 
       # recover from the teared down event loop caused by the error for further
       # tests

@@ -204,12 +204,12 @@ describe Kernel do
     end
   end
 
-  describe "#await_scheduled_resume!" do
+  describe "#await_resume!" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:wait_proc) { proc{ await_scheduled_resume! wait_options } }
+      let(:wait_proc) { proc{ await_resume! wait_options } }
 
       def resume
-        evaluation.schedule_resume! result
+        evaluation.resume! result
       end
     end
   end

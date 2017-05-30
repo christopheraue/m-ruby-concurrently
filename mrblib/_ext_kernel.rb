@@ -44,7 +44,7 @@ module Kernel
 
   # Suspends the current evaluation until it is resumed manually. It can be
   # used inside and outside of concurrent procs.
-  def await_scheduled_resume!(opts = {})
+  def await_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
     evaluation = Concurrently::Evaluation.current
@@ -130,7 +130,7 @@ module Kernel
     run_queue = Concurrently::EventLoop.current.run_queue
     evaluation = Concurrently::Evaluation.current
     run_queue.schedule_deferred(evaluation, seconds, true)
-    await_scheduled_resume!
+    await_resume!
   ensure
     run_queue.cancel evaluation
   end

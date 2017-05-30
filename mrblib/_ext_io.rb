@@ -79,7 +79,7 @@ class IO
   def await_readable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
     io_watcher.await_reader(self, Concurrently::Evaluation.current)
-    await_scheduled_resume! opts
+    await_resume! opts
   ensure
     io_watcher.cancel_reader(self)
   end
@@ -168,7 +168,7 @@ class IO
   def await_writable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
     io_watcher.await_writer(self, Concurrently::Evaluation.current)
-    await_scheduled_resume! opts
+    await_resume! opts
   ensure
     io_watcher.cancel_writer(self)
   end

@@ -35,15 +35,15 @@ module Concurrently
 
             :cancelled
           elsif not Proc === proc
-            raise Proc::Error, "Concurrently::Proc::Evaluation#schedule_resume! called " <<
-              "without an earlier call to Kernel#await_scheduled_resume!"
+            raise Proc::Error, "Concurrently::Proc::Evaluation#resume! called " <<
+              "without an earlier call to Kernel#await_resume!"
           else
             begin
               result = proc.__proc_call__ *args
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_with result
               result
             rescue Cancelled
-              # raised in Kernel#await_scheduled_resume!
+              # raised in Kernel#await_resume!
               :cancelled
             rescue Exception => error
               # Rescue all exceptions and let none leak to the loop to keep it

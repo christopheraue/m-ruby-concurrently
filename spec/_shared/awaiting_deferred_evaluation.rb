@@ -95,14 +95,14 @@ shared_examples_for "#concurrently" do
 
     before { call(:arg1, :arg2) do |*args|
       @result = args
-      @spec_evaluation.schedule_resume!
+      @spec_evaluation.resume!
     end }
 
     # We need a reference wait to ensure we wait long enough for the
     # evaluation to finish.
     before do
       @spec_evaluation = Concurrently::Evaluation.current
-      await_scheduled_resume!
+      await_resume!
     end
 
     it { is_expected.to eq [:arg1, :arg2] }
@@ -139,14 +139,14 @@ shared_examples_for "#concurrently" do
     before { evaluation2.await_result } # let the two blocks finish
     let!(:evaluation3) { call do
       @fiber3 = Fiber.current
-      @spec_evaluation.schedule_resume!
+      @spec_evaluation.resume!
     end }
 
     # We need a reference wait to ensure we wait long enough for the
     # evaluation to finish.
     before do
       @spec_evaluation = Concurrently::Evaluation.current
-      await_scheduled_resume!
+      await_resume!
     end
 
     it { is_expected.to be @fiber2 }
@@ -154,7 +154,7 @@ shared_examples_for "#concurrently" do
   end
 end
 
-shared_examples_for "#schedule_resume!" do
+shared_examples_for "#resume!" do
   before { concurrent_proc do
     wait 0.0001
     call *result
