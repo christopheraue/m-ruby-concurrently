@@ -170,8 +170,8 @@ describe Concurrently::Proc::Evaluation do
 
       it { is_expected.to raise_error(Concurrently::Error,
         "Event loop teared down (Concurrently::Proc::Error: " <<
-          "Concurrently::Proc#schedule_resume! called without an earlier " <<
-          "call to Kernel#await_scheduled_resume!)") }
+          "Concurrently::Proc::Evaluation#schedule_resume! called " <<
+          "without an earlier call to Kernel#await_scheduled_resume!)") }
 
       # recover from the teared down event loop caused by the error for further
       # tests

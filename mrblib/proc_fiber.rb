@@ -35,7 +35,7 @@ module Concurrently
 
             :cancelled
           elsif not Proc === proc
-            raise Proc::Error, "Concurrently::Proc#schedule_resume! called " <<
+            raise Proc::Error, "Concurrently::Proc::Evaluation#schedule_resume! called " <<
               "without an earlier call to Kernel#await_scheduled_resume!"
           else
             begin
