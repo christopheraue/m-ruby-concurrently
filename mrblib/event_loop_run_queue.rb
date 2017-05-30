@@ -58,7 +58,7 @@ module Concurrently
 
       processing.each do |cart|
         @cart_index.delete cart[EVALUATION].hash
-        resume_evaluation_from_event_loop! cart[EVALUATION], cart[RESULT] if cart[EVALUATION]
+        resume_evaluation! cart[EVALUATION], cart[RESULT] if cart[EVALUATION]
       end
     end
 
@@ -71,12 +71,12 @@ module Concurrently
       end
     end
 
-    def resume_evaluation_from_event_loop!(evaluation, result)
+    def resume_evaluation!(evaluation, result)
       previous_evaluation = @current_evaluation
       case evaluation
       when Proc::Evaluation
         @current_evaluation = evaluation
-        evaluation.instance_variable_get(:@fiber).resume result
+        evaluation.fiber.resume result
       else
         @current_evaluation = nil
         Fiber.yield result

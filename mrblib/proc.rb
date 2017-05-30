@@ -41,7 +41,7 @@ module Concurrently
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
       evaluation_bucket = []
-      result = event_loop.run_queue.resume_evaluation_from_event_loop! evaluation, [self, args, evaluation_bucket]
+      result = event_loop.run_queue.resume_evaluation! evaluation, [self, args, evaluation_bucket]
 
       if result == evaluation
         # Only inject the evaluation into the proc fiber if the proc cannot be

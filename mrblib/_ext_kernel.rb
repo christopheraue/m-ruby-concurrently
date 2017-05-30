@@ -65,7 +65,7 @@ module Kernel
 
     # If result is this very evaluation it means this evaluation has been evaluated
     # prematurely.
-    if result == evaluation.instance_variable_get(:@fiber)
+    if result == evaluation.fiber
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
 
       # Generally, throw-catch is faster than raise-rescue if the code needs to

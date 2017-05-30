@@ -34,7 +34,7 @@ module Concurrently
       waiting_time = nil if waiting_time == Float::INFINITY
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
         selected.each do |ios|
-          ios.each{ |io| @run_queue.resume_evaluation_from_event_loop! @evaluations[io], true }
+          ios.each{ |io| @run_queue.resume_evaluation! @evaluations[io], true }
         end
       end
     end

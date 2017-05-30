@@ -1,6 +1,6 @@
 module Concurrently
   # Not to be instantiated directly. A new Evaluation instance will be
-  # returned by {Proc#call_nonblock} or {Proc#call_detached}.
+  # returned by {Proc#call} or one of its variants.
   class Proc::Evaluation < Evaluation
     # An error indicating the execution of the concurrent proc's block of code
     # raised an error.

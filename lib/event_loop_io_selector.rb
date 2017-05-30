@@ -29,7 +29,7 @@ module Concurrently
 
     def process_ready_in(waiting_time)
       @selector.select(waiting_time) do |monitor|
-        @run_queue.resume_evaluation_from_event_loop! monitor.value, true
+        @run_queue.resume_evaluation! monitor.value, true
       end
     end
   end
