@@ -66,8 +66,8 @@ module Concurrently
     def reinitialize!
       @start_time = Time.now.to_f
       @run_queue = RunQueue.new self
-      @io_watcher = IOWatcher.new
-      @fiber = Fiber.new(@run_queue, @io_watcher)
+      @io_selector = IOSelector.new
+      @fiber = Fiber.new(@run_queue, @io_selector)
       @proc_fiber_pool = []
       self
     end
@@ -80,7 +80,7 @@ module Concurrently
     # Its selector to watch IOs.
     #
     # @api private
-    attr_reader :io_watcher
+    attr_reader :io_selector
 
     # Its fiber running the actual loop
     #

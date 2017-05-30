@@ -1,7 +1,7 @@
 module Concurrently
   # @api private
   class EventLoop::Fiber < ::Fiber
-    def initialize(run_queue, io_watcher)
+    def initialize(run_queue, io_selector)
       super() do
         begin
           while true
@@ -14,11 +14,11 @@ module Concurrently
               # This behavior is not covered in the test suite. It becomes
               # apparent only in situations of heavy load where this event loop
               # has not much time to breathe.
-              io_watcher.process_ready_in waiting_time if io_watcher.awaiting?
+              io_selector.process_ready_in waiting_time if io_selector.awaiting?
 
               run_queue.process_pending
-            elsif io_watcher.awaiting? or waiting_time
-              io_watcher.process_ready_in waiting_time
+            elsif io_selector.awaiting? or waiting_time
+              io_selector.process_ready_in waiting_time
             else
               # Having no pending timeouts or IO events would make run this loop
               # forever. But, since we always start the loop from one of the

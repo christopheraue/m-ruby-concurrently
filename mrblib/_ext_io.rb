@@ -77,11 +77,11 @@ class IO
   #   r.await_readable(within: 0.1, timeout_result: false)
   #   # => returns false after 0.1 second
   def await_readable(opts = {})
-    io_watcher = Concurrently::EventLoop.current.io_watcher
-    io_watcher.await_reader(self, Concurrently::Evaluation.current)
+    io_selector = Concurrently::EventLoop.current.io_selector
+    io_selector.await_reader(self, Concurrently::Evaluation.current)
     await_resume! opts
   ensure
-    io_watcher.cancel_reader(self)
+    io_selector.cancel_reader(self)
   end
 
   # @!method await_writable(within: Float::INFINITY, timeout_result: Concurrently::Proc::TimeoutError)
@@ -166,10 +166,10 @@ class IO
   #   w.await_writable(within: 0.1, timeout_result: false)
   #   # => returns false after 0.1 second
   def await_writable(opts = {})
-    io_watcher = Concurrently::EventLoop.current.io_watcher
-    io_watcher.await_writer(self, Concurrently::Evaluation.current)
+    io_selector = Concurrently::EventLoop.current.io_selector
+    io_selector.await_writer(self, Concurrently::Evaluation.current)
     await_resume! opts
   ensure
-    io_watcher.cancel_writer(self)
+    io_selector.cancel_writer(self)
   end
 end
