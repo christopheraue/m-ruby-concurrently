@@ -5,6 +5,12 @@
 #
 # @api public
 class IO
+  # @!method await_readable(within: Float::INFINITY, timeout_result: Concurrently::Proc::TimeoutError)
+  #
+  # @param within [Numeric] maximum time to wait
+  # @param timeout_result [Object] result to return in case of an exceeded
+  #   waiting time.
+  #
   # Suspends the current concurrent proc until IO is readable. It can also be
   # used outside of concurrent procs.
   #
@@ -12,6 +18,8 @@ class IO
   # concurrent procs that are ready to run in the meantime.
   #
   # @return [true]
+  # @raise [Concurrently::Proc::TimeoutError] if a given maximum waiting time
+  #   is exceeded and no custom timeout result is given.
   #
   # @example Waiting inside a concurrent proc
   #   # Control flow is indicated by (N)
@@ -58,6 +66,16 @@ class IO
   #   r.read # => "Continue!"
   #
   #   r.close
+  #
+  # @example Waiting with a timeout
+  #   r,w = IO.pipe
+  #   r.await_readable(within: 1)
+  #   # => raises a TimeoutError after 1 second
+  #
+  # @example Waiting with a timeout and a timeout result
+  #   r,w = IO.pipe
+  #   r.await_readable(within: 0.1, timeout_result: false)
+  #   # => returns false after 0.1 second
   def await_readable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
     fiber = Fiber.current
@@ -67,6 +85,12 @@ class IO
     io_watcher.cancel_reader(self)
   end
 
+  # @!method await_writable(within: Float::INFINITY, timeout_result: Concurrently::Proc::TimeoutError)
+  #
+  # @param within [Numeric] maximum time to wait
+  # @param timeout_result [Object] result to return in case of an exceeded
+  #   waiting time.
+  #
   # Suspends the current concurrent proc until IO is writable. It can also be
   # used outside of concurrent procs.
   #
@@ -74,6 +98,8 @@ class IO
   # concurrent procs that are ready to run in the meantime.
   #
   # @return [true]
+  # @raise [Concurrently::Proc::TimeoutError] if a given maximum waiting time
+  #   is exceeded and no custom timeout result is given.
   #
   # @example Waiting inside a concurrent proc
   #   # Control flow is indicated by (N)
@@ -124,6 +150,22 @@ class IO
   #   # (4)
   #
   #   r.close; w.close
+  #
+  # @example Waiting with a timeout
+  #   r,w = IO.pipe
+  #   # jam the pipe with x's, assuming the pipe's max capacity is 2^16 bytes
+  #   w.write 'x'*65536
+  #
+  #   w.await_writable(within: 1)
+  #   # => raises a TimeoutError after 1 second
+  #
+  # @example Waiting with a timeout and a timeout result
+  #   r,w = IO.pipe
+  #   # jam the pipe with x's, assuming the pipe's max capacity is 2^16 bytes
+  #   w.write 'x'*65536
+  #
+  #   w.await_writable(within: 0.1, timeout_result: false)
+  #   # => returns false after 0.1 second
   def await_writable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
     fiber = Fiber.current
