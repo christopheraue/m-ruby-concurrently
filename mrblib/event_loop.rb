@@ -7,8 +7,8 @@ module Concurrently
   # when you call one of the #await_* methods the bookkeeping of selecting IOs
   # for readiness or waiting a given amount of time is done for you.
   #
-  # @note Unless you create threads or fork your process you probably won't
-  #   need to deal with the event loop directly.
+  # @note Unless you fork the process you probably won't need to deal with the
+  #   event loop directly.
   class EventLoop
     # The event loop of the current thread.
     #
@@ -34,20 +34,23 @@ module Concurrently
     #
     # @api public
     #
-    # This method should be called right after creating a fork or a thread.
-    # It's intended to make sure each thread has its separate clean event
-    # loop.
+    # This method should be called right after creating a fork. The fork
+    # inherits the main thread and with it the event loop with all its internal
+    # state from the parent. This is the a problem since we probably do not
+    # want to continue watching the parent's IOs. Also, the fibers in the run
+    # queue are not transferable between parent and fork and running them
+    # raises a "fiber called across stack rewinding barrier" error.
     #
-    # In detail it:
+    # In detail, calling this method:
     #
-    # * resets the {#lifetime},
+    # * resets its {#lifetime},
     # * clears its internal run queue,
     # * clears its internal list of IOs to watch,
     # * clears its internal pool of fibers.
     #
     # While this method clears the list of IOs to be watched for readiness,
-    # the IOs themselves are left untouched. The application developer is
-    # responsible for managing IOs like when not using this library.
+    # the IOs themselves are left untouched. You are responsible for managing
+    # IOs like when not using this library.
     #
     # @example
     #   r,w = IO.pipe
