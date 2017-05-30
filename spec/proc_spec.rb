@@ -23,7 +23,7 @@ describe Concurrently::Proc do
       end
 
       context "when starting/resuming the fiber raises an error" do
-        let(:fiber) { instance_double(Fiber) }
+        let(:fiber) { Concurrently::Proc::Fiber.new(:fiber_pool){} }
         before { allow(fiber).to receive(:resume).and_raise(FiberError, 'resume error') }
         before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return([fiber]) }
 
@@ -115,7 +115,7 @@ describe Concurrently::Proc do
       context "when starting/resuming the fiber raises an error" do
         let(:fiber_pool) { [] }
         let!(:fiber) { Concurrently::Proc::Fiber.new(fiber_pool) }
-        before { allow(fiber).to receive(:resume_from_event_loop!).and_raise(FiberError, 'resume error') }
+        before { allow(fiber).to receive(:resume).and_raise(FiberError, 'resume error') }
         before { allow(Concurrently::Proc::Fiber).to receive(:new).and_return(fiber) }
         before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
 

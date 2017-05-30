@@ -33,7 +33,7 @@ module Concurrently
       waiting_time = nil if waiting_time == Float::INFINITY
       if selected = IO.select(@readers.values, @writers.values, nil, waiting_time)
         selected.each do |ios|
-          ios.each{ |io| @fibers[io].resume_from_event_loop! true }
+          ios.each{ |io| Concurrently::EventLoop.current.run_queue.resume_fiber_from_event_loop! @fibers[io], true }
         end
       end
     end

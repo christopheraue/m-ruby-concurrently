@@ -58,7 +58,7 @@ module Concurrently
 
       processing.each do |cart|
         @cart_index.delete cart[FIBER].hash
-        cart[FIBER].resume_from_event_loop! cart[RESULT] if cart[FIBER]
+        resume_fiber_from_event_loop! cart[FIBER], cart[RESULT] if cart[FIBER]
       end
     end
 
@@ -68,6 +68,15 @@ module Concurrently
       elsif next_cart = @deferred_track.reverse_each.find{ |cart| cart[FIBER] }
         waiting_time = next_cart[TIME] - @loop.lifetime
         waiting_time < 0 ? 0 : waiting_time
+      end
+    end
+
+    def resume_fiber_from_event_loop!(fiber, result)
+      case fiber
+      when Proc::Fiber
+        fiber.resume result
+      else
+        Fiber.yield result
       end
     end
   end

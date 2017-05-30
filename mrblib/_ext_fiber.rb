@@ -1,10 +1,6 @@
 Fiber.current # let mruby created the root fiber with the correct class
 
 class Fiber
-  def resume_from_event_loop!(result = nil)
-    Fiber.yield result # yields to the fiber from the event loop
-  end
-
   # @api private
   DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
 

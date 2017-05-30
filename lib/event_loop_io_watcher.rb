@@ -28,7 +28,7 @@ module Concurrently
 
     def process_ready_in(waiting_time)
       @selector.select(waiting_time) do |monitor|
-        monitor.value.resume_from_event_loop! true
+        Concurrently::EventLoop.current.run_queue.resume_fiber_from_event_loop! monitor.value, true
       end
     end
   end

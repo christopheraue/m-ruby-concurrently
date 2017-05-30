@@ -36,10 +36,11 @@ module Concurrently
 
     # Starts evaluation of the concurrent proc
     def call_nonblock(*args)
-      proc_fiber_pool = EventLoop.current.proc_fiber_pool
+      event_loop = EventLoop.current
+      proc_fiber_pool = event_loop.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation_bucket = []
-      result = proc_fiber.resume [self, args, evaluation_bucket]
+      result = event_loop.run_queue.resume_fiber_from_event_loop! proc_fiber, [self, args, evaluation_bucket]
 
       if result == proc_fiber
         # Only create an evaluation object and inject it into the proc fiber

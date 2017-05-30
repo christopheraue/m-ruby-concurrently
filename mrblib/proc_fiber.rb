@@ -70,7 +70,5 @@ module Concurrently
       end
       :cancelled
     end
-
-    alias_method :resume_from_event_loop!, :resume
   end
 end
