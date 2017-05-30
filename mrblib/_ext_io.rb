@@ -78,8 +78,7 @@ class IO
   #   # => returns false after 0.1 second
   def await_readable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
-    evaluation = Concurrently::EventLoop.current.current_evaluation
-    io_watcher.await_reader(self, evaluation)
+    io_watcher.await_reader(self, Concurrently::Evaluation.current)
     await_scheduled_resume! opts
   ensure
     io_watcher.cancel_reader(self)
@@ -168,8 +167,7 @@ class IO
   #   # => returns false after 0.1 second
   def await_writable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
-    evaluation = Concurrently::EventLoop.current.current_evaluation
-    io_watcher.await_writer(self, evaluation)
+    io_watcher.await_writer(self, Concurrently::Evaluation.current)
     await_scheduled_resume! opts
   ensure
     io_watcher.cancel_writer(self)

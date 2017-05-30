@@ -47,7 +47,7 @@ module Kernel
   def await_scheduled_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
-    evaluation = event_loop.current_evaluation
+    evaluation = Concurrently::Evaluation.current
 
     if seconds = opts[:within]
       timeout_result = opts.fetch(:timeout_result, Concurrently::Proc::TimeoutError)
@@ -128,7 +128,7 @@ module Kernel
   #   # (4)
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
-    evaluation = Concurrently::EventLoop.current.current_evaluation
+    evaluation = Concurrently::Evaluation.current
     run_queue.schedule_deferred(evaluation, seconds, true)
     await_scheduled_resume!
   ensure

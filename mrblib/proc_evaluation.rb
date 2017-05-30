@@ -24,7 +24,7 @@ module Concurrently
         result = @result
       else
         result = begin
-          evaluation = EventLoop.current.current_evaluation
+          evaluation = Concurrently::Evaluation.current
           @awaiting_result.store evaluation, true
           await_scheduled_resume! opts
         rescue Exception => error

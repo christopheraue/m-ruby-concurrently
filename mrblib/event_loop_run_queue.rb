@@ -86,7 +86,7 @@ module Concurrently
     end
 
     def current_evaluation
-      @current_evaluation || Evaluation.new(Fiber.current)
+      @current_evaluation ||= Evaluation.new(Fiber.current)
     end
   end
 end

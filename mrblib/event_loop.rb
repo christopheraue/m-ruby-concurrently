@@ -101,9 +101,5 @@ module Concurrently
     def lifetime
       Time.now.to_f - @start_time
     end
-
-    def current_evaluation
-      @run_queue.current_evaluation
-    end
   end
 end

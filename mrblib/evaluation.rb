@@ -1,5 +1,9 @@
 module Concurrently
   class Evaluation
+    def self.current
+      EventLoop.current.run_queue.current_evaluation
+    end
+
     # @api private
     def initialize(fiber)
       @fiber = fiber
