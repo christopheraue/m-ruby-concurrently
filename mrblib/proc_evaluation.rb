@@ -1,14 +1,14 @@
 module Concurrently
   # Not to be instantiated directly. A new Evaluation instance will be
   # returned by {Proc#call_nonblock} or {Proc#call_detached}.
-  class Proc::Evaluation
+  class Proc::Evaluation < Evaluation
     # An error indicating the execution of the concurrent proc's block of code
     # raised an error.
     Error = Proc::Error
 
     # @api private
-    def initialize(proc_fiber)
-      @proc_fiber = proc_fiber
+    def initialize(fiber)
+      super
       @concluded = false
       @awaiting_result = {}
       @data = {}
@@ -24,13 +24,13 @@ module Concurrently
         result = @result
       else
         result = begin
-          fiber = Concurrently::EventLoop.current.current_fiber
-          @awaiting_result.store fiber, true
+          evaluation = EventLoop.current.current_evaluation
+          @awaiting_result.store evaluation, true
           await_scheduled_resume! opts
         rescue Exception => error
           error
         ensure
-          @awaiting_result.delete fiber
+          @awaiting_result.delete evaluation
         end
       end
 
@@ -57,9 +57,12 @@ module Concurrently
       @result = result
       @concluded = true
 
-      @proc_fiber.cancel!
+      if Fiber.current != @fiber
+        # Cancel fiber by resuming it with itself as argument
+        @fiber.resume @fiber
+      end
 
-      @awaiting_result.each_key{ |fiber| fiber.schedule_resume! result }
+      @awaiting_result.each_key{ |evaluation| evaluation.schedule_resume! result }
       :concluded
     end
 
@@ -68,11 +71,6 @@ module Concurrently
     def cancel(reason = "evaluation cancelled")
       conclude_with Proc::CancelledError.new(reason)
       :cancelled
-    end
-
-    # Schedules the evaluation of the concurrent proc to be resumed
-    def schedule_resume!(result = nil)
-      @proc_fiber.schedule_resume! result
     end
   end
 end

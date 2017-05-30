@@ -39,13 +39,13 @@ module Concurrently
       event_loop = EventLoop.current
       proc_fiber_pool = event_loop.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
+      evaluation = @evaluation_class.new(proc_fiber)
       evaluation_bucket = []
-      result = event_loop.run_queue.resume_fiber_from_event_loop! proc_fiber, [self, args, evaluation_bucket]
+      result = event_loop.run_queue.resume_evaluation_from_event_loop! evaluation, [self, args, evaluation_bucket]
 
-      if result == proc_fiber
-        # Only create an evaluation object and inject it into the proc fiber
-        # if the proc cannot be evaluated without waiting.
-        evaluation = @evaluation_class.new(proc_fiber)
+      if result == evaluation
+        # Only inject the evaluation into the proc fiber if the proc cannot be
+        # evaluated without waiting.
         evaluation_bucket << evaluation
         evaluation
       elsif Exception === result
@@ -60,7 +60,7 @@ module Concurrently
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
-      proc_fiber.schedule_resume! [self, args, [evaluation]]
+      evaluation.schedule_resume! [self, args, [evaluation]]
       evaluation
     end
 
@@ -68,7 +68,8 @@ module Concurrently
     def call_detached!(*args)
       proc_fiber_pool = EventLoop.current.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
-      proc_fiber.schedule_resume! [self, args]
+      evaluation = @evaluation_class.new(proc_fiber)
+      evaluation.schedule_resume! [self, args]
       nil
     end
   end

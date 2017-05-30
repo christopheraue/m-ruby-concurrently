@@ -84,7 +84,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
   context "when originating outside a concurrent proc" do
     subject { wait_proc.call }
-    let!(:evaluation) { Concurrently::EventLoop.current.current_fiber }
+    let!(:evaluation) { Concurrently::EventLoop.current.current_evaluation }
     include_examples "awaiting resumption"
   end
 end
@@ -95,13 +95,13 @@ shared_examples_for "#concurrently" do
 
     before { call(:arg1, :arg2) do |*args|
       @result = args
-      @spec_fiber.schedule_resume!
+      @spec_evaluation.schedule_resume!
     end }
 
     # We need a reference wait to ensure we wait long enough for the
     # evaluation to finish.
     before do
-      @spec_fiber = Concurrently::EventLoop.current.current_fiber
+      @spec_evaluation = Concurrently::EventLoop.current.current_evaluation
       await_scheduled_resume!
     end
 
@@ -139,13 +139,13 @@ shared_examples_for "#concurrently" do
     before { evaluation2.await_result } # let the two blocks finish
     let!(:evaluation3) { call do
       @fiber3 = Fiber.current
-      @spec_fiber.schedule_resume!
+      @spec_evaluation.schedule_resume!
     end }
 
     # We need a reference wait to ensure we wait long enough for the
     # evaluation to finish.
     before do
-      @spec_fiber = Concurrently::EventLoop.current.current_fiber
+      @spec_evaluation = Concurrently::EventLoop.current.current_evaluation
       await_scheduled_resume!
     end
 

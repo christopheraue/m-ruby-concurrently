@@ -102,8 +102,8 @@ module Concurrently
       Time.now.to_f - @start_time
     end
 
-    def current_fiber
-      @run_queue.current_fiber
+    def current_evaluation
+      @run_queue.current_evaluation
     end
   end
 end

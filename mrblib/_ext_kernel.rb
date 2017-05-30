@@ -47,26 +47,26 @@ module Kernel
   def await_scheduled_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
-    fiber = Concurrently::EventLoop.current.current_fiber
+    evaluation = event_loop.current_evaluation
 
     if seconds = opts[:within]
       timeout_result = opts.fetch(:timeout_result, Concurrently::Proc::TimeoutError)
-      run_queue.schedule_deferred(fiber, seconds, timeout_result)
+      run_queue.schedule_deferred(evaluation, seconds, timeout_result)
     end
 
-    result = case fiber
-    when Concurrently::Proc::Fiber
-      # Yield back to the event loop fiber or the fiber evaluating this one.
+    result = case evaluation
+    when Concurrently::Proc::Evaluation
+      # Yield back to the event loop fiber or the evaluation evaluating this one.
       # Pass along itself to indicate it is not yet fully evaluated.
-      Fiber.yield fiber
+      Fiber.yield evaluation
     else
       event_loop.fiber.resume
     end
 
-    # If result is this very fiber it means this fiber has been evaluated
+    # If result is this very evaluation it means this evaluation has been evaluated
     # prematurely.
-    if result == fiber
-      run_queue.cancel fiber # in case the fiber has already been scheduled to resume
+    if result == evaluation.instance_variable_get(:@fiber)
+      run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
 
       # Generally, throw-catch is faster than raise-rescue if the code needs to
       # play back the call stack, i.e. the throw resp. raise is invoked. If not
@@ -81,7 +81,7 @@ module Kernel
     end
   ensure
     if seconds
-      run_queue.cancel fiber
+      run_queue.cancel evaluation
     end
   end
 
@@ -128,10 +128,10 @@ module Kernel
   #   # (4)
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
-    fiber = Concurrently::EventLoop.current.current_fiber
-    run_queue.schedule_deferred(fiber, seconds, true)
+    evaluation = Concurrently::EventLoop.current.current_evaluation
+    run_queue.schedule_deferred(evaluation, seconds, true)
     await_scheduled_resume!
   ensure
-    run_queue.cancel fiber
+    run_queue.cancel evaluation
   end
 end

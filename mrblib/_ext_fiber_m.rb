@@ -1,0 +1,1 @@
+Fiber.current # let mruby created the root fiber with the correct class

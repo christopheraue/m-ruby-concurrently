@@ -62,13 +62,5 @@ module Concurrently
         end
       end
     end
-
-    def cancel!
-      if Fiber.current != self
-        # Cancel fiber by resuming it with itself as argument
-        resume self
-      end
-      :cancelled
-    end
   end
 end
