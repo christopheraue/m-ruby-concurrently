@@ -3,12 +3,12 @@ describe Concurrently::Proc::Evaluation do
     subject { evaluation.await_result(&with_result) }
 
     let(:conproc) { concurrent_proc(&wait_proc) }
-    let(:evaluation) { conproc.call_detached }
+    let(:evaluation) { conproc.call_nonblock }
     let(:with_result) { nil }
     let(:result) { :result }
 
     it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:inner_evaluation) { concurrent_proc{ await_scheduled_resume! }.call_detached }
+      let(:inner_evaluation) { concurrent_proc{ await_scheduled_resume! }.call_nonblock }
       let(:wait_proc) { proc{ inner_evaluation.await_result wait_options } }
 
       def resume
@@ -17,7 +17,7 @@ describe Concurrently::Proc::Evaluation do
     end
 
     context "when it evaluates to a result" do
-      let(:wait_proc) { proc{ result } }
+      let(:wait_proc) { proc{ wait 0.0001; result } }
 
       before { expect(evaluation).not_to be_concluded }
       after { expect(evaluation).to be_concluded }
@@ -48,7 +48,7 @@ describe Concurrently::Proc::Evaluation do
     end
 
     context "when it evaluates to an error" do
-      let(:wait_proc) { proc{ raise 'error' } }
+      let(:wait_proc) { proc{ wait 0.0001; raise 'error' } }
 
       before { expect(evaluation).not_to be_concluded }
       after { expect(evaluation).to be_concluded }
@@ -76,9 +76,9 @@ describe Concurrently::Proc::Evaluation do
     end
 
     context "when getting the result of a concurrent proc from two other ones" do
-      let!(:evaluation) { concurrent_proc{ wait(0.0001); :result }.call_detached }
-      let!(:evaluation1) { concurrent_proc{ evaluation.await_result }.call_detached }
-      let!(:evaluation2) { concurrent_proc{ evaluation.await_result within: 0, timeout_result: :timeout_result }.call_detached }
+      let!(:evaluation) { concurrent_proc{ wait(0.0001); :result }.call_nonblock }
+      let!(:evaluation1) { concurrent_proc{ evaluation.await_result }.call_nonblock }
+      let!(:evaluation2) { concurrent_proc{ evaluation.await_result within: 0, timeout_result: :timeout_result }.call_nonblock }
 
       it { is_expected.to be :result }
       after { expect(evaluation1.await_result).to be :result }
@@ -111,7 +111,7 @@ describe Concurrently::Proc::Evaluation do
     context "when doing it after requesting the result" do
       subject { concurrent_proc{ evaluation.cancel *reason }.call }
 
-      let(:evaluation) { concurrent_proc{ wait(0.0001) }.call_detached }
+      let(:evaluation) { concurrent_proc{ wait(0.0001) }.call_nonblock }
 
       context "when giving no explicit reason" do
         let(:reason) { nil }
@@ -160,7 +160,7 @@ describe Concurrently::Proc::Evaluation do
     def call(*args)
       evaluation.schedule_resume! *args
     end
-    let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_detached }
+    let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_nonblock }
 
     it_behaves_like "#schedule_resume!"
 

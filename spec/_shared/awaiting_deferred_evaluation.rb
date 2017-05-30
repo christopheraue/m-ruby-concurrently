@@ -1,6 +1,6 @@
 shared_examples_for "awaiting the result of a deferred evaluation" do
   let(:conproc) { concurrent_proc(&wait_proc) }
-  let(:evaluation) { conproc.call_detached }
+  let(:evaluation) { conproc.call_nonblock }
 
   let(:wait_options) { {} }
   let(:evaluation_time) { 0.001 }
@@ -27,7 +27,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
           resume
         end }
 
-        let!(:after_timeout) { concurrent_proc{ wait timeout_time }.call_detached }
+        let!(:after_timeout) { concurrent_proc{ wait timeout_time }.call_nonblock }
 
         it { is_expected.to eq result }
 
@@ -158,7 +158,7 @@ shared_examples_for "#schedule_resume!" do
   before { concurrent_proc do
     wait 0.0001
     call *result
-  end.call_detached }
+  end.call_nonblock }
 
   context "when given no result" do
     let(:result) { [] }

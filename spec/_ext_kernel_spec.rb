@@ -9,14 +9,14 @@ describe Kernel do
 
   describe "#concurrent_proc" do
     context "when it configures no custom evaluation" do
-      subject { concurrent_proc{} }
-      it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(Concurrently::Proc::Evaluation)) }
+      subject { concurrent_proc{ wait 0.01 } }
+      it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_nonblock: be_a(Concurrently::Proc::Evaluation)) }
     end
 
     context "when it configures a custom evaluation" do
-      subject { concurrent_proc(custom_evaluation_class){} }
+      subject { concurrent_proc(custom_evaluation_class){ wait 0.01 } }
       let(:custom_evaluation_class) { Class.new(Concurrently::Proc::Evaluation) }
-      it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_detached: be_a(custom_evaluation_class)) }
+      it { is_expected.to be_a(Concurrently::Proc).and have_attributes(call_nonblock: be_a(custom_evaluation_class)) }
     end
   end
 
@@ -49,7 +49,7 @@ describe Kernel do
       subject { evaluation.await_result }
 
       let(:wait_time) { 0.0001 }
-      let!(:evaluation) { concurrent_proc{ wait wait_time; :completed }.call_detached }
+      let!(:evaluation) { concurrent_proc{ wait wait_time; :completed }.call_nonblock }
 
       before { concurrent_proc do
         # cancel the concurrent evaluation right away
@@ -67,10 +67,10 @@ describe Kernel do
     describe "order of multiple deferred concurrent evaluations" do
       subject { evaluation.await_result }
 
-      let!(:evaluation1) { concurrent_proc{ wait(seconds1); callback1.call }.call_detached }
-      let!(:evaluation2) { concurrent_proc{ wait(seconds2); callback2.call }.call_detached }
-      let!(:evaluation3) { concurrent_proc{ wait(seconds3); callback3.call }.call_detached }
-      let(:evaluation) { concurrent_proc{ wait(0.0004) }.call_detached }
+      let!(:evaluation1) { concurrent_proc{ wait(seconds1); callback1.call }.call_nonblock }
+      let!(:evaluation2) { concurrent_proc{ wait(seconds2); callback2.call }.call_nonblock }
+      let!(:evaluation3) { concurrent_proc{ wait(seconds3); callback3.call }.call_nonblock }
+      let(:evaluation) { concurrent_proc{ wait(0.0004) }.call_nonblock }
       let(:seconds1) { 0.0001 }
       let(:seconds2) { 0.0002 }
       let(:seconds3) { 0.0003 }
@@ -178,7 +178,7 @@ describe Kernel do
           callback.call
         end
         :result
-      end.call_detached }
+      end.call_nonblock }
       let(:callback) { proc{} }
 
       before { expect(callback).to receive(:call).exactly(3).times }
