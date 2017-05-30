@@ -76,7 +76,7 @@ describe Concurrently::Proc::Evaluation do
     end
 
     context "when getting the result of a concurrent proc from two other ones" do
-      let!(:evaluation) { concurrent_proc{ wait(0.0001); :result }.call_nonblock }
+      let!(:evaluation) { concurrent_proc{ wait(0.001); :result }.call_nonblock }
       let!(:evaluation1) { concurrent_proc{ evaluation.await_result }.call_nonblock }
       let!(:evaluation2) { concurrent_proc{ evaluation.await_result within: 0, timeout_result: :timeout_result }.call_nonblock }
 
@@ -157,10 +157,11 @@ describe Concurrently::Proc::Evaluation do
 
   describe "#schedule_resume!" do
     subject { evaluation.await_result }
+    let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_nonblock }
+
     def call(*args)
       evaluation.schedule_resume! *args
     end
-    let!(:evaluation) { concurrent_proc{ await_scheduled_resume! }.call_nonblock }
 
     it_behaves_like "#schedule_resume!"
 
