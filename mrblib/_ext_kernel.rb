@@ -85,30 +85,38 @@ module Kernel
   # @return [true]
   #
   # @example Waiting inside a concurrent proc
+  #   # Control flow is indicated by (N)
+  #
+  #   # (1)
   #   wait_proc = concurrent_proc do |seconds|
-  #      wait seconds
+  #     # (4)
+  #     wait seconds
+  #     # (6)
+  #     :waited
   #   end
   #
+  #   # (2)
   #   concurrently do
+  #     # (5)
   #     puts "I'm running while the other proc is waiting!"
   #   end
   #
-  #   wait_proc.call 1
-  #
-  #   # prints: "I'm running while the other proc is waiting!"
-  #
-  #   # resumes after 1 second
+  #   # (3)
+  #   wait_proc.call 1 # => :waited
+  #   # (7)
   #
   # @example Waiting outside a concurrent proc
+  #   # Control flow is indicated by (N)
+  #
+  #   # (1)
   #   concurrently do
+  #     # (3)
   #     puts "I'm running while the outside is waiting!"
   #   end
   #
+  #   # (2)
   #   wait 1
-  #
-  #   # prints: "I'm running while the outside is waiting!"
-  #
-  #   # resumes after 1 second
+  #   # (4)
   def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     fiber = Fiber.current
