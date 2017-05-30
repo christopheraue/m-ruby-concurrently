@@ -1,6 +1,7 @@
 module Concurrently
   class EventLoop::IOSelector
-    def initialize
+    def initialize(event_loop)
+      @run_queue = event_loop.run_queue
       @selector = NIO::Selector.new
     end
 
@@ -28,7 +29,7 @@ module Concurrently
 
     def process_ready_in(waiting_time)
       @selector.select(waiting_time) do |monitor|
-        Concurrently::EventLoop.current.run_queue.resume_evaluation_from_event_loop! monitor.value, true
+        @run_queue.resume_evaluation_from_event_loop! monitor.value, true
       end
     end
   end
