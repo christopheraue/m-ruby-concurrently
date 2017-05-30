@@ -78,7 +78,7 @@ class IO
   #   # => returns false after 0.1 second
   def await_readable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
-    fiber = Fiber.current
+    fiber = Concurrently::EventLoop.current.current_fiber
     io_watcher.await_reader(self, fiber)
     await_scheduled_resume! opts
   ensure
@@ -168,7 +168,7 @@ class IO
   #   # => returns false after 0.1 second
   def await_writable(opts = {})
     io_watcher = Concurrently::EventLoop.current.io_watcher
-    fiber = Fiber.current
+    fiber = Concurrently::EventLoop.current.current_fiber
     io_watcher.await_writer(self, fiber)
     await_scheduled_resume! opts
   ensure

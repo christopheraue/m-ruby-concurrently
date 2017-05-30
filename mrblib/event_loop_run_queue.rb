@@ -74,10 +74,18 @@ module Concurrently
     def resume_fiber_from_event_loop!(fiber, result)
       case fiber
       when Proc::Fiber
+        @current_fiber = fiber
         fiber.resume result
       else
+        @current_fiber = nil
         Fiber.yield result
       end
+    ensure
+      @current_fiber = nil
+    end
+
+    def current_fiber
+      @current_fiber || Fiber.current
     end
   end
 end

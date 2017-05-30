@@ -24,7 +24,7 @@ module Concurrently
         result = @result
       else
         result = begin
-          fiber = Fiber.current
+          fiber = Concurrently::EventLoop.current.current_fiber
           @awaiting_result.store fiber, true
           await_scheduled_resume! opts
         rescue Exception => error

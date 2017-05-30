@@ -101,5 +101,9 @@ module Concurrently
     def lifetime
       Time.now.to_f - @start_time
     end
+
+    def current_fiber
+      @run_queue.current_fiber
+    end
   end
 end
