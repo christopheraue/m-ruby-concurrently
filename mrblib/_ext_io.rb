@@ -11,8 +11,8 @@ class IO
   # @param timeout_result [Object] result to return in case of an exceeded
   #   waiting time.
   #
-  # Suspends the current concurrent proc until IO is readable. It can also be
-  # used outside of concurrent procs.
+  # Suspends the current evaluation until IO is readable. It can be used inside
+  # and outside of concurrent procs.
   #
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
@@ -91,8 +91,8 @@ class IO
   # @param timeout_result [Object] result to return in case of an exceeded
   #   waiting time.
   #
-  # Suspends the current concurrent proc until IO is writable. It can also be
-  # used outside of concurrent procs.
+  # Suspends the current evaluation until IO is writable. It can be used inside
+  # and outside of concurrent procs.
   #
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.

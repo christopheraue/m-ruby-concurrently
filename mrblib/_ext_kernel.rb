@@ -42,7 +42,8 @@ module Kernel
     Concurrently::Proc.new(evaluation_class)
   end
 
-  # Suspends the current evaluation until it is resumed manually
+  # Suspends the current evaluation until it is resumed manually. It can be
+  # used inside and outside of concurrent procs.
   def await_scheduled_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
@@ -84,8 +85,8 @@ module Kernel
     end
   end
 
-  # Suspends a concurrent proc for the given number of seconds. It can also be
-  # used outside of concurrent procs.
+  # Suspends the current evaluation for the given number of seconds. It can be
+  # used inside and outside of concurrent procs.
   #
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
