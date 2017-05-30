@@ -71,12 +71,6 @@ module Concurrently
       :cancelled
     end
 
-    def yield_to_event_loop!
-      # Yield back to the event loop fiber or the fiber evaluating this one.
-      # Pass along itself to indicate it is not yet fully evaluated.
-      Fiber.yield self
-    end
-
     alias_method :resume_from_event_loop!, :resume
   end
 end

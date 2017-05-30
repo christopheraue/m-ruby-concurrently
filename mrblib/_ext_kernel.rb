@@ -42,9 +42,10 @@ module Kernel
     Concurrently::Proc.new(evaluation_class)
   end
 
-  # Suspends the current concurrent proc or fiber until it is resumed manually
+  # Suspends the current evaluation until it is resumed manually
   def await_scheduled_resume!(opts = {})
-    run_queue = Concurrently::EventLoop.current.run_queue
+    event_loop = Concurrently::EventLoop.current
+    run_queue = event_loop.run_queue
     fiber = Fiber.current
 
     if seconds = opts[:within]
@@ -52,7 +53,14 @@ module Kernel
       run_queue.schedule_deferred(fiber, seconds, timeout_result)
     end
 
-    result = fiber.yield_to_event_loop!
+    result = case fiber
+    when Concurrently::Proc::Fiber
+      # Yield back to the event loop fiber or the fiber evaluating this one.
+      # Pass along itself to indicate it is not yet fully evaluated.
+      Fiber.yield fiber
+    else
+      event_loop.fiber.resume
+    end
 
     # If result is this very fiber it means this fiber has been evaluated
     # prematurely.
