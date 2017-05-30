@@ -21,8 +21,4 @@ class Array
       lo == len ? nil : lo
     end
   end
-
-  def bisect_left
-    bsearch_index{ |item| yield item } || length
-  end
 end

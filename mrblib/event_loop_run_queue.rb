@@ -16,11 +16,17 @@ module Concurrently
 
     DEFAULT_CANCEL_OPTS = { deferred_only: false }.freeze
 
+    class Track < Array
+      def bisect_left
+        bsearch_index{ |item| yield item } || length
+      end
+    end
+
     def initialize(loop)
       @loop = loop
       @cart_index = {}
-      @deferred_track = []
-      @immediate_track = []
+      @deferred_track = Track.new
+      @immediate_track = Track.new
     end
 
     def schedule_immediately(evaluation, result = nil)
@@ -32,7 +38,7 @@ module Concurrently
     def schedule_deferred(evaluation, seconds, result = nil)
       cart = [evaluation, @loop.lifetime+seconds, result]
       @cart_index[evaluation.hash] = cart
-      index = @deferred_track.bisect_left{ |cart_on_track| cart_on_track[TIME] <= cart[TIME] }
+      index = @deferred_track.bisect_left{ |tcart| tcart[TIME] <= cart[TIME] }
       @deferred_track.insert(index, cart)
     end
 
