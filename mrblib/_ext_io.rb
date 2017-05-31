@@ -5,11 +5,10 @@
 #
 # @api public
 class IO
-  # @!method await_readable(within: Float::INFINITY, timeout_result: Concurrently::Proc::TimeoutError)
-  #
-  # @param within [Numeric] maximum time to wait
-  # @param timeout_result [Object] result to return in case of an exceeded
-  #   waiting time.
+  # @param [Hash] opts
+  # @option opts [Numeric] :within maximum time to wait (defaults to: +Float::INFINITY+)
+  # @option opts [Object] :timeout_result result to return in case of an exceeded
+  #   waiting time (defaults to raising {Concurrently::Evaluation::TimeoutError})
   #
   # Suspends the current evaluation until IO is readable. It can be used inside
   # and outside of concurrent procs.
@@ -84,11 +83,10 @@ class IO
     io_selector.cancel_reader(self)
   end
 
-  # @!method await_writable(within: Float::INFINITY, timeout_result: Concurrently::Proc::TimeoutError)
-  #
-  # @param within [Numeric] maximum time to wait
-  # @param timeout_result [Object] result to return in case of an exceeded
-  #   waiting time.
+  # @param [Hash] opts
+  # @option opts [Numeric] :within maximum time to wait (defaults to: +Float::INFINITY+)
+  # @option opts [Object] :timeout_result result to return in case of an exceeded
+  #   waiting time (defaults to raising {Concurrently::Evaluation::TimeoutError})
   #
   # Suspends the current evaluation until IO is writable. It can be used inside
   # and outside of concurrent procs.
