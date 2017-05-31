@@ -46,18 +46,19 @@ module Concurrently
       result = begin
         previous_evaluation = run_queue.current_evaluation
         run_queue.current_evaluation = nil
+        run_queue.evaluation_class = @evaluation_class
         proc_fiber.resume [self, args, evaluation_bucket]
       ensure
         run_queue.current_evaluation = previous_evaluation
+        run_queue.evaluation_class = nil
       end
 
       case result
       when Evaluation
-        # Only inject the evaluation into the proc fiber if the proc cannot be
-        # evaluated without waiting.
-        evaluation = @evaluation_class.new(proc_fiber)
-        evaluation_bucket << evaluation
-        evaluation
+        # The proc fiber if the proc cannot be evaluated without waiting.
+        # Inject the evaluation into it so it can be concluded later.
+        evaluation_bucket << result
+        result
       when Exception
         raise result
       else

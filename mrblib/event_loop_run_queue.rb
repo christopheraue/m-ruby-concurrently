@@ -97,11 +97,12 @@ module Concurrently
 
     # only needed in Concurrently::Proc#call_nonblock
     attr_accessor :current_evaluation
+    attr_writer :evaluation_class
 
     def current_evaluation
       @current_evaluation ||= case fiber = Fiber.current
       when Proc::Fiber
-        Proc::Evaluation.new fiber
+        (@evaluation_class || Proc::Evaluation).new fiber
       else
         Evaluation.new fiber
       end
