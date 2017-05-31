@@ -37,18 +37,28 @@ module Concurrently
     # Starts evaluation of the concurrent proc
     def call_nonblock(*args)
       event_loop = EventLoop.current
+      run_queue = event_loop.run_queue
+
       proc_fiber_pool = event_loop.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
-      evaluation = @evaluation_class.new(proc_fiber)
       evaluation_bucket = []
-      result = event_loop.run_queue.resume_evaluation! evaluation, [self, args, evaluation_bucket]
 
-      if result == evaluation
+      result = begin
+        previous_evaluation = run_queue.current_evaluation
+        run_queue.current_evaluation = nil
+        proc_fiber.resume [self, args, evaluation_bucket]
+      ensure
+        run_queue.current_evaluation = previous_evaluation
+      end
+
+      case result
+      when Evaluation
         # Only inject the evaluation into the proc fiber if the proc cannot be
         # evaluated without waiting.
+        evaluation = @evaluation_class.new(proc_fiber)
         evaluation_bucket << evaluation
         evaluation
-      elsif Exception === result
+      when Exception
         raise result
       else
         result

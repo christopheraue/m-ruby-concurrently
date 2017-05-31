@@ -91,8 +91,16 @@ module Concurrently
       @current_evaluation = previous_evaluation
     end
 
+    # only needed in Concurrently::Proc#call_nonblock
+    attr_accessor :current_evaluation
+
     def current_evaluation
-      @current_evaluation ||= Evaluation.new(Fiber.current)
+      @current_evaluation ||= case fiber = Fiber.current
+      when Proc::Fiber
+        Proc::Evaluation.new fiber
+      else
+        Evaluation.new fiber
+      end
     end
   end
 end
