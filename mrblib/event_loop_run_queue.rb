@@ -79,7 +79,11 @@ module Concurrently
 
     def resume_evaluation!(evaluation, result)
       previous_evaluation = @current_evaluation
+
       case evaluation
+      when Proc::Fiber # this will only happen when calling Concurrently::Proc#call_detached!
+        @current_evaluation = nil
+        evaluation.resume result
       when Proc::Evaluation
         @current_evaluation = evaluation
         evaluation.fiber.resume result
