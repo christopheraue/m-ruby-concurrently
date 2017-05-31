@@ -1,6 +1,6 @@
 module Concurrently
-  # Not to be instantiated directly. A new Evaluation instance will be
-  # returned by {Proc#call} or one of its variants.
+  # Not to be instantiated directly. An instance will be returned by
+  # {current}, {Concurrently::Proc#call} or one of its variants.
   class Proc::Evaluation < Evaluation
     # @api private
     def initialize(fiber)
