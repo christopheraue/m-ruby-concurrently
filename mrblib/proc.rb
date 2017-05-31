@@ -1,6 +1,5 @@
 module Concurrently
   if Object.const_defined? :MRUBY_VERSION
-    # @api mruby
     class Proc; end
   else
     class Proc < ::Proc
@@ -10,6 +9,7 @@ module Concurrently
     end
   end
 
+  # @api public
   # A concurrent Proc is like a regular Proc except its block of code is
   # evaluated concurrently. Its evaluation can wait for other stuff to happen
   # (e.g. result of another concurrent proc or readiness of an IO) without
