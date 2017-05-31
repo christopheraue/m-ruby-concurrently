@@ -40,6 +40,7 @@ module Concurrently
       run_queue.cancel(self, DEFAULT_RESUME_OPTS)
 
       run_queue.schedule_immediately(self, result)
+      :resumed
     end
   end
 end

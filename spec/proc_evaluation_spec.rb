@@ -159,10 +159,6 @@ describe Concurrently::Proc::Evaluation do
     subject { evaluation.await_result }
     let!(:evaluation) { concurrent_proc{ await_resume! }.call_nonblock }
 
-    def call(*args)
-      evaluation.resume! *args
-    end
-
     it_behaves_like "#resume!"
 
     context "when resumed without waiting" do

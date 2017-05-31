@@ -8,11 +8,6 @@ describe Concurrently::Evaluation do
   describe "#resume!" do
     subject { await_resume! }
     let!(:evaluation) { Concurrently::Evaluation.current }
-
-    def call(*args)
-      evaluation.resume! *args
-    end
-
     it_behaves_like "#resume!"
   end
 end

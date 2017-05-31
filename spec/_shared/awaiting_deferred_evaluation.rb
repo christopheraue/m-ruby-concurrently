@@ -157,8 +157,10 @@ end
 shared_examples_for "#resume!" do
   before { concurrent_proc do
     wait 0.0001
-    call *result
+    @resume_result = evaluation.resume! *result
   end.call_nonblock }
+
+  after { expect(@resume_result).to be :resumed }
 
   context "when given no result" do
     let(:result) { [] }
