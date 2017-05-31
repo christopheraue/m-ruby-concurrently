@@ -165,14 +165,12 @@ describe Concurrently::Proc::Evaluation do
 
     it_behaves_like "#resume!"
 
-    context "when resumed without being waiting" do
+    context "when resumed without waiting" do
+      subject { evaluation.resume! }
       let!(:evaluation) { concurrent_proc{ :no_await }.call_detached }
-      before { call }
 
-      it { is_expected.to raise_error(Concurrently::Error,
-        "Event loop teared down (Concurrently::Evaluation::Error: " <<
-          "Concurrently::Proc::Evaluation#resume! called " <<
-          "without an earlier call to Kernel#await_resume!)") }
+      it { is_expected.to raise_error(Concurrently::Evaluation::Error,
+        "evaluation is not waiting due to an earlier call of Kernel#await_resume!") }
 
       # recover from the teared down event loop caused by the error for further
       # tests

@@ -54,6 +54,7 @@ module Kernel
       run_queue.schedule_deferred(evaluation, seconds, timeout_result)
     end
 
+    evaluation.instance_variable_set :@waiting, true
     result = case evaluation
     when Concurrently::Proc::Evaluation
       # Yield back to the event loop fiber or the evaluation evaluating this one.
@@ -62,6 +63,7 @@ module Kernel
     else
       event_loop.fiber.resume
     end
+    evaluation.instance_variable_set :@waiting, false
 
     # If result is this very evaluation it means this evaluation has been evaluated
     # prematurely.

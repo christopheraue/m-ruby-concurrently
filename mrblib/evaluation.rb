@@ -16,11 +16,21 @@ module Concurrently
     # @api private
     attr_reader :fiber
 
+    # @private
+    # will be undefined in a few lines
+    attr_reader :waiting
+
+    # Checks if the evaluation is waiting
+    alias waiting? waiting
+    undef waiting
+
     # @api private
     DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
     
     # Schedules the evaluation to be resumed
     def resume!(result = nil)
+      raise Error, "evaluation is not waiting due to an earlier call of Kernel#await_resume!" unless @waiting
+
       run_queue = Concurrently::EventLoop.current.run_queue
 
       # Cancel running the fiber if it has already been scheduled to run; but

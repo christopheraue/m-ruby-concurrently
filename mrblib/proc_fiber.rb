@@ -35,8 +35,9 @@ module Concurrently
 
             :cancelled
           elsif not Proc === proc
-            raise Evaluation::Error, "Concurrently::Proc::Evaluation#resume! called " <<
-              "without an earlier call to Kernel#await_resume!"
+            # This should never happen. If it does it means something with code
+            # of this library is not right.
+            raise Concurrently::Error, "concurrent proc not started properly."
           else
             begin
               result = proc.__proc_call__ *args
