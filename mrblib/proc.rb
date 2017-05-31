@@ -67,10 +67,11 @@ module Concurrently
 
     # Schedules evaluation of the concurrent proc
     def call_detached(*args)
-      proc_fiber_pool = EventLoop.current.proc_fiber_pool
+      event_loop = EventLoop.current
+      proc_fiber_pool = event_loop.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation = @evaluation_class.new(proc_fiber)
-      evaluation.resume! [self, args, [evaluation]]
+      event_loop.run_queue.schedule_immediately evaluation, [self, args, [evaluation]]
       evaluation
     end
 
