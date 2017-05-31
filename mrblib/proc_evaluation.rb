@@ -2,10 +2,6 @@ module Concurrently
   # Not to be instantiated directly. A new Evaluation instance will be
   # returned by {Proc#call} or one of its variants.
   class Proc::Evaluation < Evaluation
-    # An error indicating the execution of the concurrent proc's block of code
-    # raised an error.
-    Error = Proc::Error
-
     # @api private
     def initialize(fiber)
       super
@@ -69,7 +65,7 @@ module Concurrently
     # Cancels the evaluation of the concurrent proc prematurely by evaluating
     # it to a CancelledError.
     def cancel(reason = "evaluation cancelled")
-      conclude_with Proc::CancelledError.new(reason)
+      conclude_with self.class::CancelledError.new(reason)
       :cancelled
     end
   end

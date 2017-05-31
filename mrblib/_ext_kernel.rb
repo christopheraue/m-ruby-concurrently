@@ -50,7 +50,7 @@ module Kernel
     evaluation = Concurrently::Evaluation.current
 
     if seconds = opts[:within]
-      timeout_result = opts.fetch(:timeout_result, Concurrently::Proc::TimeoutError)
+      timeout_result = opts.fetch(:timeout_result, Concurrently::Evaluation::TimeoutError)
       run_queue.schedule_deferred(evaluation, seconds, timeout_result)
     end
 
@@ -74,8 +74,8 @@ module Kernel
       # block. Since we won't jump out of the proc above most of the time, we
       # go with raise. It is rescued in the proc fiber.
       raise Concurrently::Proc::Fiber::Cancelled, '', []
-    elsif result == Concurrently::Proc::TimeoutError
-      raise Concurrently::Proc::TimeoutError, "evaluation timed out after #{seconds} second(s)"
+    elsif result == Concurrently::Evaluation::TimeoutError
+      raise result, "evaluation timed out after #{seconds} second(s)"
     else
       result
     end

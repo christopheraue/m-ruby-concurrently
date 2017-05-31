@@ -96,7 +96,7 @@ describe Kernel do
         before { expect(callback2).to receive(:call).ordered.and_call_original }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Proc::CancelledError }
+        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
         after { expect(evaluation2.await_result).to be :result2 }
         after { expect(evaluation3.await_result).to be :result3 }
       end
@@ -109,8 +109,8 @@ describe Kernel do
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Proc::CancelledError }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Proc::CancelledError }
+        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
         after { expect(evaluation3.await_result).to be :result3 }
       end
 
@@ -123,9 +123,9 @@ describe Kernel do
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).not_to receive(:call) }
         it { is_expected.not_to raise_error }
-        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Proc::CancelledError }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Proc::CancelledError }
-        after { expect{ evaluation3.await_result }.to raise_error Concurrently::Proc::CancelledError }
+        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect{ evaluation3.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
       end
 
       context "when the second block has been cancelled" do
@@ -136,7 +136,7 @@ describe Kernel do
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
         after { expect(evaluation1.await_result).to be :result1 }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Proc::CancelledError }
+        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
         after { expect(evaluation3.await_result).to be :result3 }
       end
 
@@ -149,8 +149,8 @@ describe Kernel do
         before { expect(callback3).not_to receive(:call) }
         it { is_expected.not_to raise_error }
         after { expect(evaluation1.await_result).to be :result1 }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Proc::CancelledError }
-        after { expect{ evaluation3.await_result }.to raise_error Concurrently::Proc::CancelledError }
+        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect{ evaluation3.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
       end
 
       context "when all timers are triggered in one go" do

@@ -42,10 +42,10 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
           before { wait_options.delete :timeout_result }
 
           if inside_concurrent_proc
-            before { expect(conproc).to receive(:trigger).with(:error, (be_a(Concurrently::Proc::TimeoutError).
+            before { expect(conproc).to receive(:trigger).with(:error, (be_a(Concurrently::Evaluation::TimeoutError).
              and have_attributes message: "evaluation timed out after #{wait_options[:within]} second(s)")) }
           end
-          it { is_expected.to raise_error Concurrently::Proc::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
+          it { is_expected.to raise_error Concurrently::Evaluation::TimeoutError, "evaluation timed out after #{wait_options[:within]} second(s)" }
         end
 
         context "when a timeout result is given" do
