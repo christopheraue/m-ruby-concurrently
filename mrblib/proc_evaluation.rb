@@ -1,5 +1,5 @@
 module Concurrently
-  # `Concurrently::Proc::Evaluation` represents the evaluation a concurrent
+  # `Concurrently::Proc::Evaluation` represents the evaluation of a concurrent
   # proc.
   #
   # An instance will be returned by {Evaluation.current} if called from inside
@@ -16,8 +16,14 @@ module Concurrently
       @data = {}
     end
 
-    # A hash for custom data to be stored in this instance. Useful if creating
-    # a subclass and overwriting {#await_result} or {#conclude_to}
+    # A hash for custom data. Use it to attach data being specific to
+    # evaluations. An example would be giving each evaluation an id.
+    #
+    # @return [Hash]
+    #
+    # @example
+    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation.data[:id] = :an_id
     attr_reader :data
 
     # Waits for the evaluation to be concluded with a result
@@ -41,13 +47,14 @@ module Concurrently
       (Exception === result) ? (raise result) : result
     end
 
-    # @private
-    # will be undefined in a few lines
-    attr_reader :concluded
-
+    # @!attribute [r] concluded?
+    #
     # Checks if the evaluation is concluded
-    alias concluded? concluded
-    undef concluded
+    #
+    # @return [Boolean]
+    def concluded?
+      @concluded
+    end
 
     # Cancels the evaluation of the concurrent proc prematurely by evaluating
     # it to a result.
