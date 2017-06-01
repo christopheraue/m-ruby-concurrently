@@ -41,6 +41,61 @@ module Concurrently
     # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
     #   is exceeded and no custom timeout result is given.
     #
+    # @example Waiting inside another concurrent proc
+    #   # Control flow is indicated by (N)
+    #
+    #   # (1)
+    #   evaluation = concurrent_proc do
+    #     # (4)
+    #     :result
+    #   end.call_detached
+    #
+    #   # (2)
+    #   concurrent_proc do
+    #     # (3)
+    #     evaluation.await_result
+    #     # (5)
+    #   end.call # => :result
+    #   # (6)
+    #
+    # @example Waiting outside a concurrent proc
+    #   # Control flow is indicated by (N)
+    #
+    #   # (1)
+    #   evaluation = concurrent_proc do
+    #      # (3)
+    #     :result
+    #   end.call_detached
+    #
+    #   # (2)
+    #   evaluation.await_result # => :result
+    #   # (4)
+    #
+    # @example Waiting with a timeout
+    #   evaluation = concurrent_proc do
+    #     wait 1
+    #     :result
+    #   end.call_detached
+    #
+    #   evaluation.await_result within: 0.1
+    #   # => raises a TimeoutError after 0.1 second
+    #
+    # @example Waiting with a timeout and a timeout result
+    #   evaluation = concurrent_proc do
+    #     wait 1
+    #     :result
+    #   end.call_detached
+    #
+    #   evaluation.await_result within: 0.1, timeout_result: false
+    #   # => returns false after 0.1 second
+    #
+    # @example When the evaluation raises or returns an error
+    #   evaluation = concurrent_proc do
+    #     RuntimeError.new("self destruct!") # equivalent: raise "self destruct!"
+    #   end.call_detached
+    #
+    #   evaluation.await_result # => raises "self destruct!"
+    #
     # @overload await_result(opts = {})
     #
     # @overload await_result(opts = {})
@@ -49,6 +104,22 @@ module Concurrently
     #
     #   @yieldparam result [Object] its result
     #   @yieldreturn [Object] a (potentially) transformed result
+    #
+    #   @example Transforming a result
+    #     evaluation = concurrent_proc do
+    #       :result
+    #     end.call_detached
+    #
+    #     evaluation.await_result{ |result| "transformed_#{result}" }
+    #     # => "transformed_result"
+    #
+    #   @example Validating a result
+    #     evaluation = concurrent_proc do
+    #       :invalid_result
+    #     end.call_detached
+    #
+    #     evaluation.await_result{ |result| raise "invalid result" if result != :result }
+    #     # => raises "invalid result"
     def await_result(opts = {}) # &with_result
       if @concluded
         result = @result
