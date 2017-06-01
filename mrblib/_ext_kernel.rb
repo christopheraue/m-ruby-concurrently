@@ -26,7 +26,7 @@ module Kernel
   #
   # Creates a concurrent proc to execute code concurrently.
   #
-  # This a shortcut for {Concurrently::Proc}.new like `proc(&block)`
+  # This a shortcut for {Concurrently::Proc}.new(&block) like `proc(&block)`
   # is a shortcut for `Proc.new(&block)`.
   #
   # @return [Concurrently::Proc]
