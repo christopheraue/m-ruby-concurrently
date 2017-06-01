@@ -1,6 +1,12 @@
 module Concurrently
-  # Not to be instantiated directly. An instance will be returned by
-  # {current}, {Concurrently::Proc#call} or one of its variants.
+  # `Concurrently::Proc::Evaluation` represents the evaluation a concurrent
+  # proc.
+  #
+  # An instance will be returned by {Evaluation.current} if called from inside
+  # a concurrent proc. It will also be returned by every call of
+  # {Concurrently::Proc#call_detached} and also by
+  # {Concurrently::Proc#call_nonblock} if the evaluation cannot be concluded in
+  # one go and needs to wait.
   class Proc::Evaluation < Evaluation
     # @api private
     def initialize(fiber)

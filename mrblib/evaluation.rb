@@ -1,6 +1,9 @@
 module Concurrently
-  # Not to be instantiated directly. An instance will be returned by
-  # {current}, {Concurrently::Proc#call} or one of its variants.
+  # `Concurrently::Evaluation` represents the evaluation of the main thread
+  # outside of any concurrent procs.
+  #
+  # An instance will be returned by {current} if called outside of any
+  # concurrent procs.
   class Evaluation
     # The evaluation that is currently running.
     #
