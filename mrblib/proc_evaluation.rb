@@ -11,7 +11,7 @@ module Concurrently
     end
 
     # A hash for custom data to be stored in this instance. Useful if creating
-    # a subclass and overwriting {#await_result} or {#conclude_with}
+    # a subclass and overwriting {#await_result} or {#conclude_to}
     attr_reader :data
 
     # Waits for the evaluation to be concluded with a result
@@ -45,7 +45,7 @@ module Concurrently
 
     # Cancels the evaluation of the concurrent proc prematurely by evaluating
     # it to a result.
-    def conclude_with(result)
+    def conclude_to(result)
       if @concluded
         raise self.class::Error, "already concluded"
       end
@@ -65,7 +65,7 @@ module Concurrently
     # Cancels the evaluation of the concurrent proc prematurely by evaluating
     # it to a CancelledError.
     def cancel(reason = "evaluation cancelled")
-      conclude_with self.class::CancelledError.new(reason)
+      conclude_to self.class::CancelledError.new(reason)
       :cancelled
     end
   end

@@ -66,7 +66,7 @@ shared_examples_for "awaiting the result of a deferred evaluation" do
 
       before { concurrent_proc do
         # cancel the concurrent evaluation right away
-        evaluation.conclude_with :intercepted
+        evaluation.conclude_to :intercepted
 
         # Wait after the event is triggered to make sure the concurrent evaluation
         # is not resumed then (i.e. watching the event is properly cancelled)

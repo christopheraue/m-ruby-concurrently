@@ -41,7 +41,7 @@ module Concurrently
           else
             begin
               result = proc.__proc_call__ *args
-              (evaluation = evaluation_bucket[0]) and evaluation.conclude_with result
+              (evaluation = evaluation_bucket[0]) and evaluation.conclude_to result
               result
             rescue Cancelled
               # raised in Kernel#await_resume!
@@ -50,7 +50,7 @@ module Concurrently
               # Rescue all exceptions and let none leak to the loop to keep it
               # up and running at all times.
               proc.trigger :error, error
-              (evaluation = evaluation_bucket[0]) and evaluation.conclude_with error
+              (evaluation = evaluation_bucket[0]) and evaluation.conclude_to error
               error
             end
           end

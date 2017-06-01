@@ -141,7 +141,7 @@ describe Concurrently::Proc::Evaluation do
       let!(:evaluation) { concurrent_proc do
         concurrent_proc do
           concurrent_proc do
-            evaluation.conclude_with :cancelled
+            evaluation.conclude_to :cancelled
           end.call_detached
 
           # The return value of this concurrent proc would be used as a
