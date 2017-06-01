@@ -41,15 +41,16 @@ module Concurrently
     # @api private
     DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
     
+    # @note The exclamation mark in its name stands for: Watch out!
+    #   This method needs to be complemented by an earlier call to
+    #   {Kernel#await_resume!}.
+    #
     # Schedules the evaluation to be resumed
     #
-    # It needs to be complemented with an earlier call to {Kernel#await_resume!}.
+    # It needs to be complemented by an earlier call to {Kernel#await_resume!}.
     #
     # @return [:resumed]
     # @raise [Error] if the evaluation is not waiting
-    #
-    # @note This method only works in certain circumstances. As a reminder its
-    #   name has an exclamation mark it its end.
     #
     # @example
     #   evaluation = concurrent_proc do

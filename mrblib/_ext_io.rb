@@ -5,19 +5,19 @@
 #
 # @api public
 class IO
-  # @param [Hash] opts
-  # @option opts [Numeric] :within maximum time to wait (defaults to: `Float::INFINITY`)
-  # @option opts [Object] :timeout_result result to return in case of an exceeded
-  #   waiting time (defaults to raising {Concurrently::Evaluation::TimeoutError})
-  #
   # Suspends the current evaluation until IO is readable. It can be used inside
   # and outside of concurrent procs.
   #
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
   #
+  # @param [Hash] opts
+  # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
+  # @option opts [Object] :timeout_result result to return in case of an exceeded
+  #   waiting time *(defaults to raising {Concurrently::Evaluation::TimeoutError})*
+  #
   # @return [true]
-  # @raise [Concurrently::Proc::TimeoutError] if a given maximum waiting time
+  # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
   #   is exceeded and no custom timeout result is given.
   #
   # @example Waiting inside a concurrent proc
@@ -83,19 +83,19 @@ class IO
     io_selector.cancel_reader(self)
   end
 
-  # @param [Hash] opts
-  # @option opts [Numeric] :within maximum time to wait (defaults to: +Float::INFINITY+)
-  # @option opts [Object] :timeout_result result to return in case of an exceeded
-  #   waiting time (defaults to raising {Concurrently::Evaluation::TimeoutError})
-  #
   # Suspends the current evaluation until IO is writable. It can be used inside
   # and outside of concurrent procs.
   #
   # While waiting, the code jumps to the event loop and executes other
   # concurrent procs that are ready to run in the meantime.
   #
+  # @param [Hash] opts
+  # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
+  # @option opts [Object] :timeout_result result to return in case of an exceeded
+  #   waiting time *(defaults to raising {Concurrently::Evaluation::TimeoutError})*
+  #
   # @return [true]
-  # @raise [Concurrently::Proc::TimeoutError] if a given maximum waiting time
+  # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
   #   is exceeded and no custom timeout result is given.
   #
   # @example Waiting inside a concurrent proc

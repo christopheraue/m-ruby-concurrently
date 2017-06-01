@@ -1,4 +1,6 @@
 module Concurrently
+  # @api public
+  #
   # @note Although you probably won't need to interact with the event loop
   #   directly (unless you call `Kernel#fork`, see {#reinitialize!}), you need
   #   to understand that it's there.
@@ -98,8 +100,6 @@ module Concurrently
   class EventLoop
     # The event loop of the current thread.
     #
-    # @api public
-    #
     # @example
     #   Concurrently::EventLoop.current
     def self.current
@@ -116,9 +116,10 @@ module Concurrently
       reinitialize!
     end
 
-    # Resets the inner state of the event loop.
+    # @note The exclamation mark in its name stands for: Watch out!
+    #   This method will break stuff if not used in the right place.
     #
-    # @api public
+    # Resets the inner state of the event loop.
     #
     # This method should be called right after calling `Kernel#fork`. The fork
     # inherits the main thread and with it the event loop with all its internal
@@ -179,8 +180,6 @@ module Concurrently
     attr_reader :proc_fiber_pool
 
     # The lifetime of this event loop in seconds
-    #
-    # @api public
     #
     # @example
     #   Concurrently::EventLoop.current.lifetime # => 2.3364
