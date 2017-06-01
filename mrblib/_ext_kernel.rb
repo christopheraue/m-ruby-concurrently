@@ -60,6 +60,53 @@ module Kernel
   #   with.
   # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
   #   is exceeded and no custom timeout result is given.
+  #
+  # @example Waiting inside a concurrent proc
+  #   # Control flow is indicated by (N)
+  #
+  #   # (1)
+  #   evaluation = concurrent_proc do
+  #      # (4)
+  #      await_resume!
+  #      # (7)
+  #   end.call_nonblock
+  #
+  #   # (2)
+  #   concurrently do
+  #     # (5)
+  #     puts "I'm running while the outside is waiting!"
+  #     evaluation.resume! :result
+  #     # (6)
+  #   end
+  #
+  #   # (3)
+  #   evaluation.await_result # => :result
+  #   # (8)
+  #
+  # @example Waiting outside a concurrent proc
+  #   # Control flow is indicated by (N)
+  #
+  #   evaluation = Concurrently::Evaluation.current
+  #
+  #   # (1)
+  #   concurrently do
+  #     # (3)
+  #     puts "I'm running while the outside is waiting!"
+  #     evaluation.resume! :result
+  #     # (4)
+  #   end
+  #
+  #   # (2)
+  #   await_resume! # => :result
+  #   # (5)
+  #
+  # @example Waiting with a timeout
+  #   await_resume! within: 1
+  #   # => raises a TimeoutError after 1 second
+  #
+  # @example Waiting with a timeout and a timeout result
+  #   await_resume! within: 0.1, timeout_result: false
+  #   # => returns false after 0.1 second
   def await_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
