@@ -42,8 +42,24 @@ module Kernel
     Concurrently::Proc.new(evaluation_class)
   end
 
+  # @note The exclamation mark in its name stands for: Watch out!
+  #   This method needs to be complemented with a later call to
+  #   {Concurrently::Evaluation#resume!}.
+  #
   # Suspends the current evaluation until it is resumed manually. It can be
   # used inside and outside of concurrent procs.
+  #
+  # It needs to be complemented with a later call to {Concurrently::Evaluation#resume!}.
+  #
+  # @param [Hash] opts
+  # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
+  # @option opts [Object] :timeout_result result to return in case of an exceeded
+  #   waiting time *(defaults to raising {Concurrently::Evaluation::TimeoutError})*
+  #
+  # @return [Object] the result {Concurrently::Evaluation#resume!} is called
+  #   with.
+  # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
+  #   is exceeded and no custom timeout result is given.
   def await_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
