@@ -149,8 +149,33 @@ module Concurrently
       @concluded
     end
 
-    # Cancels the evaluation of the concurrent proc prematurely by evaluating
-    # it to a result.
+    # Cancels the concurrent evaluation prematurely by injecting a result.
+    #
+    # @param [Object] result
+    #
+    # @return [:concluded]
+    # @raise [Error] if it is already concluded
+    #
+    # @example
+    #   # Control flow is indicated by (N)
+    #
+    #   # (1)
+    #   evaluation = concurrent_proc do
+    #     # (4)
+    #     wait 1
+    #     # never reached
+    #     :result
+    #   end.call_nonblock
+    #
+    #   # (2)
+    #   concurrently do
+    #     # (5)
+    #     evaluation.conclude_to :premature_result
+    #   end
+    #
+    #   # (3)
+    #   evaluation.await_result # => :premature_result
+    #   # (6)
     def conclude_to(result)
       if @concluded
         raise self.class::Error, "already concluded"
