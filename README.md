@@ -2,7 +2,7 @@
 
 Copyright 2015-present Christopher Aue
 
-Licensed under the [MIT License](http://opensource.org/licenses/MIT)
+Licensed under the [Apache License, Version 2.0](LICENSE)
 
 ## Summary
 

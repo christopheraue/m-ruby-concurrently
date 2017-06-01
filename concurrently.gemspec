@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.description  = spec.summary
 
   spec.homepage      = "https://github.com/christopheraue/m-ruby-concurrently"
-  spec.license       = "MIT"
+  spec.license       = "Apache-2.0"
   spec.authors       = ["Christopher Aue"]
   spec.email         = ["rubygems@christopheraue.net"]
 
