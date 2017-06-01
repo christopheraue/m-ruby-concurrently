@@ -90,67 +90,67 @@ describe Kernel do
       end
 
       context "when the first block has been cancelled" do
-        before { evaluation1.cancel }
+        before { evaluation1.conclude_to nil }
 
         before { expect(callback1).not_to receive(:call) }
         before { expect(callback2).to receive(:call).ordered.and_call_original }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect(evaluation1.await_result).to be nil }
         after { expect(evaluation2.await_result).to be :result2 }
         after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when the first and second block have been cancelled" do
-        before { evaluation1.cancel }
-        before { evaluation2.cancel }
+        before { evaluation1.conclude_to nil }
+        before { evaluation2.conclude_to nil }
 
         before { expect(callback1).not_to receive(:call) }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
-        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect(evaluation1.await_result).to be nil }
+        after { expect(evaluation2.await_result).to be nil }
         after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when all evaluations have been cancelled" do
-        before { evaluation1.cancel }
-        before { evaluation2.cancel }
-        before { evaluation3.cancel }
+        before { evaluation1.conclude_to nil }
+        before { evaluation2.conclude_to nil }
+        before { evaluation3.conclude_to nil }
 
         before { expect(callback1).not_to receive(:call) }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).not_to receive(:call) }
         it { is_expected.not_to raise_error }
-        after { expect{ evaluation1.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
-        after { expect{ evaluation3.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect(evaluation1.await_result).to be nil }
+        after { expect(evaluation2.await_result).to be nil }
+        after { expect(evaluation3.await_result).to be nil }
       end
 
       context "when the second block has been cancelled" do
-        before { evaluation2.cancel }
+        before { evaluation2.conclude_to nil }
 
         before { expect(callback1).to receive(:call).ordered.and_call_original }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).to receive(:call).ordered.and_call_original }
         it { is_expected.not_to raise_error }
         after { expect(evaluation1.await_result).to be :result1 }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect(evaluation2.await_result).to be nil }
         after { expect(evaluation3.await_result).to be :result3 }
       end
 
       context "when the second and last block have been cancelled" do
-        before { evaluation2.cancel }
-        before { evaluation3.cancel }
+        before { evaluation2.conclude_to nil }
+        before { evaluation3.conclude_to nil }
 
         before { expect(callback1).to receive(:call).ordered.and_call_original }
         before { expect(callback2).not_to receive(:call) }
         before { expect(callback3).not_to receive(:call) }
         it { is_expected.not_to raise_error }
         after { expect(evaluation1.await_result).to be :result1 }
-        after { expect{ evaluation2.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
-        after { expect{ evaluation3.await_result }.to raise_error Concurrently::Evaluation::CancelledError }
+        after { expect(evaluation2.await_result).to be nil }
+        after { expect(evaluation3.await_result).to be nil }
       end
 
       context "when all timers are triggered in one go" do

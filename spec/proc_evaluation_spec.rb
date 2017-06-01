@@ -86,48 +86,48 @@ describe Concurrently::Proc::Evaluation do
     end
   end
 
-  describe "#cancel" do
+  describe "#conclude_to" do
     before { expect(evaluation).not_to be_concluded }
     after { expect(evaluation).to be_concluded }
 
     context "when doing it before requesting the result" do
-      subject { evaluation.cancel *reason }
+      subject { evaluation.conclude_to result }
 
       let(:evaluation) { concurrent_proc{ :result }.call_detached }
 
-      context "when giving no explicit reason" do
-        let(:reason) { nil }
-        it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::Evaluation::CancelledError, "evaluation cancelled" }
+      context "when concluding to an error" do
+        let(:result) { RuntimeError.new 'error message' }
+        it { is_expected.to be :concluded }
+        after { expect{ evaluation.await_result }.to raise_error 'error message' }
       end
 
-      context "when giving a reason" do
-        let(:reason) { 'cancel reason' }
-        it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::Evaluation::CancelledError, "cancel reason" }
+      context "when concluding to a result" do
+        let(:result) { :result }
+        it { is_expected.to be :concluded }
+        after { expect{ evaluation.await_result }.to be :result}
       end
     end
 
     context "when doing it after requesting the result" do
-      subject { concurrent_proc{ evaluation.cancel *reason }.call }
+      subject { concurrent_proc{ evaluation.conclude_to result }.call }
 
       let(:evaluation) { concurrent_proc{ wait(0.0001) }.call_nonblock }
 
-      context "when giving no explicit reason" do
-        let(:reason) { nil }
-        it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::Evaluation::CancelledError, "evaluation cancelled" }
+      context "when concluding to an error" do
+        let(:result) { RuntimeError.new 'error message' }
+        it { is_expected.to be :concluded }
+        after { expect{ evaluation.await_result }.to raise_error 'error message' }
       end
 
-      context "when giving a reason" do
-        let(:reason) { 'cancel reason' }
-        it { is_expected.to be :cancelled }
-        after { expect{ evaluation.await_result }.to raise_error Concurrently::Evaluation::CancelledError, "cancel reason" }
+      context "when concluding to a result" do
+        let(:result) { :result }
+        it { is_expected.to be :concluded }
+        after { expect{ evaluation.await_result }.to be :result}
       end
     end
 
-    context "when cancelling after it is already evaluated" do
-      subject { evaluation.cancel }
+    context "when concluding after it is already evaluated" do
+      subject { evaluation.conclude_to :result }
 
       let(:evaluation) { concurrent_proc{ :result }.call_detached }
       before { evaluation.await_result }
@@ -141,12 +141,12 @@ describe Concurrently::Proc::Evaluation do
       let!(:evaluation) { concurrent_proc do
         concurrent_proc do
           concurrent_proc do
-            evaluation.conclude_to :cancelled
+            evaluation.conclude_to :concluded
           end.call_detached
 
           # The return value of this concurrent proc would be used as a
           # proc in the fiber of the outer concurrent proc unless it is
-          # not properly cancelled.
+          # not properly concluded.
           :trouble_maker
         end.call_detached.await_result
       end.call_detached }

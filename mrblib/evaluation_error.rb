@@ -5,11 +5,8 @@ module Concurrently
     # proc itself.
     class Error < Concurrently::Error; end
 
-    # An error indicating an evaluation has been cancelled
-    class CancelledError < Error; end
-
     # An error indicating an evaluation could not be concluded in a given
     # time frame
-    class TimeoutError < CancelledError; end
+    class TimeoutError < Error; end
   end
 end

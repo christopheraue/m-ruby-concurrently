@@ -61,12 +61,5 @@ module Concurrently
       @awaiting_result.each_key{ |evaluation| evaluation.resume! result }
       :concluded
     end
-
-    # Cancels the evaluation of the concurrent proc prematurely by evaluating
-    # it to a CancelledError.
-    def cancel(reason = "evaluation cancelled")
-      conclude_to self.class::CancelledError.new(reason)
-      :cancelled
-    end
   end
 end
