@@ -34,7 +34,7 @@ module Concurrently
     #
     # @api public
     #
-    # This method should be called right after creating a fork. The fork
+    # This method should be called right after calling `Kernel#fork`. The fork
     # inherits the main thread and with it the event loop with all its internal
     # state from the parent. This is the a problem since we probably do not
     # want to continue watching the parent's IOs. Also, the fibers in the run

@@ -1,4 +1,4 @@
-# Concurrently adds a few methods to "Kernel" which makes them available
+# Concurrently adds a few methods to `Kernel` which makes them available
 # for every object.
 #
 # This is part of the main API of Concurrently.
@@ -26,8 +26,8 @@ module Kernel
   #
   # Creates a concurrent proc to execute code concurrently.
   #
-  # This a shortcut for {Concurrently::Proc}.new like +proc(&block)+
-  # is a shortcut for +Proc.new(&block)+.
+  # This a shortcut for {Concurrently::Proc}.new like `proc(&block)`
+  # is a shortcut for `Proc.new(&block)`.
   #
   # @return [Concurrently::Proc]
   #

@@ -1,4 +1,4 @@
-# Concurrently adds a few methods to "IO" which make them available
+# Concurrently adds a few methods to `IO` which make them available
 # for every IO instance.
 #
 # This is part of the main API of Concurrently.
@@ -6,7 +6,7 @@
 # @api public
 class IO
   # @param [Hash] opts
-  # @option opts [Numeric] :within maximum time to wait (defaults to: +Float::INFINITY+)
+  # @option opts [Numeric] :within maximum time to wait (defaults to: `Float::INFINITY`)
   # @option opts [Object] :timeout_result result to return in case of an exceeded
   #   waiting time (defaults to raising {Concurrently::Evaluation::TimeoutError})
   #
