@@ -2,7 +2,7 @@ require_relative 'mrblib/version'
 
 MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.version      = Concurrently::VERSION
-  spec.summary      = %q{Comfortably manage IO objects polled by an event loop.}
+  spec.summary      = %q{A concurrency framework based on fibers}
   spec.description  = spec.summary
 
   spec.homepage     = "https://github.com/christopheraue/m-ruby-concurrently"

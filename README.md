@@ -6,9 +6,9 @@ Licensed under the [Apache License, Version 2.0](LICENSE)
 
 ## Summary
 
-Concurrently is a concurrency framework for Ruby and mruby. It serves the same
-purpose like [EventMachine](https://github.com/eventmachine/eventmachine) and,
-to some extent, [Celluloid](https://github.com/celluloid/celluloid). With it
+Concurrently is a concurrency framework based on fibers for Ruby and mruby. It
+serves the same purpose like [EventMachine](https://github.com/eventmachine/eventmachine)
+and, to some extent, [Celluloid](https://github.com/celluloid/celluloid). With it
 concurrent code can be written in a linear way similar to async/await.
 
 This API consists of:

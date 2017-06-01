@@ -4,7 +4,7 @@ require_relative 'mrblib/version'
 Gem::Specification.new do |spec|
   spec.name         = "concurrently"
   spec.version      = Concurrently::VERSION
-  spec.summary      = %q{Comfortably manage IO objects polled by an event loop.}
+  spec.summary      = %q{A concurrency framework based on fibers}
   spec.description  = spec.summary
 
   spec.homepage      = "https://github.com/christopheraue/m-ruby-concurrently"
