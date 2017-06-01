@@ -10,14 +10,19 @@ module Concurrently
   end
 
   # @api public
-  # A concurrent Proc is like a regular Proc except its block of code is
+  # A `Concurrently::Proc` is like a regular Proc except its block of code is
   # evaluated concurrently. Its evaluation can wait for other stuff to happen
   # (e.g. result of another concurrent proc or readiness of an IO) without
   # blocking the execution of its thread.
   class Proc
     include CallbacksAttachable
 
-    # A new instance of Concurrently::Proc
+    # A new instance of {Proc}
+    #
+    # @param [Class] evaluation_class It can be given a custom class to create
+    #   evaluation objects. This can be useful if all evaluations for this proc
+    #   share some custom behavior and it makes sense to create a sub class of
+    #   {Evaluation} for them.
     def initialize(evaluation_class = Evaluation)
       @evaluation_class = evaluation_class
     end
