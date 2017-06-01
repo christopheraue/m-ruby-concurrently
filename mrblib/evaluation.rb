@@ -29,14 +29,14 @@ module Concurrently
     # @api private
     attr_reader :fiber
 
-    # @overload waiting?
+    # @!attribute [r] waiting?
     #
     # Checks if the evaluation is waiting
     #
     # @return [Boolean]
-    attr_reader :waiting
-    class_eval{ alias waiting? waiting } # remove alias from documentation
-    undef waiting
+    def waiting?
+      @waiting
+    end
 
     # @api private
     DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
