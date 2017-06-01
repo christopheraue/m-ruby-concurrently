@@ -53,13 +53,19 @@ module Concurrently
     # @raise [Error] if the evaluation is not waiting
     #
     # @example
+    #   # Control flow is indicated by (N)
+    #
+    #   # (1)
     #   evaluation = concurrent_proc do
+    #     # (2)
     #     await_resume!
-    #     :resumed
+    #     # (4)
     #   end.call_nonblock
     #
-    #   evaluation.resume!
-    #   evaluation.await_result # => :resumed
+    #   # (3)
+    #   evaluation.resume! :result
+    #   # (5)
+    #   evaluation.await_result # => :result
     def resume!(result = nil)
       raise Error, "evaluation is not waiting due to an earlier call of Kernel#await_resume!" unless @waiting
 
