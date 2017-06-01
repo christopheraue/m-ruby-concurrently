@@ -35,11 +35,11 @@ describe Concurrently::Proc do
       end
 
       context "when the code inside the block raises an error" do
-        let(:block) { proc{ raise Exception, 'error' } }
+        let(:block) { proc{ raise StandardError, 'error' } }
 
         before { expect(instance).to receive(:trigger).with(:error,
-          (be_a(Exception).and have_attributes message: 'error')) }
-        it { is_expected.to raise_error Exception, 'error' }
+          (be_a(StandardError).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error StandardError, 'error' }
       end
     end
 
@@ -65,11 +65,11 @@ describe Concurrently::Proc do
       it { is_expected.to eq call_args }
 
       context "when the code inside the block raises an error" do
-        let(:block) { proc{ raise Exception, 'error' } }
+        let(:block) { proc{ raise StandardError, 'error' } }
 
         before { expect(instance).to receive(:trigger).with(:error,
-          (be_a(Exception).and have_attributes message: 'error')) }
-        it { is_expected.to raise_error Exception, 'error' }
+          (be_a(StandardError).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error StandardError, 'error' }
       end
     end
 
@@ -82,11 +82,11 @@ describe Concurrently::Proc do
         it { is_expected.to eq call_args }
 
         context "when the code inside the block raises an error" do
-          let(:block) { proc{ wait 0; raise Exception, 'error' } }
+          let(:block) { proc{ wait 0; raise StandardError, 'error' } }
 
           before { expect(instance).to receive(:trigger).with(:error,
-            (be_a(Exception).and have_attributes message: 'error')) }
-          it { is_expected.to raise_error Exception, 'error' }
+            (be_a(StandardError).and have_attributes message: 'error')) }
+          it { is_expected.to raise_error StandardError, 'error' }
         end
       end
     end
@@ -130,8 +130,8 @@ describe Concurrently::Proc do
         let(:block) { proc{ raise 'error' } }
 
         before { expect(instance).to receive(:trigger).with(:error,
-          (be_a(Exception).and have_attributes message: 'error')) }
-        it { is_expected.to raise_error Exception, 'error' }
+          (be_a(StandardError).and have_attributes message: 'error')) }
+        it { is_expected.to raise_error StandardError, 'error' }
       end
     end
 

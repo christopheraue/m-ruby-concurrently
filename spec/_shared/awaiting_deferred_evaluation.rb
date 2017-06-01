@@ -124,10 +124,10 @@ shared_examples_for "#concurrently" do
   end
 
   context "when the code inside the block raises an error" do
-    subject { call{ raise Exception, 'error' }; wait 0 }
+    subject { call{ raise StandardError, 'error' }; wait 0 }
 
     before { expect_any_instance_of(Concurrently::Proc).to receive(:trigger).with(:error,
-      (be_a(Exception).and have_attributes message: 'error')) }
+      (be_a(StandardError).and have_attributes message: 'error')) }
     it { is_expected.not_to raise_error }
   end
 

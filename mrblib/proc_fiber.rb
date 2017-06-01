@@ -46,9 +46,9 @@ module Concurrently
             rescue Cancelled
               # raised in Kernel#await_resume!
               :cancelled
-            rescue Exception => error
-              # Rescue all exceptions and let none leak to the loop to keep it
-              # up and running at all times.
+            rescue NoMemoryError, ScriptError, SecurityError, StandardError, SystemStackError => error
+              # Rescue all errors not critical for other concurrent evaluations
+              # and don't let them leak to the loop to keep it up and running.
               proc.trigger :error, error
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_to error
               error
