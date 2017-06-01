@@ -26,7 +26,29 @@ module Concurrently
     #   evaluation.data[:id] = :an_id
     attr_reader :data
 
-    # Waits for the evaluation to be concluded with a result
+    # Waits for the evaluation to be concluded with a result.
+    #
+    # The result can be awaited from multiple places at once. All of them are
+    # resumed once the result is available.
+    #
+    # @param [Hash] opts
+    # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
+    # @option opts [Object] :timeout_result result to return in case of an exceeded
+    #   waiting time *(defaults to raising {Concurrently::Evaluation::TimeoutError})*
+    #
+    # @return [Object] the result the evaluation is concluded with
+    # @raise [Exception] if the result is an exception.
+    # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
+    #   is exceeded and no custom timeout result is given.
+    #
+    # @overload await_result(opts = {})
+    #
+    # @overload await_result(opts = {})
+    #   Use the block to do something with the result before returning it. This
+    #   can be used to validate or transform the result.
+    #
+    #   @yieldparam result [Object] its result
+    #   @yieldreturn [Object] a (potentially) transformed result
     def await_result(opts = {}) # &with_result
       if @concluded
         result = @result
