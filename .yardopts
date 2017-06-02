@@ -1,6 +1,7 @@
 lib/**/*.rb
 mrblib/**/*.rb
 --exclude _m.rb$
+--private
 --no-private
 --markup markdown
 --query '@api.text == "public"'

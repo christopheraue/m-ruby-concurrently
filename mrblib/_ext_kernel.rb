@@ -15,7 +15,7 @@ module Kernel
   #   concurrently(a,b,c) do |a,b,c|
   #     # ...
   #   end
-  def concurrently(*args)
+  private def concurrently(*args)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new.call_and_forget *args
   end
@@ -35,7 +35,7 @@ module Kernel
   #   end
   #
   #   wait_proc.call 2 # waits 2 seconds and then resumes
-  def concurrent_proc(evaluation_class = Concurrently::Proc::Evaluation) # &block
+  private def concurrent_proc(evaluation_class = Concurrently::Proc::Evaluation)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new(evaluation_class)
   end
@@ -105,7 +105,7 @@ module Kernel
   # @example Waiting with a timeout and a timeout result
   #   await_resume! within: 0.1, timeout_result: false
   #   # => returns false after 0.1 second
-  def await_resume!(opts = {})
+  private def await_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
     evaluation = Concurrently::Evaluation.current
@@ -189,7 +189,7 @@ module Kernel
   #   # (2)
   #   wait 1
   #   # (4)
-  def wait(seconds)
+  private def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     evaluation = Concurrently::Evaluation.current
     run_queue.schedule_deferred(evaluation, seconds, true)
