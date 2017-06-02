@@ -129,7 +129,20 @@ module Concurrently
       end
     end
 
-    # Schedules evaluation of the concurrent proc
+    # Evaluates the concurrent proc detached from the current execution thread.
+    #
+    # Evaluating the proc this way detaches the evaluation from the current
+    # thread of execution and schedules its start during the next iteration of
+    # the event loop.
+    #
+    # @return [Evaluation]
+    #
+    # @example
+    #   add = concurrent_proc do |a, b|
+    #     a + b
+    #   end
+    #   evaluation = add.call_detached 5, 8
+    #   evaluation.await_result # => 13
     def call_detached(*args)
       event_loop = EventLoop.current
       proc_fiber_pool = event_loop.proc_fiber_pool
