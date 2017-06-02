@@ -23,14 +23,19 @@ module Concurrently
   #
   # # Interrupted by errors
   #
-  # Every concurrent proc rescues all errors happening during its evaluation.
-  # They won't leak to the event loop and will not tear it down. In a limited
-  # number of very particular cases an error happens right when switching from
-  # one concurrent proc to another. If this happens the event loop is indeed
-  # teared down and exits by raising an {Concurrently::Error}. This is either
-  # a sign that there is a bug in this library, you fumbled around with its
-  # internals or you did some custom stuff with fibers interfering with the
-  # fibers of concurrent procs.
+  # Every concurrent proc rescues the following errors happening during its
+  # evaluation: `NoMemoryError`, `ScriptError`, `SecurityError`,
+  # `StandardError` and `SystemStackError`. These are all errors that should
+  # not have an influence on other concurrent procs or the application as a
+  # whole. They won't leak to the event loop and will not tear it down.
+  #
+  # All other errors happening inside a concurrent proc *will* tear down the
+  # event loop. These error types are: `SignalException`, `SystemExit` and the
+  # general `Exception`. In such a case the event loop exits by raising a
+  # {Concurrently::Error}.
+  #
+  # If your application continues running after the event loop has been teared
+  # down you get a couple of fiber errors (probably "dead fiber called").
   #
   #
   # # Blocked by IO
