@@ -27,7 +27,28 @@ module Concurrently
       @evaluation_class = evaluation_class
     end
 
-    # Evaluates of the concurrent proc
+    # Evaluates the concurrent proc in a blocking manner.
+    #
+    # Evaluating the proc this way executes its block of code immediately
+    # and blocks the current thread of execution until the result is available.
+    #
+    # @return [Object] the result of the evaluation.
+    # @raise [Exception] if the evaluation raises an error.
+    #
+    # @example The proc can be evaluated without waiting
+    #   add = concurrent_proc do |a, b|
+    #     a + b
+    #   end
+    #   add.call 5, 8 # => 13
+    #
+    # @example The proc needs to wait to conclude evaluation
+    #   time_in = concurrent_proc do |seconds|
+    #     wait seconds
+    #     Time.now
+    #   end
+    #
+    #   Time.now.strftime('%H:%M:%S.%L')          # => "13:47:45.850"
+    #   time_in.call(1.5).strftime('%H:%M:%S.%L') # => "13:47:47.351"
     def call(*args)
       case immediate_result = call_nonblock(*args)
       when Evaluation
