@@ -5,6 +5,9 @@ module Concurrently
   #   directly (unless you call `Kernel#fork`, see {#reinitialize!}), you need
   #   to understand that it's there.
   #
+  # @note Event loops are **not thread safe**. Each thread has its own event
+  #   loop.
+  #
   # `Concurrently::EventLoop`, like any event loop, is the heart of your
   # application and **must never be interrupted, blocked or overloaded.** A
   # healthy event loop is one that can respond to new events immediately.
@@ -104,6 +107,8 @@ module Concurrently
   # supposed to run and the time it actually ran.
   class EventLoop
     # The event loop of the current thread.
+    #
+    # This method is thread safe. Each thread returns its own event loop.
     #
     # @example
     #   Concurrently::EventLoop.current

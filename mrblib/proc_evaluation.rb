@@ -2,6 +2,9 @@ module Concurrently
   # `Concurrently::Proc::Evaluation` represents the evaluation of a concurrent
   # proc.
   #
+  # @note Evaluations are **not thread safe**. They are operating on a fiber.
+  #   Fibers cannot be resumed inside a thread they were not created in.
+  #
   # An instance will be returned by {Evaluation.current} if called from inside
   # a concurrent proc. It will also be returned by every call of
   # {Concurrently::Proc#call_detached} and also by

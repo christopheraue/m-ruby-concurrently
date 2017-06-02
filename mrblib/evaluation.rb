@@ -2,10 +2,16 @@ module Concurrently
   # `Concurrently::Evaluation` represents the evaluation of the main thread
   # outside of any concurrent procs.
   #
+  # @note Evaluations are **not thread safe**. They are operating on a fiber.
+  #   Fibers cannot be resumed inside a thread they were not created in.
+  #
   # An instance will be returned by {current} if called outside of any
   # concurrent procs.
   class Evaluation
-    # The evaluation that is currently running.
+    # The evaluation that is currently running in the current thread.
+    #
+    # This method is thread safe. Each thread returns its own currently running
+    # evaluation.
     #
     # @return [Evaluation]
     #
