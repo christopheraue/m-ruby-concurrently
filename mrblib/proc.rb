@@ -60,7 +60,44 @@ module Concurrently
 
     alias [] call
 
-    # Starts evaluation of the concurrent proc
+    # Evaluates the concurrent proc in a non-blocking manner.
+    #
+    # Evaluating the proc this way executes its block of code immediately until
+    # the result is available or the evaluation needs to wait.
+    #
+    # Dealing with this method is similar to dealing with `IO#*_nonblock`.
+    #
+    # @return [Object] the result of the evaluation if it can be executed
+    #   without waiting.
+    # @return [Evaluation] if the evaluation needs to wait.
+    # @raise [Exception] if the evaluation raises an error.
+    #
+    # @example The proc can be evaluated without waiting
+    #   add = concurrent_proc do |a, b|
+    #     a + b
+    #   end
+    #
+    #   case immediate_result = add.call_nonblock(5, 8)
+    #   when Concurrently::Evaluation
+    #     # won't happen here
+    #   else
+    #     immediate_result # => 13
+    #   end
+    #
+    # @example The proc needs to wait to conclude evaluation
+    #   time_in = concurrent_proc do |seconds|
+    #     wait seconds
+    #     Time.now
+    #   end
+    #
+    #   Time.now.strftime('%H:%M:%S.%L') # => "15:18:42.439"
+    #
+    #   case immediate_result = time_in.call_nonblock(1.5)
+    #   when Concurrently::Evaluation
+    #     immediate_result.await_result.strftime('%H:%M:%S.%L') # => "15:18:44.577"
+    #   else
+    #     # won't happen here
+    #   end
     def call_nonblock(*args)
       event_loop = EventLoop.current
       run_queue = event_loop.run_queue
