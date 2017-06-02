@@ -149,10 +149,10 @@ describe Concurrently::Proc do
     end
   end
 
-  describe "#call_detached!" do
+  describe "#call_and_forget" do
     it_behaves_like "#concurrently" do
       def call(*args, &block)
-        concurrent_proc(&block).call_detached! *args
+        concurrent_proc(&block).call_and_forget *args
       end
     end
   end

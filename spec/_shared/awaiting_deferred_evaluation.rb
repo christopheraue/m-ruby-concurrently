@@ -134,7 +134,7 @@ shared_examples_for "#concurrently" do
   describe "the reuse of proc fibers" do
     subject { @fiber3 }
 
-    let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_detached! }
+    let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_and_forget }
     let!(:evaluation2) { concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
     before { evaluation2.await_result } # let the two blocks finish
     let!(:evaluation3) { call do

@@ -81,7 +81,7 @@ module Concurrently
       previous_evaluation = @current_evaluation
 
       case evaluation
-      when Proc::Fiber # this will only happen when calling Concurrently::Proc#call_detached!
+      when Proc::Fiber # this will only happen when calling Concurrently::Proc#call_and_forget
         @current_evaluation = nil
         evaluation.resume result
       when Proc::Evaluation

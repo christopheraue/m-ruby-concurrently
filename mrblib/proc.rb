@@ -167,11 +167,11 @@ module Concurrently
     #   add = concurrent_proc do |a, b|
     #     puts "detached!"
     #   end
-    #   add.call_detached! 5, 8
+    #   add.call_and_forget 5, 8
     #
     #   # we need to enter the event loop to see an effect
     #   wait 0 # prints "detached!"
-    def call_detached!(*args)
+    def call_and_forget(*args)
       event_loop = EventLoop.current
       proc_fiber_pool = event_loop.proc_fiber_pool
       proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)

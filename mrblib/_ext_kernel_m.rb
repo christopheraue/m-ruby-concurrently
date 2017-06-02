@@ -4,7 +4,7 @@
 # following methods with an explicit block argument.
 module Kernel
   def concurrently(*args, &block)
-    Concurrently::Proc.new(&block).call_detached! *args
+    Concurrently::Proc.new(&block).call_and_forget *args
   end
 
   def concurrent_proc(evaluation_class = Concurrently::Proc::Evaluation, &block)

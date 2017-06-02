@@ -9,7 +9,7 @@ module Kernel
   #
   # Executes code concurrently in the background.
   #
-  # This is a shortcut for {Concurrently::Proc#call_detached!}.
+  # This is a shortcut for {Concurrently::Proc#call_and_forget}.
   #
   # @return [nil]
   #
@@ -19,7 +19,7 @@ module Kernel
   #   end
   def concurrently(*args)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
-    Concurrently::Proc.new.call_detached! *args
+    Concurrently::Proc.new.call_and_forget *args
   end
 
   # @!method concurrent_proc(&block)
