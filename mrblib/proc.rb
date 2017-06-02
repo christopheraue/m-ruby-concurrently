@@ -152,7 +152,25 @@ module Concurrently
       evaluation
     end
 
-    # Schedules evaluation of the concurrent proc
+    # Fire and forget variation of {#call_detached}.
+    #
+    # Once called, there is no way to control the evaluation anymore. But,
+    # because we save creating an {Evaluation} instance this is slightly faster
+    # than {#call_detached}.
+    #
+    # To execute code this way you can also use the shortcut
+    # {Kernel#concurrently}.
+    #
+    # @return [nil]
+    #
+    # @example
+    #   add = concurrent_proc do |a, b|
+    #     puts "detached!"
+    #   end
+    #   add.call_detached! 5, 8
+    #
+    #   # we need to enter the event loop to see an effect
+    #   wait 0 # prints "detached!"
     def call_detached!(*args)
       event_loop = EventLoop.current
       proc_fiber_pool = event_loop.proc_fiber_pool
