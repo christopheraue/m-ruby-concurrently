@@ -1,8 +1,6 @@
 # Concurrently adds a few methods to `IO` which make them available
 # for every IO instance.
 #
-# This is part of the main API of Concurrently.
-#
 # @api public
 class IO
   # Suspends the current evaluation until IO is readable. It can be used inside

@@ -1,8 +1,6 @@
 # Concurrently adds a few methods to `Kernel` which makes them available
 # for every object.
 #
-# This is part of the main API of Concurrently.
-#
 # @api public
 module Kernel
   # @!method concurrently(*args, &block)
