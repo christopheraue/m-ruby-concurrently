@@ -1,7 +1,4 @@
-# @markup markdown
-# @title Basic examples
-
-# Basic examples how to use Concurrently
+# Basic examples
 
 ## Timing Code
 
