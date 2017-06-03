@@ -121,3 +121,22 @@ accepting from a server socket have no `#concurrently_*` method, yet. They need
 to be implemented manually by using the corresponding `#*_nonblock` methods
 along with {IO#await_readable} or {IO#await_writable} just like in the long form
 of `r.concurrently_read 1024`.
+
+
+## Bootstrapping an application
+
+The easiest way to start using Concurrently in your application is to wrap its
+code in a concurrent proc and call it:
+
+```ruby
+#! /bin/env ruby
+
+main = concurrent_proc do
+  # spin up your application here
+end
+
+main.call
+```
+
+This main evaluation will exit as soon as there are no more concurrent proc to
+be started and there is nothing more to wait for.
