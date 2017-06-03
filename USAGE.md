@@ -1,11 +1,23 @@
 # Basic usage
 
-## Concurrent procs
+## Concurrent Procs
 
 Concurrently has a single concurrency primitive: the {Concurrently::Proc concurrent proc}.
 It looks and feels just like a regular proc. In fact, it inherits from `Proc`.
-This means there isn't much you need to learn. Most of the stuff you already
-know.
+This means there isn't much to get used to.
+
+Concurrent procs are created with {Kernel#concurrent_proc}:
+
+```ruby
+concurrent_proc do
+  # code to run concurrently
+end
+```
+
+You can use concurrent procs the same way you use regular procs. They can be
+passed around, called multiple times with different arguments and so on.
+
+### Running them
 
 Concurrent procs offer four methods to run them:
 
@@ -26,38 +38,50 @@ Concurrent procs offer four methods to run them:
   background the next time there is nothing else to do and forget about it
   immediately. Its evaluation cannot be controlled any further.
 
-For the curious: Under the cover, each evaluation of a concurrent proc is run
+{Kernel#concurrently} is equivalent to calling {Concurrently::Proc#call_and_forget}:
+
+```ruby
+concurrently do
+  # code to run concurrently
+end
+```
+
+is the same as
+
+```ruby
+concurrent_proc do
+  # code to run concurrently
+end.call_and_forget
+```
+
+### For the curious
+
+Under the cover, each evaluation of a concurrent proc is run
 inside a fiber. This let's evaluations be suspended and resumed independently
-from each other which is just the basis of concurrency. Concurrent procs are 
+from each other which is the basis of concurrency. Concurrent procs are 
 mainly a nicer and higher level API built upon those fibers and all the
 orchestration needed between them.
 
+
 ## Timing Code
+
+To defer the current evaluation use {Kernel#wait}.
 
 ### Doing something after X seconds
 
 ```ruby
-wait X
-do_it!
-```
-
-### Doing something concurrently after X seconds
-
-```ruby
-concurrently do
+concurrent_proc do
   wait X
   do_it!
 end
-
-# Code here will be executed while the concurrent proc waits.
 ```
 
-### Doing something concurrently every X seconds
+### Doing something every X seconds
 
 This is a timer.
 
 ```ruby
-concurrently do
+concurrent_proc do
   loop do
     wait X
     do_it!
@@ -68,7 +92,7 @@ end
 ### Doing something after X seconds, every Y seconds, Z times
 
 ```ruby
-concurrently do
+concurrent_proc do
   wait X
   Z.times do
     do_it!
@@ -77,7 +101,12 @@ concurrently do
 end
 ```
 
+
 ## Handling I/O
+
+Readiness of I/O is awaited with {IO#await_readable} and {IO#await_writable}. To
+read and write from an IO you can use {IO#concurrently_read} and
+{IO#concurrently_write}.
 
 ```ruby
 r,w = IO.pipe
@@ -104,23 +133,9 @@ r.close
 w.close
 ```
 
-Here, `message = r.concurrently_read 1024` is a shortcut for
-
-```ruby
-message = begin
-  read_nonblock 1024
-rescue IO::WaitReadable
-  await_readable
-  retry
-end
-```
-
-More about reading and writing concurrently can be found in the documentation
-for {IO#concurrently_read} and {IO#concurrently_write}. Other operations like
-accepting from a server socket have no `#concurrently_*` method, yet. They need
-to be implemented manually by using the corresponding `#*_nonblock` methods
-along with {IO#await_readable} or {IO#await_writable} just like in the long form
-of `r.concurrently_read 1024`.
+Other operations like accepting from a server socket have no `#concurrently_*`
+method, yet. They need to be implemented manually by using the corresponding
+`#*_nonblock` methods along with {IO#await_readable} or {IO#await_writable}.
 
 
 ## Bootstrapping an application
