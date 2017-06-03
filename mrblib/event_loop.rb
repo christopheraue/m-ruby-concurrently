@@ -24,24 +24,26 @@ module Concurrently
   # To make sure your event loop functions properly, keep the following in
   # mind:
   #
-  # # Interrupted by errors
+  # # Errors Inside Concurrent Procs
   #
   # Every concurrent proc rescues the following errors happening during its
   # evaluation: `NoMemoryError`, `ScriptError`, `SecurityError`,
   # `StandardError` and `SystemStackError`. These are all errors that should
-  # not have an influence on other concurrent procs or the application as a
-  # whole. They won't leak to the event loop and will not tear it down.
+  # not have an immediate influence on other concurrent procs or the
+  # application as a whole. They won't leak to the event loop and will not tear
+  # it down.
   #
   # All other errors happening inside a concurrent proc *will* tear down the
   # event loop. These error types are: `SignalException`, `SystemExit` and the
   # general `Exception`. In such a case the event loop exits by raising a
   # {Concurrently::Error}.
   #
-  # If your application continues running after the event loop has been teared
-  # down you get a couple of fiber errors (probably "dead fiber called").
+  # If your application rescues the error when the event loop is teared down
+  # and continues running you get a couple of fiber errors (probably "dead
+  # fiber called").
   #
   #
-  # # Blocked by IO
+  # # Blocked Evaluation of Concurrent Procs Caused By I/O
   #
   # When doing IO always use the `#*_nonblock` variants to read from or write
   # to them, like `IO#read_nonblock` or `IO#write_nonblock`, in conjunction
@@ -60,7 +62,7 @@ module Concurrently
   # loop so it can continue evaluating other code in the meantime.
   #
   #
-  # # Overloaded by too many, too expensive operations
+  # # Too Many and/or Too Expensive Concurrent Procs
   #
   # Imagine a concurrent proc with an infinite loop:
   #
