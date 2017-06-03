@@ -46,8 +46,8 @@ module Concurrently
   # # Blocked Evaluation of Concurrent Procs Caused By I/O
   #
   # When doing IO always use the `#*_nonblock` variants to read from or write
-  # to them, like `IO#read_nonblock` or `IO#write_nonblock`, in conjunction
-  # with {IO#await_readable} and {IO#await_writable}.
+  # to them, like `IO#read_nonblock` or `IO#write_nonblock`, together with
+  # {IO#await_readable} and {IO#await_writable}.
   #
   # ```
   # def read(io, maxlen = 32768)
@@ -57,6 +57,9 @@ module Concurrently
   #   retry
   # end
   # ```
+  #
+  # For reading and writing the shortcuts {IO#concurrently_read} and
+  # #{IO#concurrently_write} are available.
   #
   # This way, while the the IO is not ready, control is given back to the event
   # loop so it can continue evaluating other code in the meantime.

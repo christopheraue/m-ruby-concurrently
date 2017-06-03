@@ -55,7 +55,7 @@ r,w = IO.pipe
 
 concurrently do
   wait 1
-  w.write "Continue!"
+  w.concurrently_write "Continue!"
 end
 
 concurrently do
@@ -67,12 +67,7 @@ concurrently do
 end
 
 # Read from r. It will take one second until there is input.
-message = begin
-  r.read_nonblock 1024
-rescue IO::WaitReadable
-  r.await_readable
-  retry
-end
+message = r.concurrently_read 1024
 
 puts message # prints "Continue!"
 
@@ -80,6 +75,20 @@ r.close
 w.close
 ```
 
-Writing to IO or other operations like accepting from a ServerSocket work the
-same. You just need to use the corresponding `#*_nonblock` methods along with
-{IO#await_readable} or {IO#await_writable}.
+Here, `message = r.concurrently_read 1024` is a shortcut for
+
+```
+message = begin
+  read_nonblock 1024
+rescue IO::WaitReadable
+  await_readable
+  retry
+end
+```
+
+More about reading and writing concurrently can be found in the documentation
+for {IO#concurrently_read} and {IO#concurrently_write}. Other operations like
+accepting from a server socket have no `#concurrently_*` method, yet. They need
+to be implemented manually by using the corresponding `#*_nonblock` methods
+along with {IO#await_readable} or {IO#await_writable} just like in the long form
+of `r.concurrently_read 1024`.
