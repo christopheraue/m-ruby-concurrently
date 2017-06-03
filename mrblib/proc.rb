@@ -17,6 +17,48 @@ module Concurrently
   # evaluated concurrently. Its evaluation can wait for other stuff to happen
   # (e.g. result of another concurrent proc or readiness of an IO) without
   # blocking the execution of its thread.
+  #
+  # Errors raised inside concurrent procs are re-raised when getting their
+  # result with {Evaluation#await_result}. They can also be watched by
+  # registering callbacks for the `:error` event as shown in the example below.
+  # This is useful as a central hook to all errors inside concurrent procs for
+  # monitoring or logging purposes. Also, concurrent procs evaluated with
+  # {Kernel#concurrently} resp. {Proc#call_and_forget} are run in the
+  # background and will fail silently. The callbacks are the only way to be
+  # notified about errors inside them.
+  #
+  # The callbacks can be registered for all procs or only for one specific
+  # proc:
+  #
+  # @example Watching errors
+  #   # Callbacks for all procs are registered for the `Concurrently::Proc` class:
+  #   Concurrently::Proc.on(:error) do |error|
+  #     puts "error in one of many procs: #{error}"
+  #   end
+  #
+  #   concurrently do
+  #     raise "eternal darkness"
+  #   end
+  #
+  #   sunshine_proc = concurrent_proc do
+  #     raise "eternal sunshine"
+  #   end
+  #
+  #   # Callbacks for a single proc are registered for the instance:
+  #   sunshine_proc.on(:error) do |error|
+  #     puts "error in the sunshine proc: #{error}"
+  #   end
+  #
+  #   # defer execution a little. This will make the concurrently block run in the
+  #   # meantime.
+  #   wait 0
+  #   # the concurrently block will fail in the background and causes a printed
+  #   # "error in one of many procs: eternal darkness"
+  #
+  #   sunshine_proc.call
+  #   # prints "error in one of many procs: eternal sunshine"
+  #   # prints "error in the sunshine proc: eternal sunshine"
+  #   # raises RuntimeError: eternal sunshine
   class Proc
     include CallbacksAttachable
 
