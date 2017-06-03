@@ -21,4 +21,16 @@ class Array
       lo == len ? nil : lo
     end
   end
+
+  # mruby does not implement Array#pop with arguments
+  alias_method :pop_single, :pop
+  def pop(n = nil)
+    if n
+      res = []
+      n.times{ res << pop_single }
+      res.reverse!
+    else
+      pop_single
+    end
+  end
 end
