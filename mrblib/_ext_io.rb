@@ -81,6 +81,47 @@ class IO
     io_selector.cancel_reader(self)
   end
 
+  # Reads from IO concurrently.
+  #
+  # If IO is not readable at the moment it blocks the current concurrent proc
+  # and tries again after it got readable again. This is a shortcut for:
+  #
+  # ```
+  # result = begin
+  #   read_nonblock(maxlen, buf)
+  # rescue IO::WaitReadable
+  #   await_readable
+  #   retry
+  # end
+  # ```
+  #
+  # @see https://ruby-doc.org/core/IO.html#method-i-read_nonblock
+  #   Ruby documentation for `IO#read_nonblock` for details about parameters and return values.
+  #
+  # @example
+  #   r,w = IO.pipe
+  #   w.write "Hello!"
+  #   r.concurrently_read 1024 # => "Hello!"
+  #
+  # @overload concurrently_read(maxlen)
+  #   Reads maxlen bytes from IO and returns it as new string
+  #
+  #   @param [Integer] maxlen
+  #   @return [String] read string
+  #
+  # @overload concurrently_read(maxlen, outbuf)
+  #   Reads maxlen bytes from IO and fills the given buffer with them.
+  #
+  #   @param [Integer] maxlen
+  #   @param [String] outbuf
+  #   @return [outbuf] outbuf filled with read string
+  def concurrently_read(maxlen, outbuf = nil)
+    read_nonblock(maxlen, outbuf)
+  rescue IO::WaitReadable
+    await_readable
+    retry
+  end
+
   # Suspends the current evaluation until IO is writable. It can be used inside
   # and outside of concurrent procs.
   #

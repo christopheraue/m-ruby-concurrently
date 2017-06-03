@@ -18,6 +18,37 @@ describe IO do
     end
   end
 
+  describe "#concurrently_read" do
+    context "without output buffer" do
+      subject { reader.concurrently_read 10 }
+
+      context "when it is readable" do
+        before { writer.write "Hello!" }
+        it { is_expected.to eq "Hello!" }
+      end
+
+      context "when it is not readable at first" do
+        before { concurrently{ writer.write "Hello!" } }
+        it { is_expected.to eq "Hello!" }
+      end
+    end
+
+    context "with output buffer" do
+      subject { reader.concurrently_read 10, outbuf }
+      let(:outbuf) { "" }
+
+      context "when it is readable" do
+        before { writer.write "Hello!" }
+        it { is_expected.to be(outbuf).and eq("Hello!") }
+      end
+
+      context "when it is not readable at first" do
+        before { concurrently{ writer.write "Hello!" } }
+        it { is_expected.to be(outbuf).and eq("Hello!") }
+      end
+    end
+  end
+
   describe "#await_writable" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc do
