@@ -1,4 +1,36 @@
-# Basic examples
+# Basic usage
+
+## Concurrent procs
+
+Concurrently has a single concurrency primitive: the {Concurrently::Proc concurrent proc}.
+It looks and feels just like a regular proc. In fact, it inherits from `Proc`.
+This means there isn't much you need to learn. Most of the stuff you already
+know.
+
+Concurrent procs offer four methods to run them:
+
+* {Concurrently::Proc#call}: Evaluates the concurrent proc and returns the
+  result. If it needs to wait for something (like I/O) it blocks the (root
+  or concurrent) evaluation it has been called from.
+* {Concurrently::Proc#call_nonblock}: Starts evaluating the concurrent proc
+  immediately. If it can be evaluated without the need to wait for something
+  (like I/O), return its result. If it needs to wait do not block the (root
+  or concurrent) evaluation it has been called from and return a
+  {Concurrently::Proc::Evaluation proxy for the evaluation} so we can decide
+  what to do with it.
+* {Concurrently::Proc#call_detached}: Evaluates the concurrent proc in the 
+  background the next time there is nothing else to do. It returns a 
+  {Concurrently::Proc::Evaluation proxy for the evaluation} so we can control
+  it.
+* {Concurrently::Proc#call_and_forget}: Evaluate the concurrent proc in the
+  background the next time there is nothing else to do and forget about it
+  immediately. Its evaluation cannot be controlled any further.
+
+For the curious: Under the cover, each evaluation of a concurrent proc is run
+inside a fiber. This let's evaluations be suspended and resumed independently
+from each other which is just the basis of concurrency. Concurrent procs are 
+mainly a nicer and higher level API built upon those fibers and all the
+orchestration needed between them.
 
 ## Timing Code
 
