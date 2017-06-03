@@ -83,8 +83,10 @@ class IO
 
   # Reads from IO concurrently.
   #
-  # If IO is not readable at the moment it blocks the current concurrent proc
-  # and tries again after it got readable again. This is a shortcut for:
+  # If IO is not readable right now it blocks the current concurrent evaluation
+  # and tries again after it became readable again.
+  #
+  # This method is a shortcut for:
   #
   # ```
   # result = begin
@@ -212,8 +214,10 @@ class IO
 
   # Writes to IO concurrently.
   #
-  # If IO is not writable at the moment it blocks the current concurrent proc
-  # and tries again after it got writable again. This is a shortcut for:
+  # If IO is not writable right now it blocks the current concurrent proc
+  # and tries again after it became writable again.
+  #
+  # This methods is a shortcut for:
   #
   # ```
   # result = begin
