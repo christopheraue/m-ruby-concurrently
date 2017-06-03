@@ -100,7 +100,7 @@ class IO
   #
   # @example
   #   r,w = IO.pipe
-  #   w.write "Hello!"
+  #   w.concurrently_write "Hello!"
   #   r.concurrently_read 1024 # => "Hello!"
   #
   # @overload concurrently_read(maxlen)
@@ -208,5 +208,36 @@ class IO
     await_resume! opts
   ensure
     io_selector.cancel_writer(self)
+  end
+
+  # Writes to IO concurrently.
+  #
+  # If IO is not writable at the moment it blocks the current concurrent proc
+  # and tries again after it got writable again. This is a shortcut for:
+  #
+  # ```
+  # result = begin
+  #   write_nonblock(string)
+  # rescue IO::WaitWritable
+  #   await_writable
+  #   retry
+  # end
+  # ```
+  #
+  # @param [String] string to write
+  # @return [Integer] bytes written
+  #
+  # @see https://ruby-doc.org/core/IO.html#method-i-write_nonblock
+  #   Ruby documentation for `IO#write_nonblock` for details about parameters and return values.
+  #
+  # @example
+  #   r,w = IO.pipe
+  #   w.concurrently_write "Hello!"
+  #   r.concurrently_read 1024 # => "Hello!"
+  def concurrently_write(string)
+    write_nonblock(string)
+  rescue IO::WaitWritable
+    await_writable
+    retry
   end
 end

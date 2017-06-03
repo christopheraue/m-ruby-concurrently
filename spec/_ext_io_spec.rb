@@ -65,4 +65,18 @@ describe IO do
       end
     end
   end
+
+  describe "#concurrently_write" do
+    subject { writer.concurrently_write "Hello!" }
+
+    context "when it is writable" do
+      it { is_expected.to eq 6 }
+    end
+
+    context "when it is not writable at first" do
+      before { writer.write ' '*(2**16) } # jam the pipe
+      before { concurrently{ reader.readpartial 2**16 } }
+      it { is_expected.to eq 6 }
+    end
+  end
 end
