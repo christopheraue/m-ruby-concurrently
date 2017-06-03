@@ -4,14 +4,14 @@
 
 ### Doing something after X seconds
 
-```
+```ruby
 wait X
 do_it!
 ```
 
 ### Doing something concurrently after X seconds
 
-```
+```ruby
 concurrently do
   wait X
   do_it!
@@ -24,7 +24,7 @@ end
 
 This is a timer.
 
-```
+```ruby
 concurrently do
   loop do
     wait X
@@ -35,7 +35,7 @@ end
 
 ### Doing something after X seconds, every Y seconds, Z times
 
-```
+```ruby
 concurrently do
   wait X
   Z.times do
@@ -47,7 +47,7 @@ end
 
 ## Handling I/O
 
-```
+```ruby
 r,w = IO.pipe
 
 concurrently do
@@ -74,7 +74,7 @@ w.close
 
 Here, `message = r.concurrently_read 1024` is a shortcut for
 
-```
+```ruby
 message = begin
   read_nonblock 1024
 rescue IO::WaitReadable
