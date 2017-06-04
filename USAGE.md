@@ -163,6 +163,23 @@ end
 ```
 
 
+## Flow of control
+
+To explain when code is run (and when it is not) it is necessary to understand
+a little bit more about the way Concurrently works.
+
+Concurrently lets every thread run an {Concurrently::EventLoop event loop}.
+These event loops are responsible for watching IOs and scheduling evaluations
+of concurrent procs. They *do not* run at the exact same time (e.g. on another
+cpu core) parallel to your application's code. Instead, your code yields to the
+event loop if it waits for something with `#wait` or one of the `#await_*`
+methods. And the event loop yields back to a waiting evaluation in your code
+when it can be resumed.
+
+So, the general rule of thumb is: **The event loop is (and only is) entered if
+your code calls `#wait` or one of the `#await_*` methods.**
+
+
 ## Bootstrapping an application
 
 The easiest way to start using Concurrently in your application is to wrap its
