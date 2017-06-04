@@ -1,12 +1,16 @@
-# Basic usage
+# An overview of Concurrently
+
+This document is meant as a general overview of what can be done with
+Concurrently and how it works. For more information and examples about a topic
+follow the interspersed links to the documentation.
 
 ## Evaluations
 
-An evaluation is an atomic thread of execution leading to a result. In this
-way, it is similar to a thread or a fiber. It can be suspended and resumed
-independently from other evaluations. It is also similar to a future or a
-promise by providing access to its future result or offering the ability to
-conclude it prematurely.
+An evaluation is an atomic thread of execution leading to a result. It is
+similar to a thread or a fiber. It can be suspended and resumed independently
+from other evaluations. It is also similar to a future or a promise by
+providing access to its future result or offering the ability to conclude it
+prematurely.
 
 Every ruby program already has an implicit {Concurrently::Evaluation root
 evaluation} running. Calling a concurrent proc creates a
@@ -34,22 +38,23 @@ they can be passed around or called multiple times with different arguments.
 
 A concurrent proc has four methods to call it.
 
-The first two run the concurrent proc immediately:
+The first two start to evaluate the concurrent proc immediately:
 
-* {Concurrently::Proc#call}: Blocks the (root or proc) evaluation it has
-  been called from. Just like a normal proc does. But if it needs to wait for
-  something it won't block other evaluations.
-* {Concurrently::Proc#call_nonblock}: Won't block the (root or proc)
+* {Concurrently::Proc#call} blocks the (root or proc) evaluation it has
+  been called from until its evaluation is concluded. Then it returns the
+  result. This behaves just like `Proc#call`.
+* {Concurrently::Proc#call_nonblock} won't block the (root or proc)
   evaluation it has been called from if it needs to wait for something. In such
-  a case, it returns its {Concurrently::Proc::Evaluation evaluation} right away.
+  a case, it does not wait until its evaluated and instead returns its
+  {Concurrently::Proc::Evaluation evaluation}.
 
 The other two schedule the concurrent proc to run in the background. It won't
 run right away and will be started during the next iteration of the event loop:
 
-* {Concurrently::Proc#call_detached}: Returns an {Concurrently::Proc::Evaluation
-  evaluation} to control it.
-* {Concurrently::Proc#call_and_forget}: Forgets about the evaluation. It cannot be
-  controlled any further.
+* {Concurrently::Proc#call_detached} returns an {Concurrently::Proc::Evaluation
+  evaluation}.
+* {Concurrently::Proc#call_and_forget} forgets about the evaluation immediately
+  and returns `nil`.
 
 There is a shortcut for {Concurrently::Proc#call_and_forget}:
 
