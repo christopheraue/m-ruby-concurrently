@@ -134,9 +134,24 @@ r.close
 w.close
 ```
 
-Other operations like accepting from a server socket have no `#concurrently_*`
-method, yet. They need to be implemented manually by using the corresponding
-`#*_nonblock` methods along with {IO#await_readable} or {IO#await_writable}.
+Other operations like accepting from a server socket need to be done by using
+the corresponding `#*_nonblock` methods along with {IO#await_readable} or
+{IO#await_writable}:
+
+```ruby
+require 'socket'
+
+server = UNIXServer.new "/tmp/sock"
+
+begin
+  socket = server.accept_nonblock
+rescue IO::WaitReadable
+  server.await_readable
+  retry
+end
+
+# socket is an accepted socket.
+```
 
 
 ## Bootstrapping an application

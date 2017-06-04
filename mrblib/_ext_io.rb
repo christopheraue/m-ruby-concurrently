@@ -84,12 +84,12 @@ class IO
   # Reads from IO concurrently.
   #
   # If IO is not readable right now it blocks the current concurrent evaluation
-  # and tries again after it became readable again.
+  # and tries again after it became readable.
   #
   # This method is a shortcut for:
   #
   # ```
-  # result = begin
+  # begin
   #   read_nonblock(maxlen, buf)
   # rescue IO::WaitReadable
   #   await_readable
@@ -215,12 +215,12 @@ class IO
   # Writes to IO concurrently.
   #
   # If IO is not writable right now it blocks the current concurrent proc
-  # and tries again after it became writable again.
+  # and tries again after it became writable.
   #
   # This methods is a shortcut for:
   #
   # ```
-  # result = begin
+  # begin
   #   write_nonblock(string)
   # rescue IO::WaitWritable
   #   await_writable
