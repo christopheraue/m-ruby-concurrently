@@ -15,8 +15,9 @@ evaluation} running. Calling a concurrent proc creates a
 
 ## Concurrent Procs
 
-Concurrently has a single concurrency primitive: the {Concurrently::Proc concurrent proc}.
-It looks and feels just like a regular proc. In fact, it inherits from `Proc`.
+The {Concurrently::Proc concurrent proc} is Concurrently's concurrency
+primitive. It looks and feels just like a regular proc. In fact,
+{Concurrently::Proc} inherits from `Proc`.
 
 Concurrent procs are created with {Kernel#concurrent_proc}:
 
@@ -26,8 +27,8 @@ concurrent_proc do
 end
 ```
 
-You can use concurrent procs the same way you use regular procs. They can be
-passed around, called multiple times with different arguments and so on.
+Concurrent procs can be used the same way regular procs are used. For example,
+they can be passed around or called multiple times with different arguments.
 
 ### Calling concurrent procs
 
