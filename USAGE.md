@@ -19,26 +19,27 @@ passed around, called multiple times with different arguments and so on.
 
 ### Running them
 
-Concurrent procs offer four methods to run them:
+A concurrent proc has four methods to run it.
 
-* {Concurrently::Proc#call}: Evaluates the concurrent proc and returns the
-  result. If it needs to wait for something (like I/O) it blocks the (root
-  or concurrent) evaluation it has been called from.
-* {Concurrently::Proc#call_nonblock}: Starts evaluating the concurrent proc
-  immediately. If it can be evaluated without the need to wait for something
-  (like I/O), return its result. If it needs to wait do not block the (root
-  or concurrent) evaluation it has been called from and return a
-  {Concurrently::Proc::Evaluation proxy for the evaluation} so we can decide
-  what to do with it.
-* {Concurrently::Proc#call_detached}: Evaluates the concurrent proc in the 
-  background the next time there is nothing else to do. It returns a 
-  {Concurrently::Proc::Evaluation proxy for the evaluation} so we can control
-  it.
-* {Concurrently::Proc#call_and_forget}: Evaluate the concurrent proc in the
-  background the next time there is nothing else to do and forget about it
-  immediately. Its evaluation cannot be controlled any further.
+The first two run the concurrent proc immediately:
 
-{Kernel#concurrently} is equivalent to calling {Concurrently::Proc#call_and_forget}:
+* {Concurrently::Proc#call}: Blocks the (root or concurrent) evaluation it has
+  been called from. Just like a normal proc does. But if it needs to wait for
+  something (like I/O) it won't block any other concurrent evaluations.
+* {Concurrently::Proc#call_nonblock}: Won't block the (root or concurrent)
+  evaluation it has been called from if it needs to wait for something (like
+  I/O). In that case, it returns right away with a
+  {Concurrently::Proc::Evaluation proxy for the evaluation} to control it.
+
+The other two schedule the concurrent proc to run in the background. It won't
+run right away and will be started during the next iteration of the event loop:
+
+* {Concurrently::Proc#call_detached}: Returns a {Concurrently::Proc::Evaluation
+  proxy for the evaluation} to control it.
+* {Concurrently::Proc#call_and_forget}: Forgets about the evaluation. It cannot be
+  controlled any further.
+
+There is a shortcut for {Concurrently::Proc#call_and_forget}:
 
 ```ruby
 concurrently do
