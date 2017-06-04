@@ -1,8 +1,8 @@
 # An overview of Concurrently
 
 This document is meant as a general overview of what can be done with
-Concurrently and how it works. For more information and examples about a topic
-follow the interspersed links to the documentation.
+Concurrently and how all its parts work together. For more information and
+examples about a topic follow the interspersed links to the documentation.
 
 ## Evaluations
 
@@ -40,16 +40,17 @@ A concurrent proc has four methods to call it.
 
 The first two start to evaluate the concurrent proc immediately:
 
-* {Concurrently::Proc#call} blocks the (root or proc) evaluation it has
-  been called from until its evaluation is concluded. Then it returns the
+* {Concurrently::Proc#call} blocks the (root or proc) evaluation it has been
+  called from until its own evaluation is concluded. Then it returns the
   result. This behaves just like `Proc#call`.
-* {Concurrently::Proc#call_nonblock} won't block the (root or proc)
-  evaluation it has been called from if it needs to wait for something. In such
-  a case, it does not wait until its evaluated and instead returns its
-  {Concurrently::Proc::Evaluation evaluation}.
+* {Concurrently::Proc#call_nonblock} will not block the (root or proc)
+  evaluation it has been called from if it waits for something. Instead, it
+  immediately returns its {Concurrently::Proc::Evaluation evaluation}. If it
+  can be evaluated without waiting it returns the result.
 
-The other two schedule the concurrent proc to run in the background. It won't
-run right away and will be started during the next iteration of the event loop:
+The other two schedule the concurrent proc to run in the background. The
+evaluation is not started right away but is deferred until the the next
+iteration of the event loop:
 
 * {Concurrently::Proc#call_detached} returns an {Concurrently::Proc::Evaluation
   evaluation}.
@@ -204,8 +205,8 @@ Unicorns!
 `concurrently{}` is a shortcut for `concurrent_proc{}.call_and_forget`.
 {Concurrently::Proc#call_and_forget} does not evaluate its code right away but
 schedules it to run during the next iteration of the event loop. But, since the
-root evaluation didn't await anything the event loop has never been entered and
-the evaluation of the concurrent proc has never been started.
+root evaluation did not await anything the event loop has never been entered
+and the evaluation of the concurrent proc has never been started.
 
 A more subtle variation of this behavior occurs in the following scenario:
 
