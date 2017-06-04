@@ -285,18 +285,38 @@ end
 
 ## Bootstrapping an application
 
-The easiest way to start using Concurrently in your application is to wrap its
-code in a concurrent proc and call it:
+Considering a server application with a single server socket accepting
+connections, how can such an application be built?
+
+Here is a simplified (i.e. imperfect) example to show the general idea:
 
 ```ruby
-#! /bin/env ruby
+#!/bin/env ruby
 
-main = concurrent_proc do
-  # spin up your application here
+require 'socket'
+
+accept_connection = concurrent_proc do |socket|
+  until socket.closed?
+    message = socket.concurrently_read 4096
+    request = extract_request_from message
+    response = request.evaluate
+    socket.concurrently_write response
+  end
 end
 
-main.call
-```
+start_server = concurrent_proc do |server|
+  until server.closed?
+    begin
+      # Handle each socket concurrently so it can await readiness without
+      # blocking the server.
+      accept_connection.call_detached server.accept_nonblock
+    rescue IO::WaitReadable
+      server.await_readable
+      retry
+    end
+  end
+end
 
-This main evaluation will exit as soon as there are no more concurrent proc to
-be started and there is nothing more to wait for.
+server = UNIXServer.new "/tmp/sock"
+start_server.call server # blocks as long as the server loop is running
+```
