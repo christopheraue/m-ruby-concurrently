@@ -180,7 +180,7 @@ when it can be resumed.
 So, the general rule of thumb is: **The event loop is (and only is) entered if
 your code calls `#wait` or one of the `#await_*` methods.**
 
-This has a few implications:
+This can lead to the following effects:
 
 ### A concurrent proc is scheduled but never run
 
@@ -233,6 +233,54 @@ second time frame. Because of this, the evaluation of the `concurrently` block
 is indeed started and immediately waits for two seconds. After one second the
 root evaluation is resumed and exits. The `concurrently` block is never awoken
 again from its now eternal beauty sleep.
+
+### A call is blocking the entire execution.
+
+```ruby
+#!/bin/env ruby
+
+r,w = IO.pipe
+
+concurrently do
+  w.write 'Wake up!'
+end
+
+r.readpartial 32
+```
+
+Here, although we are practically waiting for `r` to be readable we do so in a
+blocking manner (`IO#readpartial` is blocking). This brings the whole process
+to a halt, the event loop will not be entered and the `concurrently` block will
+not be run. It will not be written to the pipe which in turn creates a nice
+deadlock.
+
+You can use blocking calls to deal with I/O. But you should await readiness of
+the IO before. If instead of just `r.readpartial 32` we write:
+
+```ruby
+r.await_readable
+r.readpartial 32
+```
+
+we suspend the root evaluation, switch to the event loop which runs the
+`concurrently` block and once there is something to read from `r` the root
+evaluation is resumed.
+
+This approach is not perfect. It is not very efficient if we would not need to
+await readability at all and could read from `r` immediately. But it is still
+better than blocking everything by default.
+
+The most efficient way is doing a non-blocking read and only await readability
+if it is not readable:
+
+```ruby
+begin
+  r.read_nonblock 32
+rescue IO::WaitReadable
+  r.await_readable
+  retry
+end
+```
 
 
 ## Bootstrapping an application
