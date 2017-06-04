@@ -179,6 +179,60 @@ when it can be resumed.
 So, the general rule of thumb is: **The event loop is (and only is) entered if
 your code calls `#wait` or one of the `#await_*` methods.**
 
+This has a few implications:
+
+### A concurrent proc is scheduled but never run
+
+Consider the following script:
+
+```ruby
+#!/bin/env ruby
+
+concurrently do
+  puts "I will be forgotten, like tears in the rain."
+end
+
+puts "Unicorns!"
+```
+
+Running it will only print:
+
+```
+Unicorns!
+```
+
+`concurrently{}` is a shortcut for `concurrent_proc{}.call_and_forget`.
+{Concurrently::Proc#call_and_forget} does not evaluate its code right away but
+schedules it to run during the next iteration of the event loop. But, since the
+root evaluation didn't await anything the event loop has never been entered and
+the evaluation of the concurrent proc has never been started.
+
+A more subtle variation of this behavior occurs in the following scenario:
+
+```ruby
+#!/bin/env ruby
+
+concurrently do
+  puts "Unicorns!"
+  wait 2
+  puts "I will be forgotten, like tears in the rain."
+end
+
+wait 1
+```
+
+Running it will also only print:
+
+```
+Unicorns!
+```
+
+This time, the root evaluation does await something, namely the end of a one
+second time frame. Because of this, the evaluation of the `concurrently` block
+is indeed started and immediately waits for two seconds. After one second the
+root evaluation is resumed and exits. The `concurrently` block is never awoken
+again from its now eternal beauty sleep.
+
 
 ## Bootstrapping an application
 
