@@ -10,6 +10,7 @@ module Concurrently
   end
 
   # @api public
+  # @since 1.0.0
   #
   # @note Concurrent procs are **thread safe**.
   #

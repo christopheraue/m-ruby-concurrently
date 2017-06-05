@@ -1,7 +1,8 @@
+# @api public
+# @since 1.0.0
+#
 # Concurrently adds a few methods to `Kernel` which makes them available
 # for every object.
-#
-# @api public
 module Kernel
   # @!method concurrently(*args, &block)
   #

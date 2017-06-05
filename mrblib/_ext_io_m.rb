@@ -1,4 +1,5 @@
 # @api mruby
+#
 # mruby-io does not support non-blocking io operations.
 class IO
   unless const_defined? :EAGAIN

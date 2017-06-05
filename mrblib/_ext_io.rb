@@ -1,7 +1,8 @@
+# @api public
+# @since 1.0.0
+#
 # Concurrently adds a few methods to `IO` which make them available
 # for every IO instance.
-#
-# @api public
 class IO
   # Suspends the current evaluation until IO is readable. It can be used inside
   # and outside of concurrent procs.

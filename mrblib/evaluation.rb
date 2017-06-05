@@ -1,4 +1,7 @@
 module Concurrently
+  # @api public
+  # @since 1.0.0
+  #
   # `Concurrently::Evaluation` represents the evaluation of the main thread
   # outside of any concurrent procs.
   #

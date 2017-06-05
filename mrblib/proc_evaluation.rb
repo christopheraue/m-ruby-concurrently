@@ -1,4 +1,7 @@
 module Concurrently
+  # @api public
+  # @since 1.0.0
+  #
   # `Concurrently::Proc::Evaluation` represents the evaluation of a concurrent
   # proc.
   #

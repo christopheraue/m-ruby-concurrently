@@ -1,5 +1,6 @@
 module Concurrently
   # @api public
+  # @since 1.0.0
   #
   # @note Although you probably won't need to interact with the event loop
   #   directly (unless you call `Kernel#fork`, see {#reinitialize!}), you need
