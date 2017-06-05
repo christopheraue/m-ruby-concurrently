@@ -1,4 +1,3 @@
-lib/**/*.rb
 mrblib/**/*.rb
 --exclude _m.rb$
 --private

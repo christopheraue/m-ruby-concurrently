@@ -1,4 +1,6 @@
 module Concurrently
+  # @api private
+  # Let Ruby use nio to select IOs.
   class EventLoop::IOSelector
     def initialize(event_loop)
       @run_queue = event_loop.run_queue
