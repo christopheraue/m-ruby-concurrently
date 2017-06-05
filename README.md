@@ -3,8 +3,15 @@
 Concurrently is a concurrency framework based on fibers for Ruby and mruby.
 
 It serves the same purpose like [EventMachine](https://github.com/eventmachine/eventmachine)
-and, to some extent, [Celluloid](https://github.com/celluloid/celluloid). With it
-concurrent code can be written linearly similar to async/await.
+and, to some extent, [Celluloid](https://github.com/celluloid/celluloid).
+
+To run code concurrently, it is defined as a concurrent proc. These concurrent
+procs are very similar to regular procs, except when they are called their code
+is evaluated in a fiber (that is a lightweight thread). This lets their
+evaluation be suspended and resumed independent from the evaluations of other
+concurrent procs. Along with methods to wait for a time period, await readiness
+of I/O and await the result of other evaluations, concurrent code can be
+written linearly similar to async/await.
 
 ## A very basic example
 
