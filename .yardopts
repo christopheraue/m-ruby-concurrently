@@ -3,4 +3,7 @@ mrblib/**/*.rb
 --private
 --no-private
 --markup markdown
-- USAGE.md CHANGES.md
+-
+INSTALL.md
+USAGE.md
+CHANGES.md

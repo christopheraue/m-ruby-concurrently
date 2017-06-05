@@ -46,37 +46,9 @@ evaluation3.await_result # wait for the longest running evaluation to finish
 That's all! Just a bucket for code, a hand full of methods to wait for stuff
 and a placeholder for the result.
 
-## Ruby Installation
+## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'concurrently'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install concurrently
-
-## mruby Installation
-
-To directly add it to an mruby build config or GemBox:
-```ruby
-MRuby::Build.new do |conf| # or MRuby::GemBox.new do |conf|
-  conf.gem github: 'christopheraue/m-ruby-concurrently'
-end
-```
-
-To use it in an mruby gem:
-```ruby
-MRuby::Gem::Specification.new('mruby-your_gem') do |spec|
-  spec.add_dependency 'mruby-concurrently', github: 'christopheraue/m-ruby-concurrently'
-end
-```
+see [INSTALL](INSTALL.md)
 
 ## Usage
 
