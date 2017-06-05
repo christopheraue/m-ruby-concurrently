@@ -67,7 +67,7 @@ This is the output:
 ## Installation & Documentation
 
 * [Installation instructions][installation]
-* [An introduction to Concurrently][introduction]
+* [An Introduction to Concurrently][introduction]
 * [API documentation][documentation]
 
 
@@ -78,10 +78,10 @@ This is the output:
 
 ## License
 
-Copyright 2015-present Christopher Aue
+Copyright 2016-present Christopher Aue
 
-Licensed under the Apache License, Version 2.0. Please see the file called
-LICENSE.
+Concurrently is licensed under the Apache License, Version 2.0. Please see the
+file called LICENSE.
 
 
 [installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/INSTALL.md
