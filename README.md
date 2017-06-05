@@ -63,6 +63,6 @@ LICENSE.
 
 
 [installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/INSTALL.md
-[introduction]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/USAGE.md
+[introduction]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/INTRODUCTION.md
 [documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/
 [changes]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/CHANGES.md

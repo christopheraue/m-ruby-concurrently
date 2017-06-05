@@ -5,5 +5,5 @@ mrblib/**/*.rb
 --markup markdown
 -
 INSTALL.md
-USAGE.md
+INTRODUCTION.md
 CHANGES.md

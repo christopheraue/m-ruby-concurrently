@@ -1,4 +1,4 @@
-# An overview of Concurrently
+# An Introduction to Concurrently
 
 This document is meant as a general overview of what can be done with
 Concurrently and how all its parts work together. For more information and
