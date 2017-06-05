@@ -37,7 +37,7 @@
 * [#reinitialize!](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method)
 
 ### Added Errors
-* [Concurrently::Error](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation/Error)
+* [Concurrently::Error](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error)
 * [Concurrently::Evaluation::Error](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation/Error)
 * [Concurrently::Evaluation::TimeoutError](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation/TimeoutError)
 
