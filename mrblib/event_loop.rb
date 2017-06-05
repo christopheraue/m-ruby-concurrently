@@ -5,111 +5,17 @@ module Concurrently
   #   directly (unless you call `Kernel#fork`, see {#reinitialize!}), you need
   #   to understand that it's there.
   #
-  # @note Event loops are **not thread safe**. Each thread has its own event
-  #   loop.
+  # @note Event loops are **not thread safe**. But since each thread has its
+  #   own event loop they are not shared anyway.
   #
   # `Concurrently::EventLoop`, like any event loop, is the heart of your
   # application and **must never be interrupted, blocked or overloaded.** A
   # healthy event loop is one that can respond to new events immediately.
   #
-  # The event loop is responsible for selecting/polling IOs and waiting for
-  # a given amount of time. It does all the coordination between concurrent
-  # procs. Every thread has a single event loop attached to it.
-  #
   # The loop runs in the background and you won't interact with it directly.
-  # Instead, when you call one of the #await_* methods the bookkeeping of
-  # selecting IOs for readiness or waiting a given amount of time is done for
-  # you.
-  #
-  # To make sure your event loop functions properly, keep the following in
-  # mind:
-  #
-  # # Errors Inside Concurrent Procs
-  #
-  # Every concurrent proc rescues the following errors happening during its
-  # evaluation: `NoMemoryError`, `ScriptError`, `SecurityError`,
-  # `StandardError` and `SystemStackError`. These are all errors that should
-  # not have an immediate influence on other concurrent procs or the
-  # application as a whole. They won't leak to the event loop and will not tear
-  # it down.
-  #
-  # All other errors happening inside a concurrent proc *will* tear down the
-  # event loop. These error types are: `SignalException`, `SystemExit` and the
-  # general `Exception`. In such a case the event loop exits by raising a
-  # {Concurrently::Error}.
-  #
-  # If your application rescues the error when the event loop is teared down
-  # and continues running you get a couple of fiber errors (probably "dead
-  # fiber called").
-  #
-  #
-  # # Blocked Evaluation of Concurrent Procs Caused By I/O
-  #
-  # When doing IO always use the `#*_nonblock` variants to read from or write
-  # to them, like `IO#read_nonblock` or `IO#write_nonblock`, together with
-  # {IO#await_readable} and {IO#await_writable}.
-  #
-  # ```
-  # def read(io, maxlen = 32768)
-  #   io.read_nonblock(maxlen)
-  # rescue IO::WaitReadable
-  #   io.await_readable
-  #   retry
-  # end
-  # ```
-  #
-  # For reading and writing the shortcuts {IO#concurrently_read} and
-  # #{IO#concurrently_write} are available.
-  #
-  # This way, while the the IO is not ready, control is given back to the event
-  # loop so it can continue evaluating other code in the meantime.
-  #
-  #
-  # # Too Many and/or Too Expensive Concurrent Procs
-  #
-  # Imagine a concurrent proc with an infinite loop:
-  #
-  # ```
-  # evaluation = concurrent_proc do
-  #   loop do
-  #     puts "To infinity! And beyond!"
-  #   end
-  # end.call_detached
-  #
-  # concurrently do
-  #   evaluation.conclude_to :cancelled
-  # end
-  # ```
-  #
-  # When it is scheduled to run it runs and runs and runs and never finishes.
-  # The event loop is never entered again and the other concurrent proc
-  # concluding the evaluation is never started.
-  #
-  # A less extreme example is something like:
-  #
-  # ```
-  # concurrent_proc do
-  #   loop do
-  #     wait 0.1
-  #     puts "iteration started at: #{Time.now.strftime('%H:%M:%S.%L')}"
-  #     concurrently do
-  #       sleep 1 # defers the entire event loop
-  #     end
-  #   end
-  # end.call
-  #
-  # # => iteration started at: 16:08:17.704
-  # # => iteration started at: 16:08:18.705
-  # # => iteration started at: 16:08:19.705
-  # # => iteration started at: 16:08:20.705
-  # # => iteration started at: 16:08:21.706
-  # ```
-  #
-  # This is a timer that is supposed to run every 0.1 seconds and creates
-  # another concurrent evaluation that takes a full second to complete. But
-  # since it takes so long the loop also only gets a chance to run every
-  # second leading to a delay of 0.9 seconds between the time the loop is
-  # supposed to run and the time it actually ran.
+  # Instead, when you call `#wait` or one of the `#await_*` methods the
+  # bookkeeping of selecting IOs for readiness or waiting a given amount of
+  # time is done for you.
   class EventLoop
     # The event loop of the current thread.
     #

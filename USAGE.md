@@ -164,23 +164,23 @@ end
 ```
 
 
-## Flow of control
+## Flow of control and Troubleshooting
 
 To explain when code is run (and when it is not) it is necessary to understand
 a little bit more about the way Concurrently works.
 
 Concurrently lets every thread run an {Concurrently::EventLoop event loop}.
 These event loops are responsible for watching IOs and scheduling evaluations
-of concurrent procs. They *do not* run at the exact same time (e.g. on another
-cpu core) parallel to your application's code. Instead, your code yields to the
-event loop if it waits for something with `#wait` or one of the `#await_*`
-methods. And the event loop yields back to a waiting evaluation in your code
-when it can be resumed.
+of concurrent procs. They **must never be interrupted, blocked or overloaded.**
+A healthy event loop is one that can respond to new events immediately.
 
-So, the general rule of thumb is: **The event loop is (and only is) entered if
-your code calls `#wait` or one of the `#await_*` methods.**
+Event loops *do not* run at the exact same time (e.g. on another cpu core)
+parallel to your application's code. Instead, your code yields to them if it
+waits for something. **An event loop is (and only is) entered if your code
+calls `#wait` or one of the `#await_*` methods.** Later, when your code can
+be resumed the event loop yields back to it.
 
-This can lead to the following effects:
+These properties of event loops can lead to the following effects:
 
 ### A concurrent proc is scheduled but never run
 
@@ -266,7 +266,7 @@ we suspend the root evaluation, switch to the event loop which runs the
 `concurrently` block and once there is something to read from `r` the root
 evaluation is resumed.
 
-This approach is not perfect. It is not very efficient if we would not need to
+This approach is not perfect. It is not very efficient if we do not need to
 await readability at all and could read from `r` immediately. But it is still
 better than blocking everything by default.
 
@@ -281,6 +281,69 @@ rescue IO::WaitReadable
   retry
 end
 ```
+
+### The event loop is jammed by too many or too expensive evaluations
+
+Let's talk about a concurrent proc with an infinite loop:
+
+```ruby
+evaluation = concurrent_proc do
+  loop do
+    puts "To infinity! And beyond!"
+  end
+end.call_detached
+
+concurrently do
+  evaluation.conclude_to :cancelled
+end
+```
+
+When the concurrent proc is scheduled to run it runs and runs and runs and
+never finishes. The event loop is never entered again and the other concurrent
+proc concluding the evaluation is never started.
+
+A less extreme example is something like:
+
+```ruby
+concurrent_proc do
+  loop do
+    wait 0.1
+    puts "timer triggered at: #{Time.now.strftime('%H:%M:%S.%L')}"
+    concurrently do
+      sleep 1 # defers the entire event loop
+    end
+  end
+end.call
+
+# => timer triggered at: 16:08:17.704
+# => timer triggered at: 16:08:18.705
+# => timer triggered at: 16:08:19.705
+# => timer triggered at: 16:08:20.705
+# => timer triggered at: 16:08:21.706
+```
+
+This is a timer that is supposed to run every 0.1 seconds and creates another
+evaluation that takes a full second to complete. But since it takes so long the
+loop also only gets a chance to run every second leading to a delay of 0.9
+seconds between the time the timer is supposed to run and the time it actually
+ran.
+
+### Errors tear down the event loop
+  
+Every concurrent proc rescues the following errors happening during its
+evaluation: `NoMemoryError`, `ScriptError`, `SecurityError`, `StandardError`
+and `SystemStackError`. These are all errors that should not have an immediate
+influence on other evaluations or the application as a whole. They will not
+leak to the event loop and will not tear it down.
+
+All other errors happening inside a concurrent proc *will* tear down the
+event loop. These error types are: `SignalException`, `SystemExit` and the
+general `Exception`. In such a case the event loop exits by raising a
+{Concurrently::Error}.
+
+If your application rescues the error when the event loop is teared down
+and continues running you get a couple of fiber errors (probably "dead
+fiber called").
 
 
 ## Bootstrapping an application
