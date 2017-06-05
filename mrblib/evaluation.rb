@@ -28,14 +28,14 @@ module Concurrently
       EventLoop.current.run_queue.current_evaluation
     end
 
-    # @api private
+    # @private
     def initialize(fiber)
       @fiber = fiber
     end
 
-    # The fiber the evaluation runs inside.
+    # @private
     #
-    # @api private
+    # The fiber the evaluation runs inside.
     attr_reader :fiber
 
     # @!attribute [r] waiting?
@@ -47,7 +47,7 @@ module Concurrently
       @waiting
     end
 
-    # @api private
+    # @private
     DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
     
     # @note The exclamation mark in its name stands for: Watch out!

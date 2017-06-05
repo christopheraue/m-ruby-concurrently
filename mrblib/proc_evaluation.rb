@@ -14,7 +14,7 @@ module Concurrently
   # {Concurrently::Proc#call_nonblock} if the evaluation cannot be concluded in
   # one go and needs to wait.
   class Proc::Evaluation < Evaluation
-    # @api private
+    # @private
     def initialize(fiber)
       super
       @concluded = false

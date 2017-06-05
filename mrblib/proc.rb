@@ -8,7 +8,7 @@ module Concurrently
     class Proc; end
   else
     class Proc < ::Proc
-      # @api private
+      # @private
       # Calls the concurrent proc like a normal proc
       alias_method :__proc_call__, :call
     end

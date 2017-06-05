@@ -28,9 +28,9 @@ module Concurrently
       @current ||= new
     end
 
-    # A new instance
-    #
     # @private
+    #
+    # A new instance
     #
     # An event loop is created for every thread automatically. It should not
     # be instantiated manually.
@@ -81,24 +81,24 @@ module Concurrently
       self
     end
 
-    # Its run queue keeping track of and scheduling all concurrent procs
+    # @private
     #
-    # @api private
+    # Its run queue keeping track of and scheduling all concurrent procs
     attr_reader :run_queue
 
-    # Its selector to watch IOs.
+    # @private
     #
-    # @api private
+    # Its selector to watch IOs.
     attr_reader :io_selector
 
-    # Its fiber running the actual loop
+    # @private
     #
-    # @api private
+    # Its fiber running the actual loop
     attr_reader :fiber
 
-    # Its pool of reusable fibers to run the code of concurrent procs in.
+    # @private
     #
-    # @api private
+    # Its pool of reusable fibers to run the code of concurrent procs in.
     attr_reader :proc_fiber_pool
 
     # The lifetime of this event loop in seconds

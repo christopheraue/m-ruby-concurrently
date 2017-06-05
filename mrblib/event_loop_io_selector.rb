@@ -1,5 +1,5 @@
 module Concurrently
-  # @api private
+  # @private
   class EventLoop::IOSelector
     def initialize(event_loop)
       @run_queue = event_loop.run_queue

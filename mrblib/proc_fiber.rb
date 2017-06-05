@@ -1,5 +1,5 @@
 module Concurrently
-  # @api private
+  # @private
   class Proc::Fiber < ::Fiber
     class Cancelled < Exception
       # should not be rescued accidentally and therefore is an exception

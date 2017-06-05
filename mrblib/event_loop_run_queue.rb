@@ -1,5 +1,5 @@
 module Concurrently
-  # @api private
+  # @private
   class EventLoop::RunQueue
     # The items of the run queue are called carts. Carts are simple arrays
     # with the following layout: [evaluation, time, result]

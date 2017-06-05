@@ -3,5 +3,4 @@ mrblib/**/*.rb
 --private
 --no-private
 --markup markdown
---query '@api.text == "public"'
 - USAGE.md CHANGES.md
