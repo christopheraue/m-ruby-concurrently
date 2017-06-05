@@ -1,5 +1,10 @@
 module Concurrently
   if Object.const_defined? :MRUBY_VERSION
+    # @api mruby_patches
+    # @since 1.0.0
+    #
+    # mruby's Proc does not support instance variables. So, whe have to make
+    # it a normal class that does not inherit from Proc :(
     class Proc; end
   else
     class Proc < ::Proc
