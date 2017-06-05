@@ -1,10 +1,5 @@
 # Concurrently
 
-Copyright 2015-present Christopher Aue
-
-Licensed under the [Apache License, Version 2.0](LICENSE)
-
-## Summary
 
 Concurrently is a concurrency framework based on fibers for Ruby and mruby. It
 serves the same purpose like [EventMachine](https://github.com/eventmachine/eventmachine)
@@ -46,11 +41,28 @@ evaluation3.await_result # wait for the longest running evaluation to finish
 That's all! Just a bucket for code, a hand full of methods to wait for stuff
 and a placeholder for the result.
 
-## Installation
 
-see [INSTALL](INSTALL.md)
+## Installation & Documentation
 
-## Usage
+* [Installation instructions][installation]
+* [An introduction to Concurrently][introduction]
+* [API documentation][documentation]
 
-TODO
 
+## Development
+
+[Release Notes][changes]
+
+
+## License
+
+Copyright 2015-present Christopher Aue
+
+Licensed under the Apache License, Version 2.0. Please see the file called
+LICENSE.
+
+
+[installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/INSTALL.md
+[introduction]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/USAGE.md
+[documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/
+[changes]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/CHANGES.md
