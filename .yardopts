@@ -4,6 +4,6 @@ mrblib/**/*.rb
 --no-private
 --markup markdown
 -
-INSTALL.md
-INTRODUCTION.md
-CHANGES.md
+docs/Installation.md
+docs/Introduction.md
+docs/ReleaseNotes.md

@@ -80,7 +80,7 @@ This is the output:
 
 ## Development
 
-[Release Notes][changes]
+[Release Notes][release_notes]
 
 
 ## License
@@ -91,7 +91,7 @@ Concurrently is licensed under the Apache License, Version 2.0. Please see the
 file called LICENSE.
 
 
-[installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/INSTALL.md
-[introduction]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/INTRODUCTION.md
-[documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/
-[changes]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/CHANGES.md
+[installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/Installation.md
+[introduction]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/Introduction.md
+[documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/index
+[release_notes]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/ReleaseNotes.md

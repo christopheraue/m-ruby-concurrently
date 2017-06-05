@@ -1,4 +1,4 @@
-# Installing Concurrently
+# How to Install Concurrently
 
 ## Ruby
 
