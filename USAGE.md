@@ -12,18 +12,16 @@ from other evaluations. It is also similar to a future or a promise by
 providing access to its future result or offering the ability to conclude it
 prematurely.
 
-Every ruby program already has an implicit {Concurrently::Evaluation root
-evaluation} running. Calling a concurrent proc creates a
-{Concurrently::Proc::Evaluation proc evaluation}.
-
+Every ruby program already has an implicit [root evaluation][Concurrently::Evaluation]
+running. Calling a concurrent proc creates a [proc evaluation][Concurrently::Proc::Evaluation].
 
 ## Concurrent Procs
 
-The {Concurrently::Proc concurrent proc} is Concurrently's concurrency
+The [concurrent proc][Concurrently::Proc] is Concurrently's concurrency
 primitive. It looks and feels just like a regular proc. In fact,
-{Concurrently::Proc} inherits from `Proc`.
+[Concurrently::Proc][] inherits from `Proc`.
 
-Concurrent procs are created with {Kernel#concurrent_proc}:
+Concurrent procs are created with [Kernel#concurrent_proc][]:
 
 ```ruby
 concurrent_proc do
@@ -40,43 +38,40 @@ A concurrent proc has four methods to call it.
 
 The first two start to evaluate the concurrent proc immediately:
 
-* {Concurrently::Proc#call} blocks the (root or proc) evaluation it has been
+* [Concurrently::Proc#call][] blocks the (root or proc) evaluation it has been
   called from until its own evaluation is concluded. Then it returns the
   result. This behaves just like `Proc#call`.
-* {Concurrently::Proc#call_nonblock} will not block the (root or proc)
+* [Concurrently::Proc#call_nonblock][] will not block the (root or proc)
   evaluation it has been called from if it waits for something. Instead, it
-  immediately returns its {Concurrently::Proc::Evaluation evaluation}. If it
+  immediately returns its [evaluation][Concurrently::Proc::Evaluation]. If it
   can be evaluated without waiting it returns the result.
 
 The other two schedule the concurrent proc to run in the background. The
 evaluation is not started right away but is deferred until the the next
 iteration of the event loop:
 
-* {Concurrently::Proc#call_detached} returns an {Concurrently::Proc::Evaluation
-  evaluation}.
-* {Concurrently::Proc#call_and_forget} forgets about the evaluation immediately
-  and returns `nil`.
-
-There is a shortcut for {Concurrently::Proc#call_and_forget}:
-
-```ruby
-concurrently do
-  # code to run concurrently
-end
-```
-
-is the same as
-
-```ruby
-concurrent_proc do
-  # code to run concurrently
-end.call_and_forget
-```
+* [Concurrently::Proc#call_detached][] returns an [evaluation][Concurrently::Proc::Evaluation].
+* [Concurrently::Proc#call_and_forget][] forgets about the evaluation immediately
+    and returns `nil`.
+    
+    [Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_and_forget][]:
+    
+    ```ruby
+    concurrently do
+      # code to run concurrently
+    end
+    
+    # is equivalent to:
+    
+    concurrent_proc do
+      # code to run concurrently
+    end.call_and_forget
+    ```
 
 
 ## Timing Code
 
-To defer the current evaluation use {Kernel#wait}.
+To defer the current evaluation use [Kernel#wait][].
 
 ### Doing something after X seconds
 
@@ -115,9 +110,9 @@ end
 
 ## Handling I/O
 
-Readiness of I/O is awaited with {IO#await_readable} and {IO#await_writable}. To
-read and write from an IO you can use {IO#concurrently_read} and
-{IO#concurrently_write}.
+Readiness of I/O is awaited with [IO#await_readable][] and [IO#await_writable][].
+To read and write from an IO you can use [IO#concurrently_read][] and
+[IO#concurrently_write][].
 
 ```ruby
 r,w = IO.pipe
@@ -145,8 +140,8 @@ w.close
 ```
 
 Other operations like accepting from a server socket need to be done by using
-the corresponding `#*_nonblock` methods along with {IO#await_readable} or
-{IO#await_writable}:
+the corresponding `#*_nonblock` methods along with [IO#await_readable][] or
+[IO#await_writable][]:
 
 ```ruby
 require 'socket'
@@ -169,7 +164,7 @@ end
 To explain when code is run (and when it is not) it is necessary to understand
 a little bit more about the way Concurrently works.
 
-Concurrently lets every thread run an {Concurrently::EventLoop event loop}.
+Concurrently lets every thread run an [event loop][Concurrently::EventLoop].
 These event loops are responsible for watching IOs and scheduling evaluations
 of concurrent procs. They **must never be interrupted, blocked or overloaded.**
 A healthy event loop is one that can respond to new events immediately.
@@ -202,11 +197,11 @@ Running it will only print:
 Unicorns!
 ```
 
-`concurrently{}` is a shortcut for `concurrent_proc{}.call_and_forget`.
-{Concurrently::Proc#call_and_forget} does not evaluate its code right away but
-schedules it to run during the next iteration of the event loop. But, since the
-root evaluation did not await anything the event loop has never been entered
-and the evaluation of the concurrent proc has never been started.
+[Kernel#concurrently][] is a shortcut for [Concurrently::Proc#call_and_forget][]
+which in turn does not evaluate its code right away but schedules it to run
+during the next iteration of the event loop. But, since the root evaluation did
+not await anything the event loop has never been entered and the evaluation of
+the concurrent proc has never been started.
 
 A more subtle variation of this behavior occurs in the following scenario:
 
@@ -339,7 +334,7 @@ leak to the event loop and will not tear it down.
 All other errors happening inside a concurrent proc *will* tear down the
 event loop. These error types are: `SignalException`, `SystemExit` and the
 general `Exception`. In such a case the event loop exits by raising a
-{Concurrently::Error}.
+[Concurrently::Error][].
 
 If your application rescues the error when the event loop is teared down
 and continues running you get a couple of fiber errors (probably "dead
@@ -383,3 +378,20 @@ end
 server = UNIXServer.new "/tmp/sock"
 start_server.call server # blocks as long as the server loop is running
 ```
+
+[Concurrently::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation
+[Concurrently::Proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc
+[Concurrently::Proc#call]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call-instance_method
+[Concurrently::Proc#call_nonblock]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_nonblock-instance_method
+[Concurrently::Proc#call_detached]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_detached-instance_method
+[Concurrently::Proc#call_and_forget]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_and_forget-instance_method
+[Concurrently::Proc::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc/Evaluation
+[Concurrently::EventLoop]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop
+[Concurrently::Error]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error
+[Kernel#concurrent_proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrent_proc-instance_method
+[Kernel#concurrently]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrently-instance_method
+[Kernel#wait]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#wait-instance_method
+[IO#await_readable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_readable-instance_method
+[IO#await_writable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_writable-instance_method
+[IO#concurrently_read]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_read-instance_method
+[IO#concurrently_write]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_write-instance_method
