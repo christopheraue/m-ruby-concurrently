@@ -21,7 +21,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "hitimes", "~> 1.2"
   spec.add_runtime_dependency "callbacks_attachable", "~> 2.2"
 
-  spec.add_development_dependency "yard", "~> 0.9"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rspec-is_expected_block", "~> 3.0"
 end
