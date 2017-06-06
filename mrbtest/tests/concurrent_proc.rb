@@ -4,6 +4,10 @@ end
 
 assert "concurrent_proc#call" do
   assert_equal conproc.call(:result), :result
+
+  assert_raise RuntimeError, "error" do
+    concurrent_proc{ raise "error" }.call
+  end
 end
 
 assert "concurrent_proc#call_nonblock" do
