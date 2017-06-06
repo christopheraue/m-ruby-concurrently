@@ -8,7 +8,7 @@ and, to some extent, [Celluloid](https://github.com/celluloid/celluloid).
 To run code concurrently, it is defined as a concurrent proc. These concurrent
 procs are very similar to regular procs, except when they are called their code
 is evaluated in a fiber (which is kind of a lightweight thread). This lets their
-evaluation be suspended and resumed independent from the evaluations of other
+evaluation be suspended and resumed independently from evaluations of other
 concurrent procs. Along with methods to wait for a time period, await readiness
 of I/O and await the result of other evaluations, concurrent code can be
 written linearly similar to async/await.
@@ -68,6 +68,7 @@ This is the output:
 * [Installation instructions][installation]
 * [An Introduction to Concurrently][introduction]
 * [API documentation][documentation]
+* [Troubleshooting][troubleshooting]
 
 
 ## Development
@@ -86,4 +87,5 @@ file called LICENSE.
 [installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/Installation.md
 [introduction]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/Introduction.md
 [documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/index
+[troubleshooting]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/Troubleshooting.md
 [release_notes]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/ReleaseNotes.md

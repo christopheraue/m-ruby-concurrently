@@ -6,4 +6,5 @@ mrblib/**/*.rb
 -
 docs/Installation.md
 docs/Introduction.md
+docs/Troubleshooting.md
 docs/ReleaseNotes.md
