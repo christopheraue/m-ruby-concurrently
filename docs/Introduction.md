@@ -323,6 +323,30 @@ loop also only gets a chance to run every second leading to a delay of 0.9
 seconds between the time the timer is supposed to run and the time it actually
 ran.
 
+### Forking the process causes issues
+
+A fork inherits the main thread and with it the event loop with all its
+internal state from the parent. This is a problem since fibers created in
+the parent process cannot be resume in the forked process. Trying to do so
+raises a "fiber called across stack rewinding barrier" error. Also, we
+probably do not want to continue watching the parent's IOs.
+
+To fix this, the event loop has to be [reinitialized][Concurrently::EventLoop#reinitialize!]
+directly after forking:
+
+```ruby
+fork do
+  Concurrently::EventLoop.current.reinitialize!
+  # ...
+end
+
+# ...
+```
+
+While reinitializing the event loop clears its list of IOs watched for
+readiness, the IOs themselves are left untouched. You are responsible for
+managing IOs (e.g. closing them).
+
 ### Errors tear down the event loop
   
 Every concurrent proc rescues the following errors happening during its
@@ -387,6 +411,7 @@ start_server.call server # blocks as long as the server loop is running
 [Concurrently::Proc#call_and_forget]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_and_forget-instance_method
 [Concurrently::Proc::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc/Evaluation
 [Concurrently::EventLoop]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop
+[Concurrently::EventLoop#reinitialize!]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method
 [Concurrently::Error]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error
 [Kernel#concurrent_proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrent_proc-instance_method
 [Kernel#concurrently]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrently-instance_method

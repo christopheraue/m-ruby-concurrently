@@ -43,13 +43,6 @@ module Concurrently
     #
     # Resets the inner state of the event loop.
     #
-    # This method should be called right after calling `Kernel#fork`. The fork
-    # inherits the main thread and with it the event loop with all its internal
-    # state from the parent. This is the a problem since we probably do not
-    # want to continue watching the parent's IOs. Also, the fibers in the run
-    # queue are not transferable between parent and fork and running them
-    # raises a "fiber called across stack rewinding barrier" error.
-    #
     # In detail, calling this method for the event loop:
     #
     # * resets its {#lifetime},
@@ -59,18 +52,14 @@ module Concurrently
     #
     # While this method clears the list of IOs watched for readiness, the IOs
     # themselves are left untouched. You are responsible for managing IOs (e.g.
-    # closing them) like when not using this library.
+    # closing them).
     #
     # @example
-    #   r,w = IO.pipe
-    #
     #   fork do
     #     Concurrently::EventLoop.current.reinitialize!
-    #     r.close
     #     # ...
     #   end
     #
-    #   w.close
     #   # ...
     def reinitialize!
       @start_time = Time.now.to_f
