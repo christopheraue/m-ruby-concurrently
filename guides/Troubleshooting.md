@@ -1,9 +1,7 @@
 # Troubleshooting
 
 To get an idea about the inner workings of Concurrently have a look at the
-[Flow of control][] section in the introduction.
-
-[Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Introduction.md#label-Flow+of+control
+[Flow of control][] section in the overview.
 
 ## A concurrent proc is scheduled but never run
 
@@ -193,5 +191,6 @@ and continues running (irb does this, for example) it will do so with a
 [reinitialized event loop] [Concurrently::EventLoop#reinitialize!].
 
 
+[Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md#label-Flow+of+control
 [Concurrently::EventLoop#reinitialize!]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method
 [Concurrently::Error]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error

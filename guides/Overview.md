@@ -1,4 +1,4 @@
-# An Introduction to Concurrently
+# An Overview of Concurrently
 
 This document is meant as a general overview of what can be done with
 Concurrently and how all its parts work together. For more information and
@@ -182,9 +182,7 @@ overloaded.** A healthy event loop is one that can respond to new events
 immediately.
 
 If you are experiencing issues when using Concurrently it is probably due to
-these properties of event loops. Have a look at the [Troubleshooting][] page.
-
-[Troubleshooting]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Troubleshooting.md 
+these properties of event loops. Have a look at the [Troubleshooting][] page. 
 
 
 ## Bootstrapping an application
@@ -240,3 +238,4 @@ start_server.call server # blocks as long as the server loop is running
 [IO#await_writable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_writable-instance_method
 [IO#concurrently_read]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_read-instance_method
 [IO#concurrently_write]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_write-instance_method
+[Troubleshooting]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/guides/Troubleshooting.md

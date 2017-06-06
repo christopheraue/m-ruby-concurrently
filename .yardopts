@@ -4,7 +4,7 @@ mrblib/**/*.rb
 --no-private
 --markup markdown
 -
-docs/Installation.md
-docs/Introduction.md
-docs/Troubleshooting.md
-docs/ReleaseNotes.md
+RELEASE_NOTES.md
+guides/Installation.md
+guides/Overview.md
+guides/Troubleshooting.md
