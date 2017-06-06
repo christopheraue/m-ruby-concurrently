@@ -15,11 +15,37 @@ describe Concurrently::Proc do
       context "if the block does not need to wait during evaluation" do
         let(:block) { proc{ |*args| args } }
         it { is_expected.to eq call_args }
+
+        context "when the code inside the block raises a recoverable error" do
+          let(:block) { proc{ raise StandardError, 'error' } }
+
+          before { expect(instance).to receive(:trigger).with(:error,
+            (be_a(StandardError).and have_attributes message: 'error')) }
+          it { is_expected.to raise_error StandardError, 'error' }
+        end
+
+        context "when the code inside the block raises an error tearing down the event loop" do
+          let(:block) { proc{ raise Exception, 'error' } }
+          it { is_expected.to raise_error(Exception, "error") }
+        end
       end
 
       context "if the block needs to wait during evaluation" do
-        let(:block) { proc{ |*args| wait 0.0001; args } }
+        let(:block) { proc{ |*args| wait 0; args } }
         it { is_expected.to eq call_args }
+
+        context "when the code inside the block raises a recoverable error" do
+          let(:block) { proc{ wait 0; raise StandardError, 'error' } }
+
+          before { expect(instance).to receive(:trigger).with(:error,
+            (be_a(StandardError).and have_attributes message: 'error')) }
+          it { is_expected.to raise_error StandardError, 'error' }
+        end
+
+        context "when the code inside the block raises an error tearing down the event loop" do
+          let(:block) { proc{ wait 0; raise Exception, 'error' } }
+          it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (Exception: error)") }
+        end
       end
 
       context "when starting/resuming the fiber raises an error" do
@@ -28,18 +54,6 @@ describe Concurrently::Proc do
         before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return([fiber]) }
 
         it { is_expected.to raise_error FiberError, 'resume error' }
-
-        # recover from the teared down event loop caused by the error for further
-        # tests
-        after { Concurrently::EventLoop.current.reinitialize! }
-      end
-
-      context "when the code inside the block raises an error" do
-        let(:block) { proc{ raise StandardError, 'error' } }
-
-        before { expect(instance).to receive(:trigger).with(:error,
-          (be_a(StandardError).and have_attributes message: 'error')) }
-        it { is_expected.to raise_error StandardError, 'error' }
       end
     end
 
@@ -71,6 +85,11 @@ describe Concurrently::Proc do
           (be_a(StandardError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error StandardError, 'error' }
       end
+
+      context "when the code inside the block raises an error tearing down the event loop" do
+        let(:block) { proc{ raise Exception, 'error' } }
+        it { is_expected.to raise_error(Exception, "error") }
+      end
     end
 
     context "if the block needs to wait during evaluation" do
@@ -81,12 +100,17 @@ describe Concurrently::Proc do
         subject { call.await_result }
         it { is_expected.to eq call_args }
 
-        context "when the code inside the block raises an error" do
+        context "when the code inside the block raises a recoverable error" do
           let(:block) { proc{ wait 0; raise StandardError, 'error' } }
 
           before { expect(instance).to receive(:trigger).with(:error,
             (be_a(StandardError).and have_attributes message: 'error')) }
           it { is_expected.to raise_error StandardError, 'error' }
+        end
+
+        context "when the code inside the block raises an error tearing down the event loop" do
+          let(:block) { proc{ wait 0; raise Exception, 'error' } }
+          it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (Exception: error)") }
         end
       end
     end
@@ -120,18 +144,19 @@ describe Concurrently::Proc do
         before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
 
         it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (FiberError: resume error)") }
-
-        # recover from the teared down event loop caused by the error for further
-        # tests
-        after { Concurrently::EventLoop.current.reinitialize! }
       end
 
-      context "when the code inside the block raises an error" do
+      context "when the code inside the block raises a recoverable error" do
         let(:block) { proc{ raise 'error' } }
 
         before { expect(instance).to receive(:trigger).with(:error,
           (be_a(StandardError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error StandardError, 'error' }
+      end
+
+      context "when the code inside the block raises an error tearing down the event loop" do
+        let(:block) { proc{ raise Exception, 'error' } }
+        it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (Exception: error)") }
       end
     end
 

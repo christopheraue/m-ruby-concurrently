@@ -361,8 +361,8 @@ general `Exception`. In such a case the event loop exits by raising a
 [Concurrently::Error][].
 
 If your application rescues the error when the event loop is teared down
-and continues running you get a couple of fiber errors (probably "dead
-fiber called").
+and continues running it will do so with a [reinitialized event loop]
+[Concurrently::EventLoop#reinitialize!].
 
 
 ## Bootstrapping an application

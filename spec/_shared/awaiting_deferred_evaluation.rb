@@ -117,18 +117,19 @@ shared_examples_for "#concurrently" do
     before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
 
     it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (FiberError: resume error)") }
-
-    # recover from the teared down event loop caused by the error for further
-    # tests
-    after { Concurrently::EventLoop.current.reinitialize! }
   end
 
-  context "when the code inside the block raises an error" do
+  context "when the code inside the block raises a recoverable error" do
     subject { call{ raise StandardError, 'error' }; wait 0 }
 
     before { expect_any_instance_of(Concurrently::Proc).to receive(:trigger).with(:error,
       (be_a(StandardError).and have_attributes message: 'error')) }
     it { is_expected.not_to raise_error }
+  end
+
+  context "when the code inside the block raises an error tearing down the event loop" do
+    subject { call{ raise Exception, 'error' }; wait 0 }
+    it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (Exception: error)") }
   end
 
   describe "the reuse of proc fibers" do

@@ -167,10 +167,6 @@ describe Concurrently::Proc::Evaluation do
 
       it { is_expected.to raise_error(Concurrently::Evaluation::Error,
         "evaluation is not waiting due to an earlier call of Kernel#await_resume!") }
-
-      # recover from the teared down event loop caused by the error for further
-      # tests
-      after { Concurrently::EventLoop.current.reinitialize! }
     end
   end
 end

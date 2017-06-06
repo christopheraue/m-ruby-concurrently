@@ -30,6 +30,7 @@ module Concurrently
             end
           end
         rescue Exception => error
+          Concurrently::EventLoop.current.reinitialize!
           raise Error, "Event loop teared down (#{error.class}: #{error.message})", error.backtrace
         end
       end
