@@ -11,8 +11,11 @@ MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
 
   spec.test_rbfiles = Dir.glob("#{File.expand_path File.dirname __FILE__}/mrbtest/tests/*.rb")
 
-  spec.add_dependency 'mruby-fiber', :core => 'mruby-fiber'
-  spec.add_dependency 'mruby-io', github: 'iij/mruby-io'
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
+  spec.add_dependency 'mruby-numeric-ext', :core => 'mruby-numeric-ext'
+  spec.add_dependency 'mruby-enumerator', :core => 'mruby-enumerator'
+  spec.add_dependency 'mruby-fiber', :core => 'mruby-fiber'
+  spec.add_dependency 'mruby-time', :core => 'mruby-time'
+  spec.add_dependency 'mruby-io', github: 'iij/mruby-io'
   spec.add_dependency 'mruby-callbacks_attachable', '~> 2.0', github: 'christopheraue/m-ruby-callbacks_attachable'
 end
