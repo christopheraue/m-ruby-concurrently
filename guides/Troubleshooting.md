@@ -190,7 +190,41 @@ If your application rescues the error when the event loop is teared down
 and continues running (irb does this, for example) it will do so with a
 [reinitialized event loop] [Concurrently::EventLoop#reinitialize!].
 
+## Fiber-local variables are treated as thread-local
+
+In Ruby, Concurrently redirects `Thread#[]`, `#[]=`, `#key?` and `#keys` to
+`Thread#thread_variable_get`, `#thread_variable_set`, `#thread_variable?` and
+`#thread_variables`. Most of the code out there is not using fibers explicitly
+and really intends to attach values to the current thread instead to the
+current fiber.
+
+If you belong to the lucky ones intending to use fibers with variables indeed
+intended to be fiber-local, change all these fibers to concurrent procs and use
+their evaluation's [data hash][Concurrently::Proc::Evaluation#data] to store
+the values:
+
+```ruby
+fiber = Fiber.new do
+  Thread.current[:key] = "I intend to be fiber-local!"
+  puts Thread.current[:key]
+end
+
+fiber.resume
+```
+
+becomes:
+
+```ruby
+conproc = concurrent_proc do
+  Concurrently::Evaluation.current.data[:key] = "I'm evaluation-local!"
+  puts Concurrently::Evaluation.current.data[:key]
+end
+
+conproc.call
+```
+
 
 [Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md#Flow+of+control
 [Concurrently::EventLoop#reinitialize!]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method
 [Concurrently::Error]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error
+[Concurrently::Proc::Evaluation#data]: file:///home/c/projects/private/capp/app/m-ruby-concurrently/doc/Concurrently/Proc/Evaluation.html#data-instance_method

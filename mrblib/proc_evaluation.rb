@@ -22,12 +22,13 @@ module Concurrently
       @data = {}
     end
 
-    # A hash for custom data. Use it to attach data being specific to
-    # evaluations. An example would be giving each evaluation an id.
+    # A hash for custom data.
+    #
+    # Use it to attach data being specific to an evaluation.
     #
     # @return [Hash]
     #
-    # @example
+    # @example Give each evaluation an id
     #   evaluation = concurrent_proc{ :result }.call_detached
     #   evaluation.data[:id] = :an_id
     attr_reader :data
