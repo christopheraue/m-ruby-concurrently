@@ -4,6 +4,7 @@
 
 ### Added Support for
 * Ruby 2.2.7+, 2.3, 2.4
+* mruby 1.3
 
 ### Extended [IO](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO) interface
 * [#await_readable](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_readable-instance_method)

@@ -74,6 +74,7 @@ This is the output:
 ## Supported Ruby Versions
 
 * Ruby 2.2.7+, 2.3, 2.4
+* mruby 1.3
 
 
 ## Development
