@@ -191,6 +191,6 @@ and continues running (irb does this, for example) it will do so with a
 [reinitialized event loop] [Concurrently::EventLoop#reinitialize!].
 
 
-[Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md#label-Flow+of+control
+[Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md#Flow+of+control
 [Concurrently::EventLoop#reinitialize!]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method
 [Concurrently::Error]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error
