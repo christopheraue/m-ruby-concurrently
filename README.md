@@ -7,7 +7,7 @@ and, to some extent, [Celluloid](https://github.com/celluloid/celluloid).
 
 To run code concurrently, it is defined as a concurrent proc. These concurrent
 procs are very similar to regular procs, except when they are called their code
-is evaluated in a fiber (that is a lightweight thread). This lets their
+is evaluated in a fiber (which is kind of a lightweight thread). This lets their
 evaluation be suspended and resumed independent from the evaluations of other
 concurrent procs. Along with methods to wait for a time period, await readiness
 of I/O and await the result of other evaluations, concurrent code can be
@@ -19,7 +19,7 @@ Let's write a little server reading from an IO and printing the received
 messages:
 
 ```ruby
-def start_receiving_messages_from(io)
+printer = concurrent_proc do |io|
   while true
     begin
       puts io.read_nonblock 32
@@ -31,33 +31,25 @@ def start_receiving_messages_from(io)
 end
 ```
 
-This is a client sending a timestamp every 0.5 seconds:
-
-```ruby
-def start_sending_messages_to(io)
-  while true
-    wait 0.5
-    io.write Time.now.strftime('%H:%M:%S.%L')
-  end
-end
-```
-
-And now, we connect both through a pipe:
+And now, we call it detached from the root fiber and send out messages every
+0.5 seconds.
 
 ```ruby
 r,w = IO.pipe
 
-concurrently do
-  start_sending_messages_to w
-end
+printer.call_detached r
 
 puts "#{Time.now.strftime('%H:%M:%S.%L')} (Start time)"
-start_receiving_messages_from r
+
+while true
+  wait 0.5
+  w.write Time.now.strftime('%H:%M:%S.%L')
+end
 ```
 
-The evaluation of the root thread is effectively blocked by our server
-listening to the read end of the pipe. But since the client runs concurrently
-it is not affected by this and happily sends outs its messages.
+The evaluation of the root fiber is effectively blocked by waiting or sending
+messages through the pipe. But since the server runs concurrently it is not
+affected by this and happily prints its received messages.
 
 This is the output:
 
