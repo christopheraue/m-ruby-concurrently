@@ -11,10 +11,11 @@ Gem::Specification.new do |spec|
   spec.license       = "Apache-2.0"
   spec.authors       = ["Christopher Aue"]
   spec.email         = ["rubygems@christopheraue.net"]
-
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+
+  spec.required_ruby_version = ">= 2.2.7"
 
   spec.add_runtime_dependency "nio4r", "~> 2.1"
   spec.add_runtime_dependency "hitimes", "~> 1.2"

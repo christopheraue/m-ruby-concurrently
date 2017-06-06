@@ -71,6 +71,11 @@ This is the output:
 * [Troubleshooting][troubleshooting]
 
 
+## Supported Ruby Versions
+
+* Ruby 2.2.7+, 2.3, 2.4
+
+
 ## Development
 
 [Release Notes][release_notes]
