@@ -166,16 +166,22 @@ a little bit more about the way Concurrently works.
 
 Concurrently lets every thread run an [event loop][Concurrently::EventLoop].
 These event loops are responsible for watching IOs and scheduling evaluations
-of concurrent procs. They **must never be interrupted, blocked or overloaded.**
-A healthy event loop is one that can respond to new events immediately.
+of concurrent procs. Evaluations are scheduled by putting them into a run queue
+ordered by the time they are supposed to run. The run queue is then worked off
+sequentially. If two evaluations are scheduled to run a the same time the
+evaluation scheduled first is also run first.
 
 Event loops *do not* run at the exact same time (e.g. on another cpu core)
 parallel to your application's code. Instead, your code yields to them if it
-waits for something. **An event loop is (and only is) entered if your code
+waits for something: **The event loop is (and only is) entered if your code
 calls `#wait` or one of the `#await_*` methods.** Later, when your code can
-be resumed the event loop yields back to it.
+be resumed the event loop schedules the corresponding evaluation to run again.
 
-These properties of event loops can lead to the following effects:
+Keep in mind, that an event loop **must never be interrupted, blocked or
+overloaded.** A healthy event loop is one that can respond to new events
+immediately.
+
+All in all, the properties of event loops can lead to the following effects:
 
 ### A concurrent proc is scheduled but never run
 
