@@ -1,0 +1,20 @@
+Dir.chdir File.dirname __FILE__
+
+namespace :mruby do
+  mruby_env = File.expand_path "mrb/testenv"
+  mruby_dir = "#{mruby_env}/mruby"
+  
+  file mruby_dir do
+    sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby_dir}"
+  end
+
+  task :test => mruby_dir do
+    sh "cd #{mruby_dir} && MRUBY_CONFIG=#{mruby_env}/build_config.rb rake test"
+  end
+
+  task :clean => mruby_dir do
+    sh "cd #{mruby_dir} && rake deep_clean"
+  end
+end
+
+task :default => "mruby:test"

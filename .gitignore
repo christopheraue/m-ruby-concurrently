@@ -2,4 +2,4 @@
 /.yardoc
 /Gemfile.lock
 /doc
-/mrbtest/mruby
+/mrb/mruby

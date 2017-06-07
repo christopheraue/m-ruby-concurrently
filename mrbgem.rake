@@ -9,7 +9,7 @@ MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.license      = 'Apache-2.0'
   spec.authors      = ['Christopher Aue']
 
-  spec.test_rbfiles = Dir.glob("#{File.expand_path File.dirname __FILE__}/mrbtest/tests/*.rb")
+  spec.test_rbfiles = Dir.glob("#{File.expand_path File.dirname __FILE__}/mrb/tests/*.rb")
 
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
   spec.add_dependency 'mruby-numeric-ext', :core => 'mruby-numeric-ext'
