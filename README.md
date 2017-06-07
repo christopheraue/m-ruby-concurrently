@@ -1,5 +1,7 @@
 # Concurrently
 
+[![Build Status](https://secure.travis-ci.org/christopheraue/m-ruby-concurrently.svg?branch=master)](http://travis-ci.org/christopheraue/m-ruby-concurrently)
+
 Concurrently is a concurrency framework based on fibers for Ruby and mruby.
 
 It serves the same purpose like [EventMachine](https://github.com/eventmachine/eventmachine)
