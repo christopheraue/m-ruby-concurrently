@@ -11,13 +11,6 @@ rvm:
 env:
   - TEST_RUBY=ruby
 
-os:
-  - linux
-  - osx
-
 matrix:
   include:
   - env: TEST_RUBY=mruby
-    os: linux
-  - env: TEST_RUBY=mruby
-    os: osx
