@@ -1,5 +1,11 @@
 Dir.chdir File.dirname __FILE__
 
+namespace :ruby do
+  task :test do
+    sh "rspec"
+  end
+end
+
 namespace :mruby do
   mruby_env = File.expand_path "mrb/testenv"
   mruby_dir = "#{mruby_env}/mruby"
@@ -17,4 +23,6 @@ namespace :mruby do
   end
 end
 
-task :default => "mruby:test"
+task :test => %w(ruby:test mruby:test)
+
+task :default => :test
