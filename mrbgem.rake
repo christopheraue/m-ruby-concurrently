@@ -1,4 +1,4 @@
-require_relative 'mrblib/version'
+require_relative 'lib/concurrently/version'
 
 MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.version      = Concurrently::VERSION
@@ -9,7 +9,12 @@ MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.license      = 'Apache-2.0'
   spec.authors      = ['Christopher Aue']
 
-  spec.test_rbfiles = Dir.glob("#{File.expand_path File.dirname __FILE__}/mrb/tests/*.rb")
+  # patch build process so we can set source files with spec.rbfiles
+  @generate_functions = true
+  @objs << objfile("#{build_dir}/gem_init")
+
+  spec.rbfiles      = Dir["#{spec.dir}/lib/**/*.rb"].sort + Dir["#{spec.dir}/mrb/lib/**/*.rb"].sort
+  spec.test_rbfiles = Dir["#{spec.dir}/mrb/test/*.rb"]
 
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
   spec.add_dependency 'mruby-numeric-ext', :core => 'mruby-numeric-ext'

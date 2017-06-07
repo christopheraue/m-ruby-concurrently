@@ -1,5 +1,5 @@
 # coding: utf-8
-require_relative 'mrblib/version'
+require_relative 'lib/concurrently/version'
 
 Gem::Specification.new do |spec|
   spec.name         = "concurrently"
@@ -12,8 +12,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Christopher Aue"]
   spec.email         = ["rubygems@christopheraue.net"]
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
-  spec.require_paths = ["lib"]
+  spec.require_paths = ["rb/lib"]
 
   spec.required_ruby_version = ">= 2.2.7"
 

@@ -1,5 +1,4 @@
-mrblib/**/*.rb
---exclude _m.rb$
+lib/**/*.rb
 --private
 --no-private
 --markup markdown
