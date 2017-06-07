@@ -17,10 +17,7 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 2.2.7"
 
-  spec.add_runtime_dependency "nio4r", "~> 2.1"
-  spec.add_runtime_dependency "hitimes", "~> 1.2"
-  spec.add_runtime_dependency "callbacks_attachable", "~> 2.2"
-
-  spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "rspec-is_expected_block", "~> 3.0"
+  spec.add_dependency "nio4r", "~> 2.1"
+  spec.add_dependency "hitimes", "~> 1.2"
+  spec.add_dependency "callbacks_attachable", "~> 2.2"
 end
