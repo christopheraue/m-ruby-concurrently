@@ -1,14 +1,23 @@
 language: ruby
 
+script: rake $TEST_RUBY:test
+sudo: false
+
 rvm:
-  - 2.2.7
-  - 2.3.4
   - 2.4.1
+  - 2.3.4
+  - 2.2.7
+
+env:
+  - TEST_RUBY=ruby
 
 os:
   - linux
   - osx
 
-sudo: false
-
-script: rspec
+matrix:
+  include:
+  - env: TEST_RUBY=mruby
+    os: linux
+  - env: TEST_RUBY=mruby
+    os: osx
