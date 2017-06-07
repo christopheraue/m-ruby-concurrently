@@ -24,7 +24,7 @@ describe Kernel do
     describe "waiting for given seconds" do
       subject { @end_time - @start_time }
 
-      let(:seconds) { 0.01 }
+      let(:seconds) { 0.02 }
 
       let(:wait_proc) { proc do
         @start_time = Time.now.to_f

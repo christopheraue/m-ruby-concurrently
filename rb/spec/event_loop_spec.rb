@@ -88,7 +88,8 @@ describe Concurrently::EventLoop do
   describe "#lifetime" do
     subject { instance.lifetime }
     let!(:creation_time) { instance.reinitialize!; Time.now.to_f }
-    before { wait 0.001 }
-    it { is_expected.to be_within(0.0001).of(Time.now.to_f - creation_time) }
+    let(:seconds) { 0.005 }
+    before { wait seconds }
+    it { is_expected.to be_within(0.1*seconds).of(Time.now.to_f - creation_time) }
   end
 end
