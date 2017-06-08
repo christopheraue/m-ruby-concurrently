@@ -31,12 +31,27 @@ end
 
 Concurrent procs can be used the same way regular procs are used. For example,
 they can be passed around or called multiple times with different arguments.
+    
+[Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_and_forget][]:
+    
+```ruby
+concurrently do
+  # code to run concurrently
+end
 
-### Calling concurrent procs
+# is equivalent to:
+
+concurrent_proc do
+  # code to run concurrently
+end.call_and_forget
+```
+
+### Calling Concurrent Procs
 
 A concurrent proc has four methods to call it.
 
-The first two start to evaluate the concurrent proc immediately:
+The first two start to evaluate the concurrent proc immediately in the
+foreground:
 
 * [Concurrently::Proc#call][] blocks the (root or proc) evaluation it has been
   called from until its own evaluation is concluded. Then it returns the
@@ -53,22 +68,8 @@ iteration of the event loop:
 * [Concurrently::Proc#call_detached][] returns an [evaluation][Concurrently::Proc::Evaluation].
 * [Concurrently::Proc#call_and_forget][] forgets about the evaluation immediately
     and returns `nil`.
-    
-    [Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_and_forget][]:
-    
-    ```ruby
-    concurrently do
-      # code to run concurrently
-    end
-    
-    # is equivalent to:
-    
-    concurrent_proc do
-      # code to run concurrently
-    end.call_and_forget
-    ```
 
-### Benchmarking the call methods
+### Benchmarking the `#call` Methods
 
 This is a benchmark comparing all `#call` methods of a concurrent proc and a
 regular proc in Ruby 2.4.1 on a Intel i7-5820K 3.3 GHz. Both proc types
@@ -103,39 +104,37 @@ You can run the benchmark yourself by running the script [perf/concurrent_proc.r
 
 To defer the current evaluation use [Kernel#wait][].
 
-### Doing something after X seconds
+* Doing something after X seconds:
+    
+    ```ruby
+    concurrent_proc do
+      wait X
+      do_it!
+    end
+    ```
 
-```ruby
-concurrent_proc do
-  wait X
-  do_it!
-end
-```
+* Doing something every X seconds. This is a timer:
+    
+    ```ruby
+    concurrent_proc do
+      loop do
+        wait X
+        do_it!
+      end
+    end
+    ```
 
-### Doing something every X seconds
-
-This is a timer.
-
-```ruby
-concurrent_proc do
-  loop do
-    wait X
-    do_it!
-  end
-end
-```
-
-### Doing something after X seconds, every Y seconds, Z times
-
-```ruby
-concurrent_proc do
-  wait X
-  Z.times do
-    do_it!
-    wait Y
-  end
-end
-```
+* Doing something after X seconds, every Y seconds, Z times:
+    
+    ```ruby
+    concurrent_proc do
+      wait X
+      Z.times do
+        do_it!
+        wait Y
+      end
+    end
+    ```
 
 
 ## Handling I/O
@@ -189,7 +188,7 @@ end
 ```
 
 
-## Flow of control
+## Flow of Control
 
 To understand when code is run (and when it is not) it is necessary to know
 a little bit more about the way Concurrently works.
@@ -215,7 +214,7 @@ If you are experiencing issues when using Concurrently it is probably due to
 these properties of event loops. Have a look at the [Troubleshooting][] page. 
 
 
-## Bootstrapping an application
+## Bootstrapping an Application
 
 Considering a server application with a single server socket accepting
 connections, how can such an application be built?
