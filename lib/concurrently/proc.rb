@@ -158,7 +158,7 @@ module Concurrently
         previous_evaluation = run_queue.current_evaluation
         run_queue.current_evaluation = nil
         run_queue.evaluation_class = @evaluation_class
-        event_loop.proc_fiber_pool.pop.resume [self, args, evaluation_bucket]
+        event_loop.proc_fiber_pool.take_fiber.resume [self, args, evaluation_bucket]
       ensure
         run_queue.current_evaluation = previous_evaluation
         run_queue.evaluation_class = nil
@@ -193,7 +193,7 @@ module Concurrently
     #   evaluation.await_result # => 13
     def call_detached(*args)
       event_loop = EventLoop.current
-      evaluation = @evaluation_class.new(event_loop.proc_fiber_pool.pop)
+      evaluation = @evaluation_class.new(event_loop.proc_fiber_pool.take_fiber)
       event_loop.run_queue.schedule_immediately evaluation, [self, args, [evaluation]]
       evaluation
     end
@@ -221,7 +221,7 @@ module Concurrently
       event_loop = EventLoop.current
       # run without creating an Evaluation object at first. It will be created
       # if the proc needs to wait for something.
-      event_loop.run_queue.schedule_immediately event_loop.proc_fiber_pool.pop, [self, args]
+      event_loop.run_queue.schedule_immediately event_loop.proc_fiber_pool.take_fiber, [self, args]
 
       nil
     end

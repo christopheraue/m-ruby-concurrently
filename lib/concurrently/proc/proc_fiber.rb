@@ -55,7 +55,7 @@ module Concurrently
             end
           end
 
-          fiber_pool << self
+          fiber_pool.return self
 
           # Yield back to the event loop fiber or the fiber evaluating this one
           # and wait for the next proc to evaluate.

@@ -110,10 +110,10 @@ shared_examples_for "#concurrently" do
 
   context "when starting/resuming the fiber raises an error" do
     subject { call{}; wait 0 }
-    let(:fiber_pool) { [] }
+    let(:fiber_pool) { Concurrently::EventLoop::ProcFiberPool.new(Concurrently::EventLoop.current) }
     let!(:fiber) { Concurrently::Proc::Fiber.new(fiber_pool) }
     before { allow(fiber).to receive(:resume).and_raise(FiberError, 'resume error') }
-    before { fiber_pool << fiber }
+    before { fiber_pool.return fiber }
     before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
 
     it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down (FiberError: resume error)") }
