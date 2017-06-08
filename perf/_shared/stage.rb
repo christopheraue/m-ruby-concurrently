@@ -19,7 +19,7 @@ class Stage
 
     profiler.new(profile.stop).print(STDOUT, sort_method: :self_time) if ARGV[0] == 'profile'
 
-    puts "#{iterations} iterations executed in #{(stop_time-start_time).round 4} seconds"
+    { iterations: iterations, time: (stop_time-start_time) }
   end
 end
 

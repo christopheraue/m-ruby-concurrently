@@ -6,6 +6,8 @@ stage = Stage.new
 
 conproc = concurrent_proc{}
 
-stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
+result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
   conproc.call_nonblock
 end
+
+puts "#{result[:iterations]} iterations executed in #{result[:time].round 4} seconds"
