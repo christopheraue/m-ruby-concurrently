@@ -152,16 +152,13 @@ module Concurrently
     def call_nonblock(*args)
       event_loop = EventLoop.current
       run_queue = event_loop.run_queue
-
-      proc_fiber_pool = event_loop.proc_fiber_pool
-      proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
       evaluation_bucket = []
 
       result = begin
         previous_evaluation = run_queue.current_evaluation
         run_queue.current_evaluation = nil
         run_queue.evaluation_class = @evaluation_class
-        proc_fiber.resume [self, args, evaluation_bucket]
+        event_loop.proc_fiber_pool.pop.resume [self, args, evaluation_bucket]
       ensure
         run_queue.current_evaluation = previous_evaluation
         run_queue.evaluation_class = nil
@@ -196,9 +193,7 @@ module Concurrently
     #   evaluation.await_result # => 13
     def call_detached(*args)
       event_loop = EventLoop.current
-      proc_fiber_pool = event_loop.proc_fiber_pool
-      proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
-      evaluation = @evaluation_class.new(proc_fiber)
+      evaluation = @evaluation_class.new(event_loop.proc_fiber_pool.pop)
       event_loop.run_queue.schedule_immediately evaluation, [self, args, [evaluation]]
       evaluation
     end
@@ -224,12 +219,9 @@ module Concurrently
     #   wait 0 # prints "detached!"
     def call_and_forget(*args)
       event_loop = EventLoop.current
-      proc_fiber_pool = event_loop.proc_fiber_pool
-      proc_fiber = proc_fiber_pool.pop || Proc::Fiber.new(proc_fiber_pool)
-
       # run without creating an Evaluation object at first. It will be created
       # if the proc needs to wait for something.
-      event_loop.run_queue.schedule_immediately proc_fiber, [self, args]
+      event_loop.run_queue.schedule_immediately event_loop.proc_fiber_pool.pop, [self, args]
 
       nil
     end

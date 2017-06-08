@@ -66,7 +66,7 @@ module Concurrently
       @run_queue = RunQueue.new self
       @io_selector = IOSelector.new self
       @fiber = Fiber.new(@run_queue, @io_selector)
-      @proc_fiber_pool = []
+      @proc_fiber_pool = ProcFiberPool.new self
       self
     end
 
