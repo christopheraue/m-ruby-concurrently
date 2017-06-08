@@ -65,8 +65,8 @@ module Concurrently
       @start_time = Time.now.to_f
       @run_queue = RunQueue.new self
       @io_selector = IOSelector.new self
-      @fiber = Fiber.new(@run_queue, @io_selector)
       @proc_fiber_pool = ProcFiberPool.new self
+      @fiber = Fiber.new @run_queue, @io_selector, @proc_fiber_pool
       self
     end
 

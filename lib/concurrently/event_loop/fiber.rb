@@ -1,13 +1,13 @@
 module Concurrently
   # @private
   class EventLoop::Fiber < ::Fiber
-    def initialize(run_queue, io_selector)
+    def initialize(run_queue, io_selector, proc_fiber_pool)
       super() do
         begin
           while true
-            waiting_time = run_queue.waiting_time
+            proc_fiber_pool.reset_iteration_quota
 
-            if waiting_time == 0
+            if (waiting_time = run_queue.waiting_time) == 0
               # Check ready IOs although fibers are ready to run to not neglect
               # IO operations. Otherwise, IOs might become jammed since they
               # are constantly written to but not read from.

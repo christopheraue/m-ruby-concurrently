@@ -133,13 +133,11 @@ shared_examples_for "#concurrently" do
   end
 
   describe "the reuse of proc fibers" do
-    subject { @fiber3 }
+    subject { @fiber2 }
 
     let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_and_forget }
-    let!(:evaluation2) { concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
-    before { evaluation2.await_result } # let the two blocks finish
-    let!(:evaluation3) { call do
-      @fiber3 = Fiber.current
+    let!(:evaluation2) { call do
+      @fiber2 = Fiber.current
       @spec_evaluation.resume!
     end }
 
@@ -150,8 +148,7 @@ shared_examples_for "#concurrently" do
       await_resume!
     end
 
-    it { is_expected.to be @fiber2 }
-    after { expect(subject).not_to be @fiber1 }
+    it { is_expected.to be @fiber1 }
   end
 end
 

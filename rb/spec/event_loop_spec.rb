@@ -68,7 +68,8 @@ describe Concurrently::EventLoop do
     end
 
     context "when it is waiting for the result of a concurrent proc" do
-      let!(:evaluation) { concurrent_proc{ wait 0 }.call_nonblock }
+      let!(:evaluation) { concurrent_proc{ wait 0 }.call_detached }
+      before { wait 0 }
       before { concurrent_proc{ evaluation.await_result; @result = :waited }.call_nonblock }
 
       context "when reinitialized after the concurrent proc finished waiting (for control)" do

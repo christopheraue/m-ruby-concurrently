@@ -163,16 +163,13 @@ describe Concurrently::Proc do
     end
 
     describe "the reuse of proc fibers" do
-      subject { @fiber3 }
+      subject { @fiber2 }
 
       let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_detached }
       let!(:evaluation2) { concurrent_proc{ @fiber2 = Fiber.current }.call_detached }
-      before { evaluation2.await_result } # let the two blocks finish
-      let!(:evaluation3) { concurrent_proc{ @fiber3 = Fiber.current }.call_detached }
-      before { evaluation3.await_result } # let the third block finish
+      before { evaluation2.await_result }
 
-      it { is_expected.to be @fiber2 }
-      after { expect(subject).not_to be @fiber1 }
+      it { is_expected.to be @fiber1 }
     end
   end
 
