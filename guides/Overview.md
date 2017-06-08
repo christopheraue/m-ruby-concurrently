@@ -68,6 +68,36 @@ iteration of the event loop:
     end.call_and_forget
     ```
 
+### Benchmarking the call methods
+
+This is a benchmark comparing all `#call` methods of a concurrent proc and a
+regular proc in Ruby 2.4.1 on a Intel i7-5820K 3.3 GHz. Both proc types
+have an empty block doing nothing:
+
+    proc = proc{}
+    conproc = concurrent_proc{}
+    
+    proc.call:               5843096 iterations executed in 1.0 seconds
+    conproc.call:            621627  iterations executed in 1.0 seconds
+    conproc.call_nonblock:   716721  iterations executed in 1.0 seconds
+    conproc.call_detached:   362884  iterations executed in 1.0012 seconds
+    conproc.call_and_forget: 535587  iterations executed in 1.0003 seconds
+
+Explanation of the results:
+
+* The difference between a regular and a concurrent proc is caused by
+concurrent procs being evaluated in a fiber.
+* Of the two methods evaluating the proc in the foreground, `#call_nonblock`
+is faster than `#call`, because `#call` calls `#call_nonblock` and does a
+little bit more on top.
+* Of the two methods evaluating the proc in the background, `#call_and_forget`
+is faster than `#call_detached` because the latter creates an evaluation
+object.
+* Because the background evaluation of concurrent procs is scheduled and needs
+to go through one iteration of the event loop, it is slower than the foreground
+evaluation.
+
+You can run the benchmark yourself by running the script [perf/concurrent_proc.rb][].
 
 ## Timing Code
 
@@ -239,3 +269,4 @@ start_server.call server # blocks as long as the server loop is running
 [IO#concurrently_read]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_read-instance_method
 [IO#concurrently_write]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_write-instance_method
 [Troubleshooting]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/guides/Troubleshooting.md
+[perf/concurrent_proc.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc.rb
