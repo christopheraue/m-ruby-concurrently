@@ -22,16 +22,59 @@ module Concurrently
       @data = {}
     end
 
-    # A hash for custom data.
+    # Attaches a value to the evaluation under the given key
     #
-    # Use it to attach data being specific to an evaluation.
+    # @param [Object] key The key to store the value under
+    # @param [Object] value The value to store
+    # @return [value]
     #
-    # @return [Hash]
-    #
-    # @example Give each evaluation an id
+    # @example
     #   evaluation = concurrent_proc{ :result }.call_detached
-    #   evaluation.data[:id] = :an_id
-    attr_reader :data
+    #   evaluation[:key] = :value
+    #   evaluation[:key]  # => :value
+    def []=(key, value)
+      @data[key] = value
+    end
+
+    # Retrieves the attached value under the given key
+    #
+    # @param [Object] key The key to look up
+    # @return [Object] the stored value
+    #
+    # @example
+    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation[:key] = :value
+    #   evaluation[:key]  # => :value
+    def [](key)
+      @data[key]
+    end
+
+    # Checks if there is an attached value for the given key
+    #
+    # @param [Object] key The key to look up
+    # @return [Boolean]
+    #
+    # @example
+    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation[:key] = :value
+    #   evaluation.key? :key          # => true
+    #   evaluation.key? :another_key  # => false
+    def key?(key)
+      @data.key? key
+    end
+
+    # Returns all keys with values
+    #
+    # @return [Array]
+    #
+    # @example
+    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation[:key1] = :value1
+    #   evaluation[:key2] = :value2
+    #   evaluation.keys  # => [:key1, :key2]
+    def keys
+      @data.keys
+    end
 
     # Waits for the evaluation to be concluded with a result.
     #

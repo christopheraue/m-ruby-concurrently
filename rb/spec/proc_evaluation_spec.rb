@@ -1,4 +1,12 @@
 describe Concurrently::Proc::Evaluation do
+  describe "attached data" do
+    let(:evaluation) { concurrent_proc{ :result }.call_detached }
+    before { evaluation[:key] = :value }
+    it { expect(evaluation[:key]).to be :value }
+    it { expect(evaluation.key? :key).to be true }
+    it { expect(evaluation.keys).to eq [:key] }
+  end
+
   describe "#await_result" do
     subject { evaluation.await_result(&with_result) }
 

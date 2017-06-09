@@ -200,7 +200,7 @@ current fiber.
 
 If you belong to the lucky ones intending to use fibers with variables indeed
 intended to be fiber-local, change all these fibers to concurrent procs and use
-their evaluation's [data hash][Concurrently::Proc::Evaluation#data] to store
+their evaluation's [data store][Concurrently::Proc::Evaluation#brackets] to store
 the values:
 
 ```ruby
@@ -216,8 +216,8 @@ becomes:
 
 ```ruby
 conproc = concurrent_proc do
-  Concurrently::Evaluation.current.data[:key] = "I'm evaluation-local!"
-  puts Concurrently::Evaluation.current.data[:key]
+  Concurrently::Evaluation.current[:key] = "I'm evaluation-local!"
+  puts Concurrently::Evaluation.current[:key]
 end
 
 conproc.call
@@ -227,4 +227,4 @@ conproc.call
 [Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md#Flow+of+control
 [Concurrently::EventLoop#reinitialize!]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method
 [Concurrently::Error]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Error
-[Concurrently::Proc::Evaluation#data]: file:///home/c/projects/private/capp/app/m-ruby-concurrently/doc/Concurrently/Proc/Evaluation.html#data-instance_method
+[Concurrently::Proc::Evaluation#brackets]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc/Evaluation#%5B%5D-instance_method

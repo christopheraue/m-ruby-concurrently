@@ -123,13 +123,13 @@ describe Concurrently::Proc do
     let(:call_args) { [] }
 
     context "when it configures no custom evaluation" do
-      it { is_expected.to be_a(Concurrently::Proc::Evaluation).and have_attributes(data: {}) }
+      it { is_expected.to be_a(Concurrently::Proc::Evaluation) }
     end
 
     context "when it configures a custom evaluation" do
       let(:args) { [custom_evaluation_class] }
       let(:custom_evaluation_class) { Class.new(Concurrently::Proc::Evaluation) }
-      it { is_expected.to be_a(custom_evaluation_class).and have_attributes(data: {}) }
+      it { is_expected.to be_a(custom_evaluation_class) }
     end
 
     context "when awaiting its result" do
