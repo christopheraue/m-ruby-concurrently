@@ -1,5 +1,5 @@
 # coding: utf-8
-require_relative 'lib/concurrently/version'
+require_relative 'all/lib/concurrently/version'
 
 Gem::Specification.new do |spec|
   spec.name         = "concurrently"

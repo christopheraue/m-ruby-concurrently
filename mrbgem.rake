@@ -1,4 +1,4 @@
-require_relative 'lib/concurrently/version'
+require_relative 'all/lib/concurrently/version'
 
 MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.version      = Concurrently::VERSION
@@ -13,7 +13,11 @@ MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   @generate_functions = true
   @objs << objfile("#{build_dir}/gem_init")
 
-  spec.rbfiles      = Dir["#{spec.dir}/lib/**/*.rb"].sort + Dir["#{spec.dir}/mrb/lib/**/*.rb"].sort
+  spec.rbfiles      =
+    Dir["#{spec.dir}/all/ext/**/*.rb"].sort +
+    Dir["#{spec.dir}/mrb/ext/**/*.rb"].sort +
+    Dir["#{spec.dir}/all/lib/**/*.rb"].sort +
+    Dir["#{spec.dir}/mrb/lib/**/*.rb"].sort
   spec.test_rbfiles = Dir["#{spec.dir}/mrb/test/*.rb"]
 
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
