@@ -25,7 +25,8 @@ module Concurrently
           @iteration_quota -= 1
           Proc::Fiber.new self
         else
-          wait 0
+          @event_loop.run_queue.schedule_immediately Concurrently::Evaluation.current
+          await_resume!
           take_fiber
         end
       end
