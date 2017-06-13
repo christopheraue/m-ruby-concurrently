@@ -14,15 +14,15 @@ namespace :mruby do
     sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby_dir}"
   end
 
-  task :test => mruby_dir do
+  task test: mruby_dir do
     sh "cd #{mruby_dir} && MRUBY_CONFIG=#{mruby_env}/build_config.rb rake test"
   end
 
-  task :clean => mruby_dir do
+  task clean: mruby_dir do
     sh "cd #{mruby_dir} && rake deep_clean"
   end
 end
 
-task :test => %w(ruby:test mruby:test)
+task test: %w(ruby:test mruby:test)
 
-task :default => :test
+task default: :test
