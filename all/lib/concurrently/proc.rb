@@ -155,10 +155,14 @@ module Concurrently
       evaluation_bucket = []
 
       result = begin
+        fiber = event_loop.proc_fiber_pool.take_fiber
+        # ProcFiberPool#take_fiber might have accessed the current evaluation
+        # if it needs to wait for the next iteration to get a fiber. Reset the
+        # current evaluation afterwards!
         previous_evaluation = run_queue.current_evaluation
         run_queue.current_evaluation = nil
         run_queue.evaluation_class = @evaluation_class
-        event_loop.proc_fiber_pool.take_fiber.resume [self, args, evaluation_bucket]
+        fiber.resume [self, args, evaluation_bucket]
       ensure
         run_queue.current_evaluation = previous_evaluation
         run_queue.evaluation_class = nil
