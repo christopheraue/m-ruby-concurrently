@@ -25,6 +25,6 @@ MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.add_dependency 'mruby-enumerator', :core => 'mruby-enumerator'
   spec.add_dependency 'mruby-fiber', :core => 'mruby-fiber'
   spec.add_dependency 'mruby-time', :core => 'mruby-time'
-  spec.add_dependency 'mruby-io', github: 'christopheraue/mruby-io'
+  spec.add_dependency 'mruby-io', github: 'iij/mruby-io'
   spec.add_dependency 'mruby-callbacks_attachable', '~> 2.0', github: 'christopheraue/m-ruby-callbacks_attachable'
 end
