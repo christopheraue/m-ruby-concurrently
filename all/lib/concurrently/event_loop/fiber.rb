@@ -5,8 +5,6 @@ module Concurrently
       super() do
         begin
           while true
-            proc_fiber_pool.reset_iteration_quota
-
             if (waiting_time = run_queue.waiting_time) == 0
               # Check ready IOs although fibers are ready to run to not neglect
               # IO operations. Otherwise, IOs might become jammed since they
