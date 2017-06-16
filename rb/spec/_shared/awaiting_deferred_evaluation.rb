@@ -135,7 +135,7 @@ shared_examples_for "#concurrently" do
   describe "the reuse of proc fibers" do
     subject { @fiber2 }
 
-    let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call_and_forget }
+    let!(:evaluation1) { concurrent_proc{ @fiber1 = Fiber.current }.call }
     let!(:evaluation2) { call do
       @fiber2 = Fiber.current
       @spec_evaluation.resume!
