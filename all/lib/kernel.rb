@@ -129,7 +129,7 @@ module Kernel
 
     # If result is this very evaluation it means this evaluation has been evaluated
     # prematurely.
-    if result == evaluation.fiber
+    if evaluation.fiber == result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
 
       # Generally, throw-catch is faster than raise-rescue if the code needs to
@@ -138,7 +138,7 @@ module Kernel
       # block. Since we won't jump out of the proc above most of the time, we
       # go with raise. It is rescued in the proc fiber.
       raise Concurrently::Proc::Fiber::Cancelled, '', []
-    elsif result == Concurrently::Evaluation::TimeoutError
+    elsif Concurrently::Evaluation::TimeoutError == result
       raise result, "evaluation timed out after #{seconds} second(s)"
     else
       result
