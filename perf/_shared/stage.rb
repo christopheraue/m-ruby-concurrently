@@ -10,6 +10,7 @@ class Stage
     profile = RubyProf::Profile.new(merge_fibers: true).tap(&:start) if ARGV[0] == 'profile'
 
     event_loop = Concurrently::EventLoop.current
+    event_loop.reinitialize!
     iterations = 0
     start_time = event_loop.lifetime
     end_time = start_time + seconds
@@ -21,10 +22,6 @@ class Stage
 
     profiler.new(profile.stop).print(STDOUT, sort_method: :self_time) if ARGV[0] == 'profile'
     GC.enable
-
-    # run all procs scheduled during profiling so this does not happen while
-    # running the next profile.
-    wait 0
 
     { iterations: iterations, time: (stop_time-start_time) }
   end
