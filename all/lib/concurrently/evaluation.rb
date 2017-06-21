@@ -76,8 +76,6 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def resume!(result = nil)
-      raise Error, "evaluation is not waiting due to an earlier call of Kernel#await_resume!" unless @waiting
-
       run_queue = Concurrently::EventLoop.current.run_queue
 
       # Cancel running the fiber if it has already been scheduled to run; but

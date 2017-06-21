@@ -168,13 +168,5 @@ describe Concurrently::Proc::Evaluation do
     let!(:evaluation) { concurrent_proc{ await_resume! }.call_nonblock }
 
     it_behaves_like "#resume!"
-
-    context "when resumed without waiting" do
-      subject { evaluation.resume! }
-      let!(:evaluation) { concurrent_proc{ :no_await }.call_detached }
-
-      it { is_expected.to raise_error(Concurrently::Evaluation::Error,
-        "evaluation is not waiting due to an earlier call of Kernel#await_resume!") }
-    end
   end
 end
