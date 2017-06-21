@@ -12,12 +12,16 @@ class Stage
     start_time = event_loop.lifetime
     end_time = start_time + seconds
     while event_loop.lifetime < end_time
-      iterations += 1
       yield
+      iterations += 1
     end
     stop_time = event_loop.lifetime
 
     profiler.new(profile.stop).print(STDOUT, sort_method: :self_time) if ARGV[0] == 'profile'
+
+    # run all procs scheduled during profiling so this does not happen while
+    # running the next profile.
+    wait 0
 
     { iterations: iterations, time: (stop_time-start_time) }
   end

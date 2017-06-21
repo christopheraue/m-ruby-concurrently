@@ -10,4 +10,4 @@ result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
   conproc.call
 end
 
-puts "#{result[:iterations]} iterations executed in #{result[:time].round 4} seconds"
+puts "#{result[:iterations]} executions in #{result[:time].round 4} seconds"
