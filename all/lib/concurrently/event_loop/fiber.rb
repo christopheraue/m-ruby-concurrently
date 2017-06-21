@@ -27,9 +27,9 @@ module Concurrently
                 "are no concurrent procs or fibers scheduled and no IOs to await."
             end
           end
-        rescue Exception
+        rescue Exception => e
           Concurrently::EventLoop.current.reinitialize!
-          raise Error, "Event loop teared down"
+          raise Error, "Event loop teared down by #{e.inspect}"
         end
       end
     end

@@ -44,7 +44,7 @@ describe Concurrently::Proc do
 
         context "when the code inside the block raises an error tearing down the event loop" do
           let(:block) { proc{ wait 0; raise Exception, 'error' } }
-          it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down") do |e|
+          it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down by #<Exception: error>") do |e|
             expect(e.cause).to be_a(Exception).and having_attributes(message: "error")
           end }
         end
@@ -114,7 +114,7 @@ describe Concurrently::Proc do
 
         context "when the code inside the block raises an error tearing down the event loop" do
           let(:block) { proc{ wait 0; raise Exception, 'error' } }
-          it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down") do |e|
+          it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down by #<Exception: error>") do |e|
             expect(e.cause).to be_a(Exception).and having_attributes(message: "error")
           end }
         end
@@ -149,7 +149,7 @@ describe Concurrently::Proc do
         before { fiber_pool.return fiber }
         before { allow(Concurrently::EventLoop.current).to receive(:proc_fiber_pool).and_return(fiber_pool) }
 
-        it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down") do |e|
+        it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down by #<FiberError: resume error>") do |e|
           expect(e.cause).to be_a(FiberError).and having_attributes(message: "resume error")
         end }
       end
@@ -164,7 +164,7 @@ describe Concurrently::Proc do
 
       context "when the code inside the block raises an error tearing down the event loop" do
         let(:block) { proc{ raise Exception, 'error' } }
-        it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down") do |e|
+        it { is_expected.to raise_error(Concurrently::Error, "Event loop teared down by #<Exception: error>") do |e|
           expect(e.cause).to be_a(Exception).and having_attributes(message: "error")
         end }
       end
