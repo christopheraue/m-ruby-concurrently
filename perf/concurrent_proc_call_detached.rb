@@ -4,10 +4,12 @@ require_relative "_shared/stage"
 
 stage = Stage.new
 
-conproc = concurrent_proc{}
+evaluation = Concurrently::Evaluation.current
+conproc = concurrent_proc{ evaluation.resume! }
 
 result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
   conproc.call_detached
+  await_resume!
 end
 
 puts "#{result[:iterations]} executions in #{result[:time].round 4} seconds"
