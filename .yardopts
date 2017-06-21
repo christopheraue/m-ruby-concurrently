@@ -4,6 +4,4 @@ lib/**/*.rb
 --markup markdown
 -
 RELEASE_NOTES.md
-guides/Installation.md
-guides/Overview.md
-guides/Troubleshooting.md
+guides/*

@@ -71,6 +71,7 @@ This is the output:
 * [An Overview of Concurrently][overview]
 * [API documentation][documentation]
 * [Troubleshooting][troubleshooting]
+* [Performance][performance]
 
 
 ## Supported Ruby Versions
@@ -96,4 +97,5 @@ file called LICENSE.
 [overview]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md
 [documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/index
 [troubleshooting]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md
+[performance]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Performance.md
 [release_notes]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/RELEASE_NOTES.md
