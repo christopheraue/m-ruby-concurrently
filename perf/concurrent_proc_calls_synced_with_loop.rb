@@ -8,19 +8,18 @@ format = "  %-25s %7d executions in %2.4f seconds"
 puts <<-DOC
 Benchmarked Code
 ----------------
-
   evaluation = Concurrently::Evaluation.current
   proc = proc{ evaluation.resume! }
   conproc = concurrent_proc{ evaluation.resume! }
   
   while elapsed_seconds < 1
-    proc.call # or others
+    # CODE #
     await_resume!
   end
 
 Results
 -------
-
+  # CODE #
 DOC
 
 evaluation = Concurrently::Evaluation.current
