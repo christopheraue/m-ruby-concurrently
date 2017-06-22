@@ -1,7 +1,11 @@
 # Performance of Concurrently
 
-The performance is measured in Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz running
-Linux 4.10. Garbage collection is disabled during the measurements.
+Overall, Concurrently is able to execute around 100k moderately costly
+concurrent evaluations per second. The upper bound for this value is narrowed
+down in the following benchmarks.
+
+The measurements are executed with Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz
+running Linux 4.10. Garbage collection is disabled.
 
 ## Calling a (Concurrent) Proc
 
@@ -49,9 +53,12 @@ Explanation of the results:
 
 You can run the benchmark yourself by running the script [perf/concurrent_proc_calls.rb][].
 
-## Suspending and resuming an evaluation
+## Scheduling
 
-Here, each iteration of the `while` loop calls the proc and then it waits until
+This is a benchmark being closer to the real usage of Concurrently. It
+includes scheduling an evaluation once per iteration of the event loop.
+
+Each iteration of the `while` loop calls the proc and then it waits until
 it is resumed. This enters the event loop. When the proc runs it schedules the
 resumption of the `while` loop. This way, the proc is evaluated exactly once
 for each iteration of the event loop.
