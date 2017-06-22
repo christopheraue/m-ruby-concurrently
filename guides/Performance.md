@@ -91,6 +91,50 @@ You can run the benchmark yourself by running the [script][perf/concurrent_proc_
     $ perf/concurrent_proc_calls_awaiting.rb
 
 
+## Scheduling (Concurrent) Procs and Evaluating Them in Batches
+
+Additional to waiting inside a proc, it calls the proc 100 times at once. All
+100 evaluations will then be evaluated in one batch during the next iteration
+of the event loop.
+
+This is a simulation for a server receiving multiple messages during one
+iteration of the event loop and processing all of them in one go.
+
+    Benchmarked Code
+    ----------------
+      conproc = concurrent_proc{ wait 0 }
+      
+      while elapsed_seconds < 1
+        100.times{ # CODE # }
+        wait 0 # to enter the event loop
+      end
+    
+    Results
+    -------
+      # CODE #
+      conproc.call:               76300 executions in 1.0006 seconds
+      conproc.call_nonblock:     186200 executions in 1.0002 seconds
+      conproc.call_detached:     180200 executions in 1.0000 seconds
+      conproc.call_and_forget:   193500 executions in 1.0004 seconds
+
+
+Explanation of the results:
+
+* `#call` does not profit from batching due to is synchronizing nature.
+* The other methods show an increased throughput compared to running just a
+  single evaluation per event loop iteration.
+
+The result of this benchmark is the upper bound for how many concurrent
+evaluations Concurrently is able to run per second. The number of executions
+does not change much with a varying batch size. Larger batches (e.g. 200+)
+gradually start to get a bit slower. A batch of 1000 evaluations still handles
+around 140k executions.
+
+You can run the benchmark yourself by running the [script][perf/concurrent_proc_calls_awaiting.rb]:
+
+    $ perf/concurrent_proc_calls_awaiting.rb 100
+
+
 [perf/concurrent_proc_calls.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls.rb
 [perf/concurrent_proc_calls_awaiting.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls_awaiting.rb
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
