@@ -192,16 +192,24 @@ and continues running (irb does this, for example) it will do so with a
 
 ## Fiber-local variables are treated as thread-local
 
-In Ruby, Concurrently redirects `Thread#[]`, `#[]=`, `#key?` and `#keys` to
-`Thread#thread_variable_get`, `#thread_variable_set`, `#thread_variable?` and
-`#thread_variables`. Most of the code out there is not using fibers explicitly
-and really intends to attach values to the current thread instead to the
-current fiber.
+In Ruby, `Thread#[]`, `#[]=`, `#key?` and `#keys` operate on variables local
+to the current fiber and not the current thread. This behavior is not noticed
+most of the time because people rarely work explicitly with fibers. Then, each
+thread has exactly one fiber and thread-local and fiber-local variables behave
+the same way.
 
-If you belong to the lucky ones intending to use fibers with variables indeed
-intended to be fiber-local, change all these fibers to concurrent procs and use
-their evaluation's [data store][Concurrently::Proc::Evaluation#brackets] to store
-the values:
+But if fibers come into play and a single thread starts switching between them,
+these methods cause errors instantly. Since Concurrently is built upon fibers
+it needs to sail around those issues. Most of the time the real intention is to
+set variables local to the current thread; just like the receiver of said
+methods suggests. For this reason, `Thread#[]`, `#[]=`, `#key?` and `#keys` are
+boldly redirected to `Thread#thread_variable_get`, `#thread_variable_set`,
+`#thread_variable?` and `#thread_variables`.
+
+If you belong to the ones using fibers with variables indeed intended to be
+fiber-local, you have two options: 1) Don't use Concurrently or 2) change all
+these fibers to concurrent procs and use their evaluation's [data store]
+[Concurrently::Proc::Evaluation#brackets] to store the variables.
 
 ```ruby
 fiber = Fiber.new do
