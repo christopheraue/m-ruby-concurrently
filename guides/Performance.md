@@ -49,5 +49,47 @@ Explanation of the results:
 
 You can run the benchmark yourself by running the script [perf/concurrent_proc_calls.rb][].
 
+## Suspending and resuming an evaluation
+
+Here, each iteration of the `while` loop calls the proc and then it waits until
+it is resumed. This enters the event loop. When the proc runs it schedules the
+resumption of the `while` loop. This way, the proc is evaluated exactly once
+for each iteration of the event loop.
+
+    Benchmarked Code
+    ----------------
+      evaluation = Concurrently::Evaluation.current
+      proc = proc{ evaluation.resume! }
+      conproc = concurrent_proc{ evaluation.resume! }
+      
+      while elapsed_seconds < 1
+        # CODE #
+        await_resume!
+      end
+    
+    Results
+    -------
+      # CODE #
+      proc.call:                 377814 executions in 1.0000 seconds
+      conproc.call:              259151 executions in 1.0000 seconds
+      conproc.call_nonblock:     269870 executions in 1.0000 seconds
+      conproc.call_detached:     195111 executions in 1.0000 seconds
+      conproc.call_and_forget:   227178 executions in 1.0000 seconds
+
+Explanation of the results:
+
+* The general trend observed when only calling the procs continues: regular
+  procs are the fastest and running concurrent procs in the foreground is
+  faster than running them in the background.
+* For calling regular procs and concurrent procs in the foreground scheduling
+  is now the dominant factor. This leads to a large drop in the number of
+  executions compared to just calling the procs. Since calling concurrent procs
+  in the background already involved scheduling, the relative change is not as
+  big for them.
+
+You can run the benchmark yourself by running the script [perf/concurrent_proc_calls_synced_with_loop.rb][].
+
+
 [perf/concurrent_proc_calls.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls.rb
+[perf/concurrent_proc_calls_synced_with_loop.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls_synced_with_loop.rb
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
