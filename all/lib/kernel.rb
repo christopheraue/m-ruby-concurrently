@@ -48,7 +48,7 @@ module Kernel
   # Suspends the current evaluation until it is resumed manually. It can be
   # used inside and outside of concurrent procs.
   #
-  # It needs to be complemented with a later call to {Concurrently::Evaluation#resume!}.
+  # It needs to be complemented with a later call of {Concurrently::Evaluation#resume!}.
   #
   # @param [Hash] opts
   # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*

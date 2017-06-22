@@ -51,12 +51,30 @@ module Concurrently
     DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
     
     # @note The exclamation mark in its name stands for: Watch out!
-    #   This method needs to be complemented by an earlier call to
-    #   {Kernel#await_resume!}.
+    #   This method is potentially dangerous and can break stuff. It also
+    #   needs to be complemented by an earlier call of {Kernel#await_resume!}.
     #
     # Schedules the evaluation to be resumed
     #
-    # It needs to be complemented by an earlier call to {Kernel#await_resume!}.
+    # It needs to be complemented by an earlier call of {Kernel#await_resume!}.
+    #
+    # This method is potentially dangerous. {Kernel#wait}, {IO#await_readable},
+    # {IO#await_writable} and {Proc::Evaluation#await_result} are implemented
+    # with {Kernel#await_resume!}. Concurrent evaluations waiting because of
+    # them are resumed when calling {#resume!} although the event they are
+    # actually awaiting has not happened yet:
+    #
+    # ```ruby
+    # conproc = concurrent_proc do
+    #   wait 1
+    #   await_resume!
+    # end
+    #
+    # conproc.resume! # resumes the wait call prematurely
+    # ```
+    #
+    # To use this method safely, make sure the evaluation to resume is waiting
+    # because of a manual call of {Kernel#await_resume!}.
     #
     # @return [:resumed]
     # @raise [Error] if the evaluation is not waiting
