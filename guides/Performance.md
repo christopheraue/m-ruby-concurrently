@@ -1,11 +1,12 @@
 # Performance of Concurrently
 
-Overall, Concurrently is able to execute around 100k moderately costly
-concurrent evaluations per second. The upper bound for this value is narrowed
-down in the following benchmarks.
+Overall, Concurrently is able to schedule around 100k concurrent evaluations
+per second. What to expect exactly is narrowed down in the following
+benchmarks.
 
 The measurements are executed with Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz
 running Linux 4.10. Garbage collection is disabled.
+
 
 ## Calling a (Concurrent) Proc
 
@@ -53,50 +54,39 @@ Explanation of the results:
 
 You can run the benchmark yourself by running the script [perf/concurrent_proc_calls.rb][].
 
-## Scheduling
 
-This is a benchmark being closer to the real usage of Concurrently. It
-includes scheduling an evaluation once per iteration of the event loop.
+## Scheduling (Concurrent) Procs
 
-Each iteration of the `while` loop calls the proc and then it waits until
-it is resumed. This enters the event loop. When the proc runs it schedules the
-resumption of the `while` loop. This way, the proc is evaluated exactly once
-for each iteration of the event loop.
+This benchmark is closer to the real usage of Concurrently. It includes waiting
+inside a concurrent proc.
 
     Benchmarked Code
     ----------------
-      evaluation = Concurrently::Evaluation.current
-      proc = proc{ evaluation.resume! }
-      conproc = concurrent_proc{ evaluation.resume! }
+      conproc = concurrent_proc{ wait 0 }
       
       while elapsed_seconds < 1
         # CODE #
-        await_resume!
+        wait 0 # to enter the event loop
       end
     
     Results
     -------
       # CODE #
-      proc.call:                 377814 executions in 1.0000 seconds
-      conproc.call:              259151 executions in 1.0000 seconds
-      conproc.call_nonblock:     269870 executions in 1.0000 seconds
-      conproc.call_detached:     195111 executions in 1.0000 seconds
-      conproc.call_and_forget:   227178 executions in 1.0000 seconds
+      conproc.call:               76845 executions in 1.0000 seconds
+      conproc.call_nonblock:     103048 executions in 1.0000 seconds
+      conproc.call_detached:     114923 executions in 1.0000 seconds
+      conproc.call_and_forget:   117739 executions in 1.0000 seconds
 
 Explanation of the results:
 
-* The general trend observed when only calling the procs continues: regular
-  procs are the fastest and running concurrent procs in the foreground is
-  faster than running them in the background.
-* For calling regular procs and concurrent procs in the foreground scheduling
-  is now the dominant factor. This leads to a large drop in the number of
-  executions compared to just calling the procs. Since calling concurrent procs
-  in the background already involved scheduling, the relative change is not as
-  big for them.
+* Because scheduling is now the dominant factor, there is a large drop in the
+  number of executions compared to just calling the procs. This makes the
+  number of executions when calling the proc in a non-blocking way comparable.
+* Calling the proc in a blocking manner with `#call` is costly. A lot of time
+  is spend waiting for the result.
 
-You can run the benchmark yourself by running the script [perf/concurrent_proc_calls_synced_with_loop.rb][].
-
+You can run the benchmark yourself by running the script [perf/concurrent_proc_calls_awaiting.rb][].
 
 [perf/concurrent_proc_calls.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls.rb
-[perf/concurrent_proc_calls_synced_with_loop.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls_synced_with_loop.rb
+[perf/concurrent_proc_calls_awaiting.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/concurrent_proc_calls_awaiting.rb
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
