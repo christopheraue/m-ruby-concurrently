@@ -47,8 +47,3 @@ result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
   conproc.call_and_forget
 end
 puts sprintf(format, "conproc.call_and_forget:", result[:iterations], result[:time])
-
-result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
-  Fiber.new{}
-end
-puts sprintf(format, "Fiber.new{}:", result[:iterations], result[:time])

@@ -23,7 +23,6 @@ collection is disabled during the measurements.
       conproc.call_nonblock:     769164 executions in 1.0000 seconds
       conproc.call_detached:     269385 executions in 1.0000 seconds
       conproc.call_and_forget:   306099 executions in 1.0000 seconds
-      Fiber.new{}:               427472 executions in 1.0000 seconds
 
 Explanation of the results:
 
