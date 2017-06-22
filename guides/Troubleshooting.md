@@ -190,6 +190,14 @@ If your application rescues the error when the event loop is teared down
 and continues running (irb does this, for example) it will do so with a
 [reinitialized event loop] [Concurrently::EventLoop#reinitialize!].
 
+## Using Plain Fibers
+
+In principle, you can safely use plain ruby fibers alongside concurrent procs.
+Just make sure you are exclusively operating on these fibers to not
+accidentally interfere with the fibers managed by Concurrently. Be
+especially careful with `Fiber.yield` and `Fiber.current` inside a concurrent
+proc.
+
 ## Fiber-local variables are treated as thread-local
 
 In Ruby, `Thread#[]`, `#[]=`, `#key?` and `#keys` operate on variables local
