@@ -1,10 +1,13 @@
 # Performance of Concurrently
 
-The performance is measured by comparing all `#call` methods of a concurrent
-proc and a regular proc in Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz. Garbage
-collection is disabled during the measurements.
+The performance is measured in Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz running
+Linux 4.10. Garbage collection is disabled during the measurements.
 
 ## Calling a (Concurrent) Proc
+
+This benchmark compares all `#call` methods of a concurrent proc and a regular
+proc. The mere invocation of the method is measured. The proc itself does
+nothing.
 
     Benchmarked Code
     ----------------
@@ -27,22 +30,22 @@ collection is disabled during the measurements.
 Explanation of the results:
 
 * The difference between a regular and a concurrent proc is caused by
-concurrent procs being evaluated in a fiber.
+  concurrent procs being evaluated in a fiber and doing some bookkeeping.
 * Of the two methods evaluating the proc in the foreground `#call_nonblock`
-is faster than `#call`, because the implementation of `#call` uses
-`#call_nonblock` and does a little bit more on top.
+  is faster than `#call`, because the implementation of `#call` uses
+  `#call_nonblock` and does a little bit more on top.
 * Of the two methods evaluating the proc in the background, `#call_and_forget`
-is faster because `#call_detached` additionally creates an evaluation
-object.
-* Running concurrent procs in the background is slower by a good chunk because
-in this setup `#call_detached` and `#call_and_forget` cannot reuse fibers.
-Their evaluation is merely scheduled and not started and concluded. This would
-happen during the next iteration of the event loop. But since the `while` loop
-never waits for something [the loop is never entered]
-[Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run].
-All this leads to the creation of a new fiber for each evaluation. This is
-responsible for the largest chunk of time take during the measurement. The
-rest of the time is spent scheduling the concurrent procs.
+  is faster because `#call_detached` additionally creates an evaluation
+  object.
+* Running concurrent procs in the background is considerably slower because
+  in this setup `#call_detached` and `#call_and_forget` cannot reuse fibers.
+  Their evaluation is merely scheduled and not started and concluded. This
+  would happen during the next iteration of the event loop. But since the
+  `while` loop never waits for something [the loop is never entered]
+  [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run].
+  All this leads to the creation of a new fiber for each evaluation. This is
+  responsible for the largest chunk of time take during the measurement. The
+  rest of the time is spent scheduling the concurrent procs.
 
 You can run the benchmark yourself by running the script [perf/concurrent_proc_calls.rb][].
 
