@@ -7,7 +7,7 @@ stage = Stage.new
 evaluation = Concurrently::Evaluation.current
 conproc = concurrent_proc{ evaluation.resume! }
 
-result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
+result = stage.measure(seconds: 1) do
   conproc.call_and_forget
   await_resume!
 end

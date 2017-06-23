@@ -4,7 +4,7 @@ Bundler.require :default
 Bundler.require :perf
 
 class Stage
-  def measure(seconds: 1, profiler: nil) # &test
+  def measure(seconds: 1) # &test
     GC.start
     GC.disable
     profile = RubyProf::Profile.new(merge_fibers: true).tap(&:start) if ARGV[0] == 'profile'
@@ -20,7 +20,11 @@ class Stage
     end
     stop_time = event_loop.lifetime
 
-    profiler.new(profile.stop).print(STDOUT, sort_method: :self_time) if ARGV[0] == 'profile'
+    if ARGV[0] == 'profile'
+      printer = ARGV[1].dup || 'flat'
+      printer[0] = printer[0].capitalize
+      RubyProf.const_get("#{printer}Printer").new(profile.stop).print(STDOUT, sort_method: :self_time)
+    end
     GC.enable
 
     { iterations: iterations, time: (stop_time-start_time) }

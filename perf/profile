@@ -1,9 +1,0 @@
-#! /bin/sh
-
-# set fiber stack sizes to 8mb
-export RUBY_FIBER_VM_STACK_SIZE=8388608
-export RUBY_FIBER_MACHINE_STACK_SIZE=8388608
-
-echo $1
-
-exec ruby $1 profile

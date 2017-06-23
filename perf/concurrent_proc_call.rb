@@ -6,7 +6,7 @@ stage = Stage.new
 
 conproc = concurrent_proc{}
 
-result = stage.measure(seconds: 1, profiler: RubyProf::FlatPrinter) do
+result = stage.measure(seconds: 1) do
   conproc.call
 end
 
