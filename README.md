@@ -2,15 +2,44 @@
 
 [![Build Status](https://secure.travis-ci.org/christopheraue/m-ruby-concurrently.svg?branch=master)](http://travis-ci.org/christopheraue/m-ruby-concurrently)
 
-Concurrently is a concurrency framework based on fibers for Ruby and mruby.
+Concurrently is a concurrency framework for Ruby and mruby. With it, concurrent
+code can be written sequentially similar to async/await.
 
-To run code concurrently, it is defined as a concurrent proc. These concurrent
-procs are very similar to regular procs, except when they are called their code
-is evaluated in a fiber (which is kind of a lightweight thread). This lets their
-evaluation be suspended and resumed independently from evaluations of other
-concurrent procs. Along with methods to wait for a time period, await readiness
-of I/O and await the result of other evaluations, concurrent code can be
-written linearly similar to async/await.
+The concurrency primitive of Concurrently is the concurrent proc. It is very
+similar to a regular proc. Calling a concurrent proc creates a concurrent
+evaluation which is kind of a lightweight thread: It can wait for stuff without
+blocking other concurrent evaluations.
+
+Under the hood, concurrent procs are evaluated inside fibers. They can wait for
+readiness of I/O or a period of time (or the result of other concurrent
+evaluations). The interface can be compared to plain Ruby:
+
+<table>
+  <tr>
+    <th>Plain Ruby</th>
+    <th>Concurrently</th>
+  </tr>
+  <tr>
+    <td><code>Fiber.new(&block).resume</code></td>
+    <td><code>concurrent_proc(&block).call</code></td>
+  </tr>
+  <tr>
+    <td><code>IO.select([io])</code></td>
+    <td><code>io.await_readable</code></td>
+  </tr>
+  <tr>
+    <td><code>IO.select(nil, [io])</code></td>
+    <td><code>io.await_writable</code></td>
+  </tr>
+  <tr>
+    <td><code>IO.select(nil, nil, nil, seconds)</code></td>
+    <td><code>wait(seconds)</code></td>
+  </tr>
+</table>
+
+Beyond the mere beautification of the interface, Concurrently also takes care
+of the management of the event loop and the coordination between all concurrent
+evaluations.
 
 
 ## A Very Basic Example
