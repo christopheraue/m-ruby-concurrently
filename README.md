@@ -106,7 +106,7 @@ This is the output:
 ## Supported Ruby Versions
 
 * Ruby 2.2.7+
-* mruby 1.3
+* mruby 1.3+ (or mruby-head until mruby 1.3 is published)
 
 
 ## Development
