@@ -42,7 +42,7 @@ of the management of the event loop and the coordination between all concurrent
 evaluations.
 
 
-## A Very Basic Example
+## A Basic Example
 
 Let's write a little server reading from an IO and printing the received
 messages:
@@ -106,7 +106,7 @@ This is the output:
 ## Supported Ruby Versions
 
 * Ruby 2.2.7+
-* mruby 1.3+ (or mruby-head until mruby 1.3 is published)
+* mruby 1.3+ (or mruby-head until mruby 1.3 is released)
 
 
 ## Development
