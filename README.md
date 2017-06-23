@@ -48,7 +48,7 @@ Let's write a little server reading from an IO and printing the received
 messages:
 
 ```ruby
-printer = concurrent_proc do |io|
+server = concurrent_proc do |io|
   while true
     begin
       puts io.read_nonblock 32
@@ -60,14 +60,16 @@ printer = concurrent_proc do |io|
 end
 ```
 
-And now, we call it detached from the root fiber and send out messages every
-0.5 seconds.
+Now, we create a pipe and start the server with the read end of it:
 
 ```ruby
 r,w = IO.pipe
+server.call_detached r
+```
 
-printer.call_detached r
+Finally, we write messages to the write end of the pipe every 0.5 seconds:
 
+```ruby
 puts "#{Time.now.strftime('%H:%M:%S.%L')} (Start time)"
 
 while true
@@ -76,9 +78,9 @@ while true
 end
 ```
 
-The evaluation of the root fiber is effectively blocked by waiting or sending
-messages through the pipe. But since the server runs concurrently it is not
-affected by this and happily prints its received messages.
+The evaluation of the root fiber is effectively blocked by waiting or writing
+messages. But since the server runs concurrently it is not affected by this and
+happily prints its received messages.
 
 This is the output:
 
