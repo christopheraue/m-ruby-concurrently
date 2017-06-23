@@ -239,6 +239,22 @@ end
 conproc.call
 ```
 
+## FiberError: mprotect failed
+
+Each concurrent evaluation runs in a fiber. If your application creates more
+concurrent evaluations than are concluded, more and more fibers need to be
+created. At some point the creation of additional fibers fails with
+"FiberError: mprotect failed". This is caused by hitting the limit for the the
+number of distinct memory maps a process can have. The corresponding linux
+kernel parameter is `/proc/sys/vm/max_map_count` and has default value of 64k.
+Each fiber creates two memory maps leading to a default maximum of around 30k
+fibers. To create more fibers the `max_map_count` needs to be increased.
+
+```
+$ sysctl -w vm.max_map_count=65530
+```
+
+See also: https://stackoverflow.com/a/11685165/3323185
 
 [Flow of control]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md#Flow+of+control
 [Concurrently::EventLoop#reinitialize!]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop#reinitialize!-instance_method
