@@ -1,4 +1,4 @@
-all/lib/**/*.rb
+lib/all/**/*.rb
 --private
 --no-private
 --markup markdown

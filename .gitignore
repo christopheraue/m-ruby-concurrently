@@ -1,5 +1,5 @@
 /.bundle
 /.yardoc
 /doc
-/mrb/testenv/mruby
+/test/mruby/testenv/mruby
 /Gemfile.lock

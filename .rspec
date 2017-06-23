@@ -1,4 +1,4 @@
 --format documentation
 --color
 --require spec_helper.rb
---default-path rb/spec
+--default-path test/Ruby

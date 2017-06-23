@@ -7,7 +7,7 @@ namespace :ruby do
 end
 
 namespace :mruby do
-  mruby_env = File.expand_path "mrb/testenv"
+  mruby_env = File.expand_path "test/mruby/testenv"
   mruby_dir = "#{mruby_env}/mruby"
   
   file mruby_dir do
