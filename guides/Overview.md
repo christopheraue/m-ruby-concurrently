@@ -189,9 +189,12 @@ these properties of event loops. Have a look at the [Troubleshooting][] page.
 This is a blueprint how to build an application listening to a server socket,
 accepting connections and serving requests through them.
 
-```ruby
-# file: concurrent_server.rb
+At first, lets implement the server. It is initialized with a socket to listen
+to. Listening accesses the concurrent proc stored in the `RECEIVER` and calls
+it in the foreground. The `RECEIVER` proc waits for and accepts incoming
+connections until the server is closed.
 
+```ruby
 class ConcurrentServer
   def initialize(socket)
     @socket = socket
@@ -204,7 +207,7 @@ class ConcurrentServer
   
   def listen
     @listening = true
-    REACTOR.call_nonblock self, @socket
+    RECEIVER.call_nonblock self, @socket
   end
   
   def close
@@ -212,7 +215,7 @@ class ConcurrentServer
     @socket.close
   end
   
-  REACTOR = concurrent_proc do |server, socket|
+  RECEIVER = concurrent_proc do |server, socket|
     while server.listening?
       begin
         Connection.new(socket.accept_nonblock).open
@@ -223,7 +226,15 @@ class ConcurrentServer
     end
   end
 end
+```
 
+The implementation of the connection is structurally similar to the one of the
+server. But because receiving data is a little bit more complex it is done in
+an additional receive buffer object. Received requests are processed in their
+own concurrent proc to not block the receiver if the implementation of the
+request needs to wait.
+
+```ruby
 class ConcurrentServer::Connection
   def initialize(socket)
     @socket = socket
@@ -237,7 +248,7 @@ class ConcurrentServer::Connection
   
   def open
     @open = true
-    REACTOR.call_nonblock self, @receive_buffer
+    RECEIVER.call_nonblock self, @receive_buffer
   end
   
   def close
@@ -245,7 +256,7 @@ class ConcurrentServer::Connection
     @socket.close
   end
   
-  REACTOR = concurrent_proc do |connection, receive_buffer|
+  RECEIVER = concurrent_proc do |connection, receive_buffer|
     while connection.open?
       receive_buffer.receive
       receive_buffer.shift_complete_requests.each do |request|
@@ -258,7 +269,12 @@ class ConcurrentServer::Connection
     request.process
   end
 end
+```
 
+The receive buffer is responsible for reading from the connection's socket and
+deserializing the received data.
+
+```ruby
 class ConcurrentServer::Connection::ReceiveBuffer
   def initialize(socket)
     @socket = socket
@@ -280,15 +296,22 @@ class ConcurrentServer::Connection::ReceiveBuffer
 end
 ```
 
+Finally, this is a script bootstrapping two concurrent servers. The script
+terminates after both servers were closed.
+
 ```ruby
 #!/bin/env ruby
 
 require 'socket'
-require 'concurrent_server'
 
-socket = UNIXServer.new "/tmp/sock"
-server_evaluation = Server.new(socket).listen
-server_evaluation.await_result # blocks as long as the server loop is running
+socket1 = UNIXServer.new "/tmp/sock1"
+socket2 = UNIXServer.new "/tmp/sock2"
+
+server_evaluation1 = ConcurrentServer.new(socket1).listen
+server_evaluation2 = ConcurrentServer.new(socket2).listen
+
+server_evaluation1.await_result
+server_evaluation2.await_result
 ```
 
 
