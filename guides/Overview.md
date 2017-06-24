@@ -184,43 +184,113 @@ If you are experiencing issues when using Concurrently it is probably due to
 these properties of event loops. Have a look at the [Troubleshooting][] page. 
 
 
-## Bootstrapping an Application
+## Implementing a Server Application
 
-Considering a server application with a single server socket accepting
-connections, how can such an application be built?
+This is a blueprint how to build an application listening to a server socket,
+accepting connections and serving requests through them.
 
-Here is a simplified (i.e. imperfect) example to show the general idea:
+```ruby
+# file: concurrent_server.rb
+
+class ConcurrentServer
+  def initialize(socket)
+    @socket = socket
+    @listening = false
+  end
+  
+  def listening?
+    @listening
+  end
+  
+  def listen
+    @listening = true
+    REACTOR.call_nonblock self, @socket
+  end
+  
+  def close
+    @listening = false
+    @socket.close
+  end
+  
+  REACTOR = concurrent_proc do |server, socket|
+    while server.listening?
+      begin
+        Connection.new(socket.accept_nonblock).open
+      rescue IO::WaitReadable
+        socket.await_readable
+        retry
+      end
+    end
+  end
+end
+
+class ConcurrentServer::Connection
+  def initialize(socket)
+    @socket = socket
+    @receive_buffer = ReceiveBuffer.new socket
+    @open = false
+  end
+  
+  def open?
+    @open
+  end
+  
+  def open
+    @open = true
+    REACTOR.call_nonblock self, @receive_buffer
+  end
+  
+  def close
+    @open = false
+    @socket.close
+  end
+  
+  REACTOR = concurrent_proc do |connection, receive_buffer|
+    while connection.open?
+      receive_buffer.receive
+      receive_buffer.shift_complete_requests.each do |request|
+        REQUEST_PROC.call_nonblock request
+      end
+    end
+  end
+  
+  REQUEST_PROC = concurrent_proc do |request|
+    request.process
+  end
+end
+
+class ConcurrentServer::Connection::ReceiveBuffer
+  def initialize(socket)
+    @socket = socket
+    @buffer = ''
+  end
+
+  def receive
+    @buffer << @socket.read_nonblock(32768)
+  rescue IO::WaitReadable
+    @socket.await_readable
+    retry
+  end
+  
+  def shift_complete_requests
+    # Deserializes the buffer according to the used wire protocol, removes
+    # the consumed bytes of all completely received requests from the buffer
+    # and returns the requests.
+  end
+end
+```
 
 ```ruby
 #!/bin/env ruby
 
 require 'socket'
+require 'concurrent_server'
 
-accept_connection = concurrent_proc do |socket|
-  until socket.closed?
-    message = socket.concurrently_read 4096
-    request = extract_request_from message
-    response = request.evaluate
-    socket.concurrently_write response
-  end
-end
-
-start_server = concurrent_proc do |server|
-  until server.closed?
-    begin
-      # Handle each socket concurrently so it can await readiness without
-      # blocking the server.
-      accept_connection.call_detached server.accept_nonblock
-    rescue IO::WaitReadable
-      server.await_readable
-      retry
-    end
-  end
-end
-
-server = UNIXServer.new "/tmp/sock"
-start_server.call server # blocks as long as the server loop is running
+socket = UNIXServer.new "/tmp/sock"
+server_evaluation = Server.new(socket).listen
+server_evaluation.await_result # blocks as long as the server loop is running
 ```
+
 
 [Concurrently::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation
 [Concurrently::Proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc
