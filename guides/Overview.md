@@ -190,9 +190,8 @@ This is a blueprint how to build an application listening to a server socket,
 accepting connections and serving requests through them.
 
 At first, lets implement the server. It is initialized with a socket to listen
-to. Listening accesses the concurrent proc stored in the `RECEIVER` and calls
-it in the foreground. The `RECEIVER` proc waits for and accepts incoming
-connections until the server is closed.
+to. Listening calls the concurrent proc stored in the `RECEIVER` constant. It
+then accepts or waits for incoming connections until the server is closed.
 
 ```ruby
 class ConcurrentServer
@@ -231,8 +230,8 @@ end
 The implementation of the connection is structurally similar to the one of the
 server. But because receiving data is a little bit more complex it is done in
 an additional receive buffer object. Received requests are processed in their
-own concurrent proc to not block the receiver if the implementation of the
-request needs to wait.
+own concurrent proc to not block the receiver if `request.process` calls one
+of the wait methods (This is important!).
 
 ```ruby
 class ConcurrentServer::Connection
@@ -310,10 +309,14 @@ socket2 = UNIXServer.new "/tmp/sock2"
 server_evaluation1 = ConcurrentServer.new(socket1).listen
 server_evaluation2 = ConcurrentServer.new(socket2).listen
 
-server_evaluation1.await_result
-server_evaluation2.await_result
+server_evaluation1.await_result # blocks until server 1 is closed
+server_evaluation2.await_result # returns immediately if server 2 is already
+                                # closed or blocks until it happens
 ```
 
+Keep in mind, that to focus on the use of Concurrently the example does not
+take error handling for I/O, properly closing all connections and other details
+into account.
 
 [Concurrently::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation
 [Concurrently::Proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc
