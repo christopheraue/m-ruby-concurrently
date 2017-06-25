@@ -4,8 +4,8 @@ Overall, Concurrently is able to schedule around 100k to 200k concurrent
 evaluations per second. What to expect exactly is narrowed down in the
 following benchmarks.
 
-The measurements are executed with Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz
-running Linux 4.10. Garbage collection is disabled.
+The measurements were executed with Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz
+running Linux 4.10. Garbage collection was disabled.
 
 
 ## Calling a (Concurrent) Proc
