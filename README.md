@@ -12,7 +12,7 @@ blocking other concurrent evaluations.
 
 Under the hood, concurrent procs are evaluated inside fibers. They can wait for
 readiness of I/O or a period of time (or the result of other concurrent
-evaluations). The interface can be compared to plain Ruby:
+evaluations). The interface is comparable to plain Ruby:
 
 <table>
   <tr>
@@ -44,8 +44,7 @@ evaluations.
 
 ## A Basic Example
 
-Let's write a little server reading from an IO and printing the received
-messages:
+This is a little server reading from an IO and printing the received messages:
 
 ```ruby
 server = concurrent_proc do |io|

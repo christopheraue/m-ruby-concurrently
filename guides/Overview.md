@@ -9,8 +9,8 @@ examples about a topic follow the interspersed links to the documentation.
 An evaluation is an atomic thread of execution leading to a result. It is
 similar to a thread or a fiber. It can be suspended and resumed independently
 from other evaluations. It is also similar to a future or a promise by
-providing access to its future result or offering the ability to conclude it
-prematurely.
+providing access to its future result or offering the ability to inject a
+result manually. Once the evaluation has a result it is *concluded*.
 
 Every ruby program already has an implicit [root evaluation][Concurrently::Evaluation]
 running. Calling a concurrent proc creates a [proc evaluation][Concurrently::Proc::Evaluation].
@@ -29,8 +29,8 @@ concurrent_proc do
 end
 ```
 
-Concurrent procs can be used the same way regular procs are used. For example,
-they can be passed around or called multiple times with different arguments.
+Concurrent procs can be used the same way regular procs are. For example, they
+can be passed around or called multiple times with different arguments.
     
 [Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_and_forget][]:
     
@@ -50,29 +50,28 @@ end.call_and_forget
 
 A concurrent proc has four methods to call it.
 
-The first two start to evaluate the concurrent proc immediately in the
-foreground:
+The first two evaluate the concurrent proc immediately in the foreground:
 
 * [Concurrently::Proc#call][] blocks the (root or proc) evaluation it has been
   called from until its own evaluation is concluded. Then it returns the
   result. This behaves just like `Proc#call`.
 * [Concurrently::Proc#call_nonblock][] will not block the (root or proc)
-  evaluation it has been called from if it waits for something. Instead, it
+  evaluation it has been called from if it needs to wait. Instead, it
   immediately returns its [evaluation][Concurrently::Proc::Evaluation]. If it
   can be evaluated without waiting it returns the result.
 
-The other two schedule the concurrent proc to run in the background. The
+The other two schedule the concurrent proc to be run in the background. The
 evaluation is not started right away but is deferred until the the next
 iteration of the event loop:
 
 * [Concurrently::Proc#call_detached][] returns an [evaluation][Concurrently::Proc::Evaluation].
-* [Concurrently::Proc#call_and_forget][] forgets about the evaluation immediately
+* [Concurrently::Proc#call_and_forget][] does not give access to the evaluation
     and returns `nil`.
 
 
 ## Timing Code
 
-To defer the current evaluation use [Kernel#wait][].
+To defer the current evaluation for a fixed time use [Kernel#wait][].
 
 * Doing something after X seconds:
     
@@ -110,8 +109,8 @@ To defer the current evaluation use [Kernel#wait][].
 ## Handling I/O
 
 Readiness of I/O is awaited with [IO#await_readable][] and [IO#await_writable][].
-To read and write from an IO you can use [IO#concurrently_read][] and
-[IO#concurrently_write][].
+To read and write from an IO concurrently you can use [IO#concurrently_read][]
+and [IO#concurrently_write][].
 
 ```ruby
 r,w = IO.pipe
@@ -167,11 +166,11 @@ Concurrently lets every (real) thread run an [event loop][Concurrently::EventLoo
 These event loops are responsible for watching IOs and scheduling evaluations
 of concurrent procs. Evaluations are scheduled by putting them into a run queue
 ordered by the time they are supposed to run. The run queue is then worked off
-sequentially. If two evaluations are scheduled to run a the same time the
-evaluation scheduled first is also run first.
+sequentially. If two evaluations are scheduled to run at the same time the
+evaluation scheduled first is run first.
 
-Event loops *do not* run at the exact same time (e.g. on another cpu core)
-parallel to your application's code. Instead, your code yields to them if it
+Event loops *do not* run parallel to your application's code at the exact same
+time (e.g. on another cpu core). Instead, your code yields to them if it
 waits for something: **The event loop is (and only is) entered if your code
 calls `#wait` or one of the `#await_*` methods.** Later, when your code can
 be resumed the event loop schedules the corresponding evaluation to run again.
@@ -230,8 +229,8 @@ end
 The implementation of the connection is structurally similar to the one of the
 server. But because receiving data is a little bit more complex it is done in
 an additional receive buffer object. Received requests are processed in their
-own concurrent proc to not block the receiver if `request.process` calls one
-of the wait methods (This is important!).
+own concurrent proc to not block the receiver loop if `request.process` calls
+one of the wait methods.
 
 ```ruby
 class ConcurrentServer::Connection
