@@ -2,39 +2,45 @@
 
 ## Ruby
 
-Add this line to your application's Gemfile:
+Install the gem manually with
+
+    $ gem install concurrently
+
+or manage your application's dependencies with [Bundler](https://bundler.io/):
+Run
+
+    $ bundle
+
+after you added
+
+    gem 'concurrently'
+
+to your Gemfile.
+
+Finally,
 
 ```ruby
-gem 'concurrently'
+require 'concurrently'
 ```
 
-And then execute:
-
-```
-$ bundle
-```
-
-Or install it yourself as:
-
-```
-$ gem install concurrently
-```
+in your application.
 
 
 ## mruby
 
-To directly add it to an mruby build config or GemBox:
+To build Concurrently into mruby directly add it to mruby's build config or a
+gem box:
 
 ```ruby
 MRuby::Build.new do |conf| # or MRuby::GemBox.new do |conf|
-  conf.gem github: 'christopheraue/m-ruby-concurrently'
+  conf.gem mgem: 'mruby-concurrently'
 end
 ```
 
-To use it in an mruby gem:
+To use it in an mruby gem add it to the gem's specification as dependency:
 
 ```ruby
-MRuby::Gem::Specification.new('mruby-your_gem') do |spec|
-  spec.add_dependency 'mruby-concurrently', github: 'christopheraue/m-ruby-concurrently'
+MRuby::Gem::Specification.new('mruby-your-gem') do |spec|
+  spec.add_dependency 'mruby-concurrently'
 end
 ```
