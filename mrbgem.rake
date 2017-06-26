@@ -3,7 +3,19 @@ require_relative 'lib/all/concurrently/version'
 MRuby::Gem::Specification.new('mruby-concurrently') do |spec|
   spec.version      = Concurrently::VERSION
   spec.summary      = %q{A concurrency framework based on fibers}
-  spec.description  = spec.summary
+  spec.description  = <<-DESC
+Concurrently is a concurrency framework for Ruby and mruby. With it, concurrent
+code can be written sequentially similar to async/await.
+
+The concurrency primitive of Concurrently is the concurrent proc. It is very
+similar to a regular proc. Calling a concurrent proc creates a concurrent
+evaluation which is kind of a lightweight thread: It can wait for stuff without
+blocking other concurrent evaluations.
+
+Under the hood, concurrent procs are evaluated inside fibers. They can wait for
+readiness of I/O or a period of time (or the result of other concurrent
+evaluations).
+  DESC
 
   spec.homepage     = "https://github.com/christopheraue/m-ruby-concurrently"
   spec.license      = 'Apache-2.0'
