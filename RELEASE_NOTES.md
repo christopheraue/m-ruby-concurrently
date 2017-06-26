@@ -1,9 +1,9 @@
 # Release Notes
  
-## 1.0.0 (2017-??-??)
+## 1.0.0 (2017-06-26)
 
 ### Added Support for
-* Ruby 2.2.7+, 2.3, 2.4
+* Ruby 2.2.7+
 * mruby 1.3
 
 ### Extended [IO](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO) interface
