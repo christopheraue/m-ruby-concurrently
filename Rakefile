@@ -7,7 +7,7 @@ namespace :ruby do
 end
 
 namespace :mruby do
-  mruby_env = File.expand_path "test/mruby/testenv"
+  mruby_env = File.expand_path "mruby_build"
   mruby_dir = "#{mruby_env}/mruby"
   
   file mruby_dir do
@@ -17,9 +17,14 @@ namespace :mruby do
   task test: mruby_dir do
     sh "cd #{mruby_dir} && MRUBY_CONFIG=#{mruby_env}/build_config.rb rake test"
   end
+  task build: :test
 
   task clean: mruby_dir do
     sh "cd #{mruby_dir} && rake deep_clean"
+  end
+
+  task pull: mruby_dir do
+    sh "cd #{mruby_dir} && git pull"
   end
 end
 
