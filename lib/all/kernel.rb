@@ -131,12 +131,6 @@ module Kernel
     # prematurely.
     if evaluation.fiber == result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
-
-      # Generally, throw-catch is faster than raise-rescue if the code needs to
-      # play back the call stack, i.e. the throw resp. raise is invoked. If not
-      # playing back the call stack, a begin block is faster than a catch
-      # block. Since we won't jump out of the proc above most of the time, we
-      # go with raise. It is rescued in the proc fiber.
       raise Concurrently::Proc::Fiber::Cancelled, '', []
     elsif Concurrently::Evaluation::TimeoutError == result
       raise result, "evaluation timed out after #{seconds} second(s)"
