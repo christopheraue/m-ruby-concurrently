@@ -7,7 +7,7 @@ stage = Stage.new
 evaluation = Concurrently::Evaluation.current
 conproc = concurrent_proc{ evaluation.resume! }
 
-result = stage.__send__(ARGV[0] || :measure, seconds: 1) do
+result = stage.profile(seconds: 1) do
   conproc.call_detached
   await_resume!
 end

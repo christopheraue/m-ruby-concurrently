@@ -9,12 +9,12 @@ namespace :ruby do
 
   task :benchmark, [:file, :batch_size] do |t, args|
     args.with_defaults file: "calls_awaiting"
-    sh "ruby #{perf_dir}/concurrent_proc_#{args.file}.rb #{args.batch_size}"
+    sh "ruby #{perf_dir}/benchmark_#{args.file}.rb #{args.batch_size}"
   end
 
   task :profile, [:file] do |t, args|
     args.with_defaults file: "call"
-    sh "ruby #{perf_dir}/concurrent_proc_#{args.file}.rb profile"
+    sh "ruby #{perf_dir}/profile_#{args.file}.rb"
   end
 end
 
