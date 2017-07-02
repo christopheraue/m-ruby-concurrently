@@ -51,9 +51,9 @@ Explanation of the results:
   All this leads to the creation of a new fiber for each evaluation. This is
   responsible for the largest chunk of time needed during the measurement.
 
-You can run the benchmark yourself by running the [script][perf/benchmark_calls.rb]:
+You can run the benchmark yourself by running the [script][perf/Ruby/benchmark_calls.rb]:
 
-    $ perf/benchmark_calls.rb
+    $ perf/Ruby/benchmark_calls.rb
 
 
 ## Scheduling (Concurrent) Procs
@@ -86,9 +86,9 @@ Explanation of the results:
 * Calling the proc in a blocking manner with `#call` is costly. A lot of time
   is spend waiting for the result.
 
-You can run the benchmark yourself by running the [script][perf/benchmark_calls_awaiting.rb]:
+You can run the benchmark yourself by running the [script][perf/Ruby/benchmark_calls_awaiting.rb]:
 
-    $ perf/benchmark_calls_awaiting.rb
+    $ perf/Ruby/benchmark_calls_awaiting.rb
 
 
 ## Scheduling (Concurrent) Procs and Evaluating Them in Batches
@@ -130,11 +130,11 @@ does not change much with a varying batch size. Larger batches (e.g. 200+)
 gradually start to get a bit slower. A batch of 1000 evaluations still handles
 around 140k executions.
 
-You can run the benchmark yourself by running the [script][perf/benchmark_calls_awaiting.rb]:
+You can run the benchmark yourself by running the [script][perf/Ruby/benchmark_calls_awaiting.rb]:
 
-    $ perf/benchmark_calls_awaiting.rb 100
+    $ perf/Ruby/benchmark_calls_awaiting.rb 100
 
 
-[perf/benchmark_calls.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/benchmark_calls.rb
-[perf/benchmark_calls_awaiting.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/benchmark_calls_awaiting.rb
+[perf/Ruby/benchmark_calls.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/Ruby/benchmark_calls.rb
+[perf/Ruby/benchmark_calls_awaiting.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/Ruby/benchmark_calls_awaiting.rb
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run

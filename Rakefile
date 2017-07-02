@@ -1,7 +1,7 @@
 Dir.chdir File.dirname __FILE__
 
 namespace :ruby do
-  perf_dir = File.expand_path "perf"
+  perf_dir = File.expand_path "perf/Ruby"
 
   task :test do
     sh "rspec"

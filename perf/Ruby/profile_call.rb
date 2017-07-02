@@ -1,6 +1,6 @@
 #!/bin/env ruby
 
-require_relative "Ruby/stage"
+require_relative "_shared/stage"
 
 stage = Stage.new
 
