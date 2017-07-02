@@ -131,7 +131,7 @@ module Kernel
     # prematurely.
     if evaluation.fiber == result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
-      raise Concurrently::Proc::Fiber::Cancelled, '', []
+      raise Concurrently::Proc::Evaluation::Cancelled, '', []
     elsif Concurrently::Evaluation::TimeoutError == result
       raise result, "evaluation timed out after #{seconds} second(s)"
     else

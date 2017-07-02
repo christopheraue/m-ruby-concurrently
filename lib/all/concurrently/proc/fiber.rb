@@ -1,10 +1,6 @@
 module Concurrently
   # @private
   class Proc::Fiber < ::Fiber
-    class Cancelled < Exception
-      # should not be rescued accidentally and therefore is an exception
-    end
-
     EMPTY_EVALUATION_BUCKET = [].freeze
 
     def initialize(fiber_pool)
@@ -43,10 +39,10 @@ module Concurrently
               result = proc.__proc_call__ *args
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_to result
               result
-            rescue Cancelled
+            rescue Proc::Evaluation::Cancelled
               # raised in Kernel#await_resume!
               :cancelled
-            rescue *RESCUABLE_ERRORS => error
+            rescue Proc::Evaluation::RescueableError => error
               # Rescue all errors not critical for other concurrent evaluations
               # and don't let them leak to the loop to keep it up and running.
               STDERR.puts error

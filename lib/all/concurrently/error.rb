@@ -4,7 +4,4 @@ module Concurrently
   #
   # The general error of this gem.
   class Error < StandardError; end
-
-  # @private
-  RESCUABLE_ERRORS = [ScriptError, StandardError, SystemStackError]
 end
