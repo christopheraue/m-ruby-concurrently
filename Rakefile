@@ -20,23 +20,49 @@ end
 
 namespace :mruby do
   mruby_env = File.expand_path "mruby_build"
-  mruby_dir = "#{mruby_env}/mruby"
-  
-  file mruby_dir do
-    sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby_dir}"
+
+  namespace :test do
+    test_mruby = "#{mruby_env}/test"
+
+    file test_mruby do
+      sh "git clone --depth=1 git://github.com/mruby/mruby.git #{test_mruby}"
+    end
+
+    task run: test_mruby do
+      sh "cd #{test_mruby} && MRUBY_CONFIG=#{mruby_env}/test_build_config.rb rake test"
+    end
+
+    task clean: test_mruby do
+      sh "cd #{test_mruby} && rake deep_clean"
+    end
+
+    task pull: test_mruby do
+      sh "cd #{test_mruby} && git pull"
+    end
   end
 
-  task test: mruby_dir do
-    sh "cd #{mruby_dir} && MRUBY_CONFIG=#{mruby_env}/build_config.rb rake test"
-  end
-  task build: :test
+  task test: 'test:run'
 
-  task clean: mruby_dir do
-    sh "cd #{mruby_dir} && rake deep_clean"
+  perf_mruby = "#{mruby_env}/perf"
+
+  file perf_mruby do
+    sh "git clone --depth=1 git://github.com/mruby/mruby.git #{perf_mruby}"
   end
 
-  task pull: mruby_dir do
-    sh "cd #{mruby_dir} && git pull"
+  namespace :benchmark do
+    task clean: perf_mruby do
+      sh "cd #{perf_mruby} && rake deep_clean"
+    end
+
+    task pull: perf_mruby do
+      sh "cd #{perf_mruby} && git pull"
+    end
+  end
+
+  task :benchmark, [:file, :batch_size] => perf_mruby do |t, args|
+    perf_dir = File.expand_path "perf/mruby"
+    args.with_defaults file: "calls_awaiting"
+    sh "cd #{perf_mruby} && MRUBY_CONFIG=#{mruby_env}/perf_build_config.rb rake && bin/mruby #{perf_dir}/benchmark_#{args.file}.rb #{args.batch_size}"
   end
 end
 
