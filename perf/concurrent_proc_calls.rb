@@ -1,6 +1,6 @@
 #!/bin/env ruby
 
-require_relative "_shared/stage"
+require_relative "Ruby/stage"
 
 stage = Stage.new
 format = "  %-25s %7d executions in %2.4f seconds"
