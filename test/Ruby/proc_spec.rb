@@ -19,6 +19,8 @@ describe Concurrently::Proc do
         context "when the code inside the block raises a recoverable error" do
           let(:block) { proc{ raise StandardError, 'error' } }
 
+          before { expect(STDERR).to receive(:puts).with(
+            be_a(StandardError).and have_attributes message: 'error') }
           before { expect(instance).to receive(:trigger).with(:error,
             (be_a(StandardError).and have_attributes message: 'error')) }
           it { is_expected.to raise_error StandardError, 'error' }
@@ -37,6 +39,8 @@ describe Concurrently::Proc do
         context "when the code inside the block raises a recoverable error" do
           let(:block) { proc{ wait 0; raise StandardError, 'error' } }
 
+          before { expect(STDERR).to receive(:puts).with(
+            (be_a(StandardError).and have_attributes message: 'error')) }
           before { expect(instance).to receive(:trigger).with(:error,
             (be_a(StandardError).and have_attributes message: 'error')) }
           it { is_expected.to raise_error StandardError, 'error' }
@@ -83,6 +87,8 @@ describe Concurrently::Proc do
       context "when the code inside the block raises an error" do
         let(:block) { proc{ raise StandardError, 'error' } }
 
+        before { expect(STDERR).to receive(:puts).with(
+          (be_a(StandardError).and have_attributes message: 'error')) }
         before { expect(instance).to receive(:trigger).with(:error,
           (be_a(StandardError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error StandardError, 'error' }
@@ -105,6 +111,8 @@ describe Concurrently::Proc do
         context "when the code inside the block raises a recoverable error" do
           let(:block) { proc{ wait 0; raise StandardError, 'error' } }
 
+          before { expect(STDERR).to receive(:puts).with(
+            (be_a(StandardError).and have_attributes message: 'error')) }
           before { expect(instance).to receive(:trigger).with(:error,
             (be_a(StandardError).and have_attributes message: 'error')) }
           it { is_expected.to raise_error StandardError, 'error' }
@@ -151,6 +159,8 @@ describe Concurrently::Proc do
       context "when the code inside the block raises a recoverable error" do
         let(:block) { proc{ raise 'error' } }
 
+        before { expect(STDERR).to receive(:puts).with(
+          (be_a(StandardError).and have_attributes message: 'error')) }
         before { expect(instance).to receive(:trigger).with(:error,
           (be_a(StandardError).and have_attributes message: 'error')) }
         it { is_expected.to raise_error StandardError, 'error' }

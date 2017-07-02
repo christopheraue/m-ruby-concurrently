@@ -49,6 +49,7 @@ module Concurrently
             rescue *RESCUABLE_ERRORS => error
               # Rescue all errors not critical for other concurrent evaluations
               # and don't let them leak to the loop to keep it up and running.
+              STDERR.puts error
               proc.trigger :error, error
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_to error
               error
