@@ -225,7 +225,7 @@ module Concurrently
       event_loop = EventLoop.current
       # run without creating an Evaluation object at first. It will be created
       # if the proc needs to wait for something.
-      event_loop.run_queue.schedule_immediately event_loop.proc_fiber_pool.take_fiber, [self, args]
+      event_loop.run_queue.schedule_immediately event_loop.proc_fiber_pool.take_fiber, [self, args], false
 
       nil
     end

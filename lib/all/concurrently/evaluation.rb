@@ -46,9 +46,6 @@ module Concurrently
     def waiting?
       @waiting
     end
-
-    # @private
-    DEFAULT_RESUME_OPTS = { deferred_only: true }.freeze
     
     # @note The exclamation mark in its name stands for: Watch out!
     #   This method is potentially dangerous and can break stuff. It also
@@ -98,9 +95,9 @@ module Concurrently
 
       # Cancel running the fiber if it has already been scheduled to run; but
       # only if it was scheduled with a time offset. This is used to cancel the
-      # timeout of a wait operation if the waiting fiber is resume before the
+      # timeout of a wait operation if the waiting fiber is resumed before the
       # timeout is triggered.
-      run_queue.cancel(self, DEFAULT_RESUME_OPTS)
+      run_queue.cancel(self, true)
 
       run_queue.schedule_immediately(self, result)
       :resumed

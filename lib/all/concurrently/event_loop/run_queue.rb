@@ -14,8 +14,6 @@ module Concurrently
     # The additional cart index exists so carts can be cancelled by their
     # evaluation. Cancelled carts have their evaluation set to false.
 
-    DEFAULT_CANCEL_OPTS = { deferred_only: false }.freeze
-
     class Track < Array
       def bisect_left
         bsearch_index{ |item| yield item } || length
@@ -24,26 +22,25 @@ module Concurrently
 
     def initialize(loop)
       @loop = loop
-      @cart_index = {}
       @deferred_track = Track.new
       @immediate_track = Track.new
     end
 
-    def schedule_immediately(evaluation, result = nil)
+    def schedule_immediately(evaluation, result = nil, cancellable = true)
       cart = [evaluation, false, result]
-      @cart_index[evaluation.hash] = cart
+      evaluation.instance_variable_set :@__cart__, cart if cancellable
       @immediate_track << cart
     end
 
     def schedule_deferred(evaluation, seconds, result = nil)
       cart = [evaluation, @loop.lifetime+seconds, result]
-      @cart_index[evaluation.hash] = cart
+      evaluation.instance_variable_set :@__cart__, cart
       index = @deferred_track.bisect_left{ |tcart| tcart[TIME] <= cart[TIME] }
       @deferred_track.insert(index, cart)
     end
 
-    def cancel(evaluation, opts = DEFAULT_CANCEL_OPTS)
-      if (cart = @cart_index[evaluation.hash]) and (not opts[:deferred_only] or cart[TIME])
+    def cancel(evaluation, only_if_deferred = false)
+      if (cart = evaluation.instance_variable_get :@__cart__) and (not only_if_deferred or cart[TIME])
         cart[EVALUATION] = false
       end
     end
@@ -63,8 +60,8 @@ module Concurrently
       end
 
       processing.each do |cart|
-        @cart_index.delete cart[EVALUATION].hash
-        resume_evaluation! cart[EVALUATION], cart[RESULT] if cart[EVALUATION]
+        evaluation = cart[EVALUATION]
+        resume_evaluation! evaluation, cart[RESULT] if evaluation
       end
     end
 
