@@ -1,14 +1,10 @@
-#!/bin/env ruby
-
-require_relative "_shared/stage"
-
 stage = Stage.new
 
 evaluation = Concurrently::Evaluation.current
 conproc = concurrent_proc{ evaluation.resume! }
 
 result = stage.profile(seconds: 1) do
-  conproc.call_and_forget
+  conproc.call_detached
   await_resume!
 end
 

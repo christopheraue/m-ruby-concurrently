@@ -1,7 +1,3 @@
-#!/bin/env ruby
-
-require_relative "_shared/stage"
-
 stage = Stage.new
 
 conproc = concurrent_proc{ wait 0 }

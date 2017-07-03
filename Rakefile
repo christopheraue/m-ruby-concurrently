@@ -1,31 +1,31 @@
 Dir.chdir File.dirname __FILE__
 
 namespace :ruby do
-  perf_dir = File.expand_path "perf/Ruby"
 
   desc "Run the mruby test suite"
   task :test do
     sh "rspec"
   end
 
+  perf_dir = File.expand_path "perf"
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb"
   task :benchmark, [:name, :batch_size] do |t, args|
     args.with_defaults name: "calls_awaiting"
     file = "#{perf_dir}/benchmark_#{args.name}.rb"
-    sh "ruby #{file} #{args.batch_size}"
+    sh "ruby -Iperf/Ruby -rstage #{file} #{args.batch_size}"
   end
 
   desc "Create a code profile by running #{perf_dir}/profile_[name].rb"
   task :profile, [:name] do |t, args|
     args.with_defaults name: "call"
     file = "#{perf_dir}/profile_#{args.name}.rb"
-    sh "ruby #{file}"
+    sh "ruby -Iperf/Ruby -rstage #{file}"
   end
 end
 
 namespace :mruby do
   mruby_builds = File.expand_path "mruby_builds"
-  perf_dir = File.expand_path "perf/mruby"
+  perf_dir = File.expand_path "perf"
 
   test_source = "#{mruby_builds}/test"
   mrbtest = "#{test_source}/bin/mrbtest"

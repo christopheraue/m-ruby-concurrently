@@ -1,7 +1,3 @@
-#!/bin/env ruby
-
-require_relative "_shared/stage"
-
 stage = Stage.new
 format = "  %-25s %7d executions in %2.4f seconds"
 factor = ARGV.fetch(0, 1).to_i
