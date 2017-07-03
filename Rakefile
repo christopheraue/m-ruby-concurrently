@@ -10,21 +10,21 @@ namespace :ruby do
 
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb"
   task :benchmark, [:name, :batch_size] do |t, args|
-    file = "#{perf_dir}/benchmark_#{args.name}.rb"
     args.with_defaults name: "calls_awaiting"
+    file = "#{perf_dir}/benchmark_#{args.name}.rb"
     sh "ruby #{file} #{args.batch_size}"
   end
 
   desc "Create a code profile by running #{perf_dir}/profile_[name].rb"
   task :profile, [:name] do |t, args|
-    file = "#{perf_dir}/profile_#{args.name}.rb"
     args.with_defaults name: "call"
+    file = "#{perf_dir}/profile_#{args.name}.rb"
     sh "ruby #{file}"
   end
 end
 
 namespace :mruby do
-  mruby_builds = File.expand_path "mruby_build"
+  mruby_builds = File.expand_path "mruby_builds"
   perf_dir = File.expand_path "perf/mruby"
 
   test_source = "#{mruby_builds}/test"
@@ -58,62 +58,62 @@ namespace :mruby do
     sh mrbtest
   end
 
-  prod_source = "#{mruby_builds}/prod"
-  mruby = "#{prod_source}/bin/mruby"
+  benchmark_source = "#{mruby_builds}/benchmark"
+  mruby = "#{benchmark_source}/bin/mruby"
 
-  namespace :prod do
-    file prod_source do
-      sh "git clone --depth=1 git://github.com/mruby/mruby.git #{prod_source}"
+  namespace :benchmark do
+    file benchmark_source do
+      sh "git clone --depth=1 git://github.com/mruby/mruby.git #{benchmark_source}"
     end
 
-    file mruby => prod_source do
-      sh "cd #{prod_source} && MRUBY_CONFIG=#{mruby_builds}/prod_build_config.rb rake"
+    file mruby => benchmark_source do
+      sh "cd #{benchmark_source} && MRUBY_CONFIG=#{mruby_builds}/benchmark_build_config.rb rake"
     end
 
-    desc "Build a production-grade mruby binary"
+    desc "Build a mruby binary for benchmarks"
     task build: mruby
 
-    desc "Clean the mruby production build"
-    task clean: prod_source do
-      sh "cd #{prod_source} && rake deep_clean"
+    desc "Clean the mruby benchmark build"
+    task clean: benchmark_source do
+      sh "cd #{benchmark_source} && rake deep_clean"
     end
 
-    desc "Update the source for the mruby production build"
-    task pull: prod_source do
-      sh "cd #{prod_source} && git pull"
+    desc "Update the source for the mruby benchmark build"
+    task pull: benchmark_source do
+      sh "cd #{benchmark_source} && git pull"
     end
   end
 
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb"
   task :benchmark, [:file, :batch_size] => mruby do |t, args|
-    file = "#{perf_dir}/benchmark_#{args.file}.rb"
     args.with_defaults file: "calls_awaiting"
+    file = "#{perf_dir}/benchmark_#{args.file}.rb"
     sh "#{mruby} #{file} #{args.batch_size}"
   end
 
-  dev_source = "#{mruby_builds}/dev"
-  mruby_dev = "#{dev_source}/bin/mruby"
+  debug_source = "#{mruby_builds}/debug"
+  mruby_debug = "#{debug_source}/bin/mruby"
 
-  namespace :dev do
-    file dev_source do
-      sh "git clone --depth=1 git://github.com/mruby/mruby.git #{dev_source}"
+  namespace :debug do
+    file debug_source do
+      sh "git clone --depth=1 git://github.com/mruby/mruby.git #{debug_source}"
     end
 
-    file mruby_dev => dev_source do
-      sh "cd #{dev_source} && MRUBY_CONFIG=#{mruby_builds}/dev_build_config.rb rake"
+    file mruby_debug => debug_source do
+      sh "cd #{debug_source} && MRUBY_CONFIG=#{mruby_builds}/debug_build_config.rb rake"
     end
 
     desc "Build an mruby binary for debugging (MRB_DEBUG, MRB_ENABLE_DEBUG_HOOK, mruby-profiler)"
-    task build: mruby_dev
+    task build: mruby_debug
 
     desc "Clean the mruby debug build"
-    task clean: dev_source do
-      sh "cd #{dev_source} && rake deep_clean"
+    task clean: debug_source do
+      sh "cd #{debug_source} && rake deep_clean"
     end
 
     desc "Update the source for the mruby debug build"
-    task pull: dev_source do
-      sh "cd #{dev_source} && git pull"
+    task pull: debug_source do
+      sh "cd #{debug_source} && git pull"
     end
   end
 end
