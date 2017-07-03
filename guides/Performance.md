@@ -1,12 +1,7 @@
 # Performance of Concurrently
 
-Overall, Concurrently is able to schedule around 100k to 200k concurrent
-evaluations per second. What to expect exactly is narrowed down in the
-following benchmarks.
-
-The measurements were executed with Ruby 2.4.1 on an Intel i7-5820K 3.3 GHz
-running Linux 4.10. Garbage collection was disabled.
-
+The measurements were executed on an Intel i7-5820K 3.3 GHz running Linux 4.10.
+Garbage collection was disabled.
 
 ## Calling a (Concurrent) Proc
 
@@ -23,14 +18,23 @@ nothing.
         # CODE #
       end
     
-    Results
-    -------
+    Results for ruby 2.4.1
+    ----------------------
       # CODE #
-      proc.call:                5423106 executions in 1.0000 seconds
-      conproc.call:              662314 executions in 1.0000 seconds
-      conproc.call_nonblock:     769164 executions in 1.0000 seconds
-      conproc.call_detached:     269385 executions in 1.0000 seconds
-      conproc.call_and_forget:   306099 executions in 1.0000 seconds
+      proc.call:                5266268 executions in 1.0000 seconds
+      conproc.call:              636313 executions in 1.0000 seconds
+      conproc.call_nonblock:     760222 executions in 1.0000 seconds
+      conproc.call_detached:     290855 executions in 1.0000 seconds
+      conproc.call_and_forget:   325831 executions in 1.0000 seconds
+    
+    Results for mruby 1.3.0
+    -----------------------
+      # CODE #
+      proc.call:                1718814 executions in 1.0000 seconds
+      conproc.call:              338579  executions in 1.0000 seconds
+      conproc.call_nonblock:     368053  executions in 1.0000 seconds
+      conproc.call_detached:     273152  executions in 1.0000 seconds
+      conproc.call_and_forget:   385587  executions in 1.0000 seconds
 
 Explanation of the results:
 
@@ -51,9 +55,9 @@ Explanation of the results:
   All this leads to the creation of a new fiber for each evaluation. This is
   responsible for the largest chunk of time needed during the measurement.
 
-You can run the benchmark yourself by running the [script][perf/Ruby/benchmark_calls.rb]:
+You can run the benchmark yourself by running:
 
-    $ perf/Ruby/benchmark_calls.rb
+    $ rake benchmark[calls]
 
 
 ## Scheduling (Concurrent) Procs
@@ -70,13 +74,21 @@ inside a concurrent proc.
         wait 0 # to enter the event loop
       end
     
-    Results
-    -------
+    Results for ruby 2.4.1
+    ----------------------
       # CODE #
-      conproc.call:               72444 executions in 1.0000 seconds
-      conproc.call_nonblock:     103468 executions in 1.0000 seconds
-      conproc.call_detached:     114882 executions in 1.0000 seconds
-      conproc.call_and_forget:   117425 executions in 1.0000 seconds
+      conproc.call:               76395 executions in 1.0000 seconds
+      conproc.call_nonblock:     107481 executions in 1.0000 seconds
+      conproc.call_detached:     118984 executions in 1.0000 seconds
+      conproc.call_and_forget:   123408 executions in 1.0000 seconds
+    
+    Results for mruby 1.3.0
+    -----------------------
+      # CODE #
+      conproc.call:               30003   executions in 1.0000 seconds
+      conproc.call_nonblock:      38709   executions in 1.0000 seconds
+      conproc.call_detached:      47200   executions in 1.0000 seconds
+      conproc.call_and_forget:    49503   executions in 1.0000 seconds
 
 Explanation of the results:
 
@@ -86,9 +98,9 @@ Explanation of the results:
 * Calling the proc in a blocking manner with `#call` is costly. A lot of time
   is spend waiting for the result.
 
-You can run the benchmark yourself by running the [script][perf/Ruby/benchmark_calls_awaiting.rb]:
+You can run the benchmark yourself by running:
 
-    $ perf/Ruby/benchmark_calls_awaiting.rb
+    $ rake benchmark[calls_awaiting]
 
 
 ## Scheduling (Concurrent) Procs and Evaluating Them in Batches
@@ -109,14 +121,21 @@ iteration of the event loop and processing all of them in one go.
         wait 0 # to enter the event loop
       end
     
-    Results
-    -------
+    Results for ruby 2.4.1
+    ----------------------
       # CODE #
-      conproc.call:               76300 executions in 1.0006 seconds
-      conproc.call_nonblock:     186200 executions in 1.0002 seconds
-      conproc.call_detached:     180200 executions in 1.0000 seconds
-      conproc.call_and_forget:   193500 executions in 1.0004 seconds
-
+      conproc.call:               77700 executions in 1.0008 seconds
+      conproc.call_nonblock:     198800 executions in 1.0001 seconds
+      conproc.call_detached:     197800 executions in 1.0003 seconds
+      conproc.call_and_forget:   207700 executions in 1.0001 seconds
+    
+    Results for mruby 1.3.0
+    -----------------------
+      # CODE #
+      conproc.call:               30300   executions in 1.0024 seconds
+      conproc.call_nonblock:      74700   executions in 1.0013 seconds
+      conproc.call_detached:      76600   executions in 1.0003 seconds
+      conproc.call_and_forget:    81900   executions in 1.0013 seconds
 
 Explanation of the results:
 
@@ -127,14 +146,12 @@ Explanation of the results:
 The result of this benchmark is the upper bound for how many concurrent
 evaluations Concurrently is able to run per second. The number of executions
 does not change much with a varying batch size. Larger batches (e.g. 200+)
-gradually start to get a bit slower. A batch of 1000 evaluations still handles
-around 140k executions.
+gradually start to get a bit slower. A batch of 1000 evaluations still leads to
+around 160k executions in Ruby and around 65k in mruby.
 
-You can run the benchmark yourself by running the [script][perf/Ruby/benchmark_calls_awaiting.rb]:
+You can run the benchmark yourself by running:
 
-    $ perf/Ruby/benchmark_calls_awaiting.rb 100
+    $ rake benchmark[calls_awaiting,100]
 
 
-[perf/Ruby/benchmark_calls.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/Ruby/benchmark_calls.rb
-[perf/Ruby/benchmark_calls_awaiting.rb]: https://github.com/christopheraue/m-ruby-concurrently/blob/master/perf/Ruby/benchmark_calls_awaiting.rb
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
