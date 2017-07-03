@@ -15,7 +15,7 @@ assert "concurrent_proc#call_nonblock" do
 end
 
 assert "concurrent_proc#call_detached" do
-  assert_kind_of Concurrently::Proc::Evaluation, conproc.call_detached(:result)
+  assert_true conproc.call_detached(:result).kind_of? Concurrently::Proc::Evaluation
 end
 
 assert "concurrent_proc#call_and_forget" do
