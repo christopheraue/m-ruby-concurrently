@@ -10,8 +10,11 @@ class Array
   def pop(n = nil)
     if n
       res = []
-      n.times{ res << pop_single }
-      res.reverse!
+      while n > 0
+        res.unshift pop_single
+        n -= 1
+      end
+      res
     else
       pop_single
     end
