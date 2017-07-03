@@ -34,13 +34,6 @@ namespace :mruby do
       sh "git clone --depth=1 git://github.com/mruby/mruby.git #{test_source}"
     end
 
-    file mrbtest => test_source do
-      sh "cd #{test_source} && MRUBY_CONFIG=#{mruby_builds}/test_build_config.rb rake"
-    end
-
-    desc "Build the mruby test runner (mrbtest)"
-    task build: mrbtest
-
     desc "Clean the mruby test build"
     task clean: test_source do
       sh "cd #{test_source} && rake deep_clean && rm #{mrbtest}"
@@ -53,8 +46,8 @@ namespace :mruby do
   end
 
   desc "Run the Ruby test suite"
-  task test: mrbtest do
-    sh mrbtest
+  task test: test_source do
+    sh "cd #{test_source} && MRUBY_CONFIG=#{mruby_builds}/test_build_config.rb rake test"
   end
 
   benchmark_source = "#{mruby_builds}/benchmark"
@@ -64,13 +57,6 @@ namespace :mruby do
     file benchmark_source do
       sh "git clone --depth=1 git://github.com/mruby/mruby.git #{benchmark_source}"
     end
-
-    file mruby => benchmark_source do
-      sh "cd #{benchmark_source} && MRUBY_CONFIG=#{mruby_builds}/benchmark_build_config.rb rake"
-    end
-
-    desc "Build a mruby binary for benchmarks"
-    task build: mruby
 
     desc "Clean the mruby benchmark build"
     task clean: benchmark_source do
@@ -84,7 +70,8 @@ namespace :mruby do
   end
 
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb"
-  task :benchmark, [:file, :batch_size] => mruby do |t, args|
+  task :benchmark, [:file, :batch_size] => benchmark_source do |t, args|
+    sh "cd #{benchmark_source} && MRUBY_CONFIG=#{mruby_builds}/benchmark_build_config.rb rake"
     args.with_defaults file: "calls_awaiting"
     file = "#{perf_dir}/benchmark_#{args.file}.rb"
     sh "#{mruby} #{file} #{args.batch_size}"
@@ -98,13 +85,6 @@ namespace :mruby do
       sh "git clone --depth=1 git://github.com/mruby/mruby.git #{profile_source}"
     end
 
-    file mruby_profile => profile_source do
-      sh "cd #{profile_source} && MRUBY_CONFIG=#{mruby_builds}/profile_build_config.rb rake"
-    end
-
-    desc "Build an mruby binary for profiling with mruby-profiler"
-    task build: mruby_profile
-
     desc "Clean the mruby profile build"
     task clean: profile_source do
       sh "cd #{profile_source} && rake deep_clean"
@@ -117,7 +97,8 @@ namespace :mruby do
   end
 
   desc "Create a code profile by running #{perf_dir}/profile_[name].rb"
-  task :profile, [:name] => mruby_profile do |t, args|
+  task :profile, [:name] => profile_source do |t, args|
+    sh "cd #{profile_source} && MRUBY_CONFIG=#{mruby_builds}/profile_build_config.rb rake"
     args.with_defaults name: "call"
     file = "#{perf_dir}/profile_#{args.name}.rb"
     sh "#{mruby_profile} #{file}"
