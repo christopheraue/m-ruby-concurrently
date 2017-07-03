@@ -1,7 +1,9 @@
 stage = Stage.new
 format = "  %-25s %7d executions in %2.4f seconds"
 
-puts <<-DOC
+skip_header = ARGV[1] == 'skip_header'
+
+puts <<-DOC unless skip_header
 Benchmarked Code
 ----------------
   proc = proc{}
@@ -10,9 +12,13 @@ Benchmarked Code
   while elapsed_seconds < 1
     # CODE #
   end
+DOC
 
-Results
--------
+result_header = "Results for #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}"
+puts <<-DOC
+
+#{result_header}
+#{'-'*result_header.length}
   # CODE #
 DOC
 

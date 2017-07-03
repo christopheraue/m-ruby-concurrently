@@ -1,8 +1,10 @@
 stage = Stage.new
 format = "  %-25s %7d executions in %2.4f seconds"
-factor = ARGV.fetch(0, 1).to_i
 
-puts <<-DOC
+factor = ARGV.fetch(0, 1).to_i
+skip_header = ARGV[1] == 'skip_header'
+
+puts <<-DOC unless skip_header
 Benchmarked Code
 ----------------
   conproc = concurrent_proc{ wait 0 }
@@ -11,9 +13,13 @@ Benchmarked Code
     #{factor}.times{ # CODE # }
     wait 0 # to enter the event loop
   end
+DOC
 
-Results
--------
+result_header = "Results for #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}"
+puts <<-DOC
+
+#{result_header}
+#{'-'*result_header.length}
   # CODE #
 DOC
 

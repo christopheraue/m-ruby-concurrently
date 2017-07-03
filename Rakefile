@@ -56,6 +56,15 @@ namespace :benchmark do
   end
 end
 
+desc "Run the benchmark #{perf_dir}/benchmark_[name].rb for Ruby and mruby"
+task :benchmark, [:name, :batch_size] do |t, args|
+  Rake::Task["mruby:build"].invoke :benchmark
+  args.with_defaults name: "calls_awaiting", batch_size: 1
+  file = "#{perf_dir}/benchmark_#{args.name}.rb"
+  sh "#{ruby[:benchmark][:exe]} #{file} #{args.batch_size}", verbose: false
+  sh "#{mruby[:benchmark][:exe]} #{file} #{args.batch_size} skip_header", verbose: false
+end
+
 namespace :profile do
   desc "Create a code profile by running #{perf_dir}/profile_[name].rb with Ruby"
   task :ruby, [:name] do |t, args|
