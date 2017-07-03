@@ -12,6 +12,6 @@ MRuby::Build.new do |conf|
 
   gem_dir = File.expand_path File.dirname File.dirname __FILE__
   conf.gem gem_dir do |gem|
-    gem.rbfiles << "#{gem_dir}/perf/stage.rb"
+    gem.rbfiles << "#{gem_dir}/perf/stage.rb" << "#{gem_dir}/perf/mruby/stage.rb"
   end
 end
