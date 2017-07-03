@@ -1,6 +1,6 @@
 language: ruby
 
-script: rake $TEST_RUBY:test
+script: rake test:$TEST_RUBY
 sudo: false
 
 rvm:
