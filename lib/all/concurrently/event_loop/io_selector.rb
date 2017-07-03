@@ -9,7 +9,7 @@ module Concurrently
     end
 
     def awaiting?
-      @evaluations.any?
+      @evaluations.size > 0
     end
 
     def await_reader(io, evaluation)

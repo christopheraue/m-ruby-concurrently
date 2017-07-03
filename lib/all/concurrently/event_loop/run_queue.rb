@@ -54,7 +54,7 @@ module Concurrently
       processing = @immediate_track
       @immediate_track = []
 
-      if @deferred_track.any?
+      if @deferred_track.size > 0
         now = @loop.lifetime
         index = @deferred_track.bisect_left{ |cart| cart[TIME] <= now }
         @deferred_track.pop(@deferred_track.length-index).reverse_each do |cart|
@@ -69,7 +69,7 @@ module Concurrently
     end
 
     def waiting_time
-      if @immediate_track.any?
+      if @immediate_track.size > 0
         0
       elsif next_cart = @deferred_track.reverse_each.find{ |cart| cart[EVALUATION] }
         waiting_time = next_cart[TIME] - @loop.lifetime
