@@ -1,6 +1,7 @@
 MRuby::Build.new do |conf|
   toolchain :gcc
   enable_debug
+  conf.cc.defines = %w(MRB_ENABLE_DEBUG_HOOK)
   conf.gem github: 'miura1729/mruby-profiler'
   conf.gem core: 'mruby-bin-mruby'
   conf.gem core: 'mruby-bin-mirb'
