@@ -100,7 +100,7 @@ Explanation of the results:
 
 You can run the benchmark yourself by running:
 
-    $ rake benchmark[calls_awaiting]
+    $ rake benchmark[wait]
 
 
 ## Scheduling (Concurrent) Procs and Evaluating Them in Batches
@@ -151,7 +151,7 @@ around 160k executions in Ruby and around 65k in mruby.
 
 You can run the benchmark yourself by running:
 
-    $ rake benchmark[calls_awaiting,100]
+    $ rake benchmark[wait,100]
 
 
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
