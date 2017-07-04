@@ -1,6 +1,6 @@
 language: ruby
 
-script: rake test:$TEST_RUBY
+script: rake test:$RUBY
 sudo: false
 
 rvm:
@@ -10,10 +10,12 @@ rvm:
   - ruby-head
 
 env:
-  - TEST_RUBY=ruby
+  - RUBY=ruby
 
 matrix:
   include:
-  - env: TEST_RUBY=mruby
+  - env: RUBY=mruby[1.3.0]
+  - env: RUBY=mruby[master]
   allow_failures:
   - rvm: ruby-head
+  - env: RUBY=mruby[master]
