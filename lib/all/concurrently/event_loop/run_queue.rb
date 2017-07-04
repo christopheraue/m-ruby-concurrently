@@ -71,6 +71,8 @@ module Concurrently
       elsif next_cart = @deferred_track.reverse_each.find{ |cart| cart[EVALUATION] }
         waiting_time = next_cart[TIME] - @loop.lifetime
         waiting_time < 0 ? 0 : waiting_time
+      else
+        Float::INFINITY
       end
     end
 
