@@ -23,8 +23,7 @@ namespace :test do
   end
 
   desc "Run the mruby test suite"
-  task :mruby do
-    Rake::Task["mruby:build"].invoke :test
+  task mruby: "mruby:build" do
     sh mruby[:test]
   end
 end
@@ -41,8 +40,7 @@ namespace :benchmark do
   end
 
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb with mruby"
-  task :mruby, [:name, :batch_size] do |t, args|
-    Rake::Task["mruby:build"].invoke :benchmark
+  task :mruby, [:name, :batch_size] => "mruby:build" do |t, args|
     args.with_defaults name: "calls_awaiting", batch_size: 1
     file = "#{perf_dir}/benchmark_#{args.name}.rb"
     sh "#{mruby[:benchmark]} #{file} #{args.batch_size}"
@@ -50,8 +48,7 @@ namespace :benchmark do
 end
 
 desc "Run the benchmark #{perf_dir}/benchmark_[name].rb for Ruby and mruby"
-task :benchmark, [:name, :batch_size] do |t, args|
-  Rake::Task["mruby:build"].invoke :benchmark
+task :benchmark, [:name, :batch_size] => "mruby:build" do |t, args|
   args.with_defaults name: "calls_awaiting", batch_size: 1
   file = "#{perf_dir}/benchmark_#{args.name}.rb"
   sh "#{ruby[:benchmark]} #{file} #{args.batch_size}", verbose: false
@@ -67,8 +64,7 @@ namespace :profile do
   end
 
   desc "Create a code profile by running #{perf_dir}/profile_[name].rb with mruby"
-  task :mruby, [:name] do |t, args|
-    Rake::Task["mruby:build"].invoke :profile
+  task :mruby, [:name] => "mruby:build" do |t, args|
     args.with_defaults name: "call"
     file = "#{perf_dir}/profile_#{args.name}.rb"
     sh "#{mruby[:profile]} #{file}"
@@ -80,6 +76,7 @@ namespace :mruby do
     sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby[:src]}"
   end
 
+  desc "Build mruby"
   task build: mruby[:src] do
     sh "cd #{mruby[:src]} && MRUBY_CONFIG=#{mruby[:cfg]} rake"
   end
