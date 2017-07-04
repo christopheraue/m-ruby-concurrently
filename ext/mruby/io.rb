@@ -29,7 +29,7 @@ class IO
     #
     # @see https://ruby-doc.org/core-1.9.3/IO.html#method-i-read_nonblock
     #   Ruby's documentation for IO#read_nonblock
-    def read_nonblock(maxlen, outbuf = nil)
+    def read_nonblock(maxlen, outbuf = '')
       if IO.select [self], nil, nil, 0
         sysread(maxlen, outbuf)
       else
