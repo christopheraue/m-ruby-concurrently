@@ -4,35 +4,28 @@ perf_dir = File.expand_path "perf"
 
 # Ruby
 ruby = {
-  test: { exe: "rspec" },
-  benchmark: { exe: "ruby -Iperf/Ruby -rstage" },
-  profile: { exe: "ruby -Iperf/Ruby -rstage" } }
+  test: "rspec" ,
+  benchmark: "ruby -Iperf/Ruby -rstage",
+  profile: "ruby -Iperf/Ruby -rstage" }
 
 mruby_dir = File.expand_path "mruby_builds"
 mruby = {
-  test: {
-    dir: "#{mruby_dir}/test",
-    cfg: "#{mruby_dir}/test_build_config.rb",
-    exe: "#{mruby_dir}/test/bin/mrbtest" },
-  benchmark: {
-    dir: "#{mruby_dir}/benchmark",
-    cfg: "#{mruby_dir}/benchmark_build_config.rb",
-    exe: "#{mruby_dir}/benchmark/bin/mruby" },
-  profile: {
-    dir: "#{mruby_dir}/profile",
-    cfg: "#{mruby_dir}/profile_build_config.rb",
-    exe: "#{mruby_dir}/profile/bin/mruby" } }
+  src: "#{mruby_dir}/_source",
+  cfg: "#{mruby_dir}/build_config.rb",
+  test: "#{mruby_dir}/test/bin/mrbtest",
+  benchmark: "#{mruby_dir}/benchmark/bin/mruby",
+  profile: "#{mruby_dir}/profile/bin/mruby" }
 
 namespace :test do
   desc "Run the Ruby test suite"
   task :ruby do
-    sh ruby[:test][:exe]
+    sh ruby[:test]
   end
 
   desc "Run the mruby test suite"
   task :mruby do
     Rake::Task["mruby:build"].invoke :test
-    sh mruby[:test][:exe]
+    sh mruby[:test]
   end
 end
 
@@ -44,7 +37,7 @@ namespace :benchmark do
   task :ruby, [:name, :batch_size] do |t, args|
     args.with_defaults name: "calls_awaiting", batch_size: 1
     file = "#{perf_dir}/benchmark_#{args.name}.rb"
-    sh "#{ruby[:benchmark][:exe]} #{file} #{args.batch_size}"
+    sh "#{ruby[:benchmark]} #{file} #{args.batch_size}"
   end
 
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb with mruby"
@@ -52,7 +45,7 @@ namespace :benchmark do
     Rake::Task["mruby:build"].invoke :benchmark
     args.with_defaults name: "calls_awaiting", batch_size: 1
     file = "#{perf_dir}/benchmark_#{args.name}.rb"
-    sh "#{mruby[:benchmark][:exe]} #{file} #{args.batch_size}"
+    sh "#{mruby[:benchmark]} #{file} #{args.batch_size}"
   end
 end
 
@@ -61,8 +54,8 @@ task :benchmark, [:name, :batch_size] do |t, args|
   Rake::Task["mruby:build"].invoke :benchmark
   args.with_defaults name: "calls_awaiting", batch_size: 1
   file = "#{perf_dir}/benchmark_#{args.name}.rb"
-  sh "#{ruby[:benchmark][:exe]} #{file} #{args.batch_size}", verbose: false
-  sh "#{mruby[:benchmark][:exe]} #{file} #{args.batch_size} skip_header", verbose: false
+  sh "#{ruby[:benchmark]} #{file} #{args.batch_size}", verbose: false
+  sh "#{mruby[:benchmark]} #{file} #{args.batch_size} skip_header", verbose: false
 end
 
 namespace :profile do
@@ -70,7 +63,7 @@ namespace :profile do
   task :ruby, [:name] do |t, args|
     args.with_defaults name: "call"
     file = "#{perf_dir}/profile_#{args.name}.rb"
-    sh "#{ruby[:profile][:exe]} #{file}"
+    sh "#{ruby[:profile]} #{file}"
   end
 
   desc "Create a code profile by running #{perf_dir}/profile_[name].rb with mruby"
@@ -78,39 +71,32 @@ namespace :profile do
     Rake::Task["mruby:build"].invoke :profile
     args.with_defaults name: "call"
     file = "#{perf_dir}/profile_#{args.name}.rb"
-    sh "#{mruby[:profile][:exe]} #{file}"
+    sh "#{mruby[:profile]} #{file}"
   end
 end
 
 namespace :mruby do
-  mruby.each_value do |config|
-    file config[:dir] do
-      sh "git clone --depth=1 git://github.com/mruby/mruby.git #{config[:dir]}"
-    end
+  file mruby[:src] do
+    sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby[:src]}"
   end
 
-  task :build, [:env] do |t, args|
-    env = args.env.to_sym
-    Rake::Task[mruby[env][:dir]].invoke
-    sh "cd #{mruby[env][:dir]} && MRUBY_CONFIG=#{mruby[env][:cfg]} rake"
+  task build: mruby[:src] do
+    sh "cd #{mruby[:src]} && MRUBY_CONFIG=#{mruby[:cfg]} rake"
   end
 
-  desc "Clean the mruby [#{mruby.keys.join(',')}] build"
-  task :clean, [:env] do |t, args|
-    env = args.env.to_sym
-    sh "cd #{mruby[env][:dir]} && rake deep_clean && rm -f #{mruby[:profile][:exe]}"
+  desc "Clean the mruby build"
+  task clean: mruby[:src] do
+    sh "cd #{mruby[:src]} && rake deep_clean"
   end
 
-  desc "Update the source for the mruby [#{mruby.keys.join(',')}] build"
-  task :pull, [:env] do |t, args|
-    env = args.env.to_sym
-    sh "cd #{mruby[env][:dir]} && git pull"
+  desc "Update the source of mruby"
+  task pull: mruby[:src] do
+    sh "cd #{mruby[:src]} && git pull"
   end
 
-  desc "Delete the mruby [#{mruby.keys.join(',')}] build"
-  task :delete, [:env] do |t, args|
-    env = args.env.to_sym
-    sh "rm -rf #{mruby[env][:dir]}"
+  desc "Delete the mruby source"
+  task delete: mruby[:src] do
+    sh "rm -rf #{mruby[:src]}"
   end
 end
 
