@@ -23,7 +23,7 @@ namespace :test do
   end
 
   desc "Run the mruby test suite"
-  task mruby: "mruby:build" do
+  task :mruby, [:reference] => "mruby:build" do
     sh mruby[:test]
   end
 end
@@ -76,8 +76,19 @@ namespace :mruby do
     sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby[:src]}"
   end
 
+  desc "Checkout a tag or commit of the mruby source. Executes: git checkout reference"
+  task :checkout, [:reference] => mruby[:src] do |t, args|
+    args.with_defaults reference: 'master'
+    current_ref = `cd #{mruby[:src]} && git rev-parse HEAD`
+    checkout_ref = `cd #{mruby[:src]} && git rev-parse #{args.reference}`
+    if checkout_ref != current_ref
+      Rake::Task['mruby:clean'].invoke
+      sh "cd #{mruby[:src]} && git fetch --tags && git checkout #{args.reference}"
+    end
+  end
+
   desc "Build mruby"
-  task build: mruby[:src] do
+  task :build, [:reference] => :checkout do
     sh "cd #{mruby[:src]} && MRUBY_CONFIG=#{mruby[:cfg]} rake"
   end
 
