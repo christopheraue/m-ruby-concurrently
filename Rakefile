@@ -95,7 +95,7 @@ namespace :mruby do
 
   desc "Clean the mruby build"
   task clean: mruby[:src] do
-    sh "cd #{mruby[:src]} && rake deep_clean"
+    sh "cd #{mruby[:src]} && MRUBY_CONFIG=#{mruby[:cfg]} rake deep_clean"
   end
 
   desc "Update the source of mruby"
