@@ -35,10 +35,11 @@ MRuby::Build.new 'benchmark', File.dirname(__FILE__) do
   gem core: 'mruby-bin-mirb'
   gem core: 'mruby-proc-ext'
   gem core: 'mruby-sprintf'
+  gem core: 'mruby-eval'
 
   gem_dir = File.expand_path File.dirname File.dirname __FILE__
   gem gem_dir do |gem|
-    gem.rbfiles << "#{gem_dir}/perf/stage.rb"
+    gem.rbfiles << "#{gem_dir}/perf/stage.rb" << "#{gem_dir}/perf/stage/benchmark.rb"
   end
 end
 

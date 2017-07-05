@@ -1,4 +1,8 @@
 class Stage
-  alias_method :profile, :measure
+  def profile(opts = {})
+    gc_disabled do
+      execute(opts){ yield }
+    end
+  end
 end
 

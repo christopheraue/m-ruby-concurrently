@@ -1,4 +1,8 @@
 class Stage
+  def initialize
+    @benchmarks = []
+  end
+
   def gc_disabled
     GC.start
     GC.disable
@@ -22,9 +26,20 @@ class Stage
     { iterations: iterations, time: (stop_time-start_time) }
   end
 
-  def measure(opts = {}) # &test
-    gc_disabled do
-      execute(opts){ yield }
+  def benchmark(*args)
+    @benchmarks << Benchmark.new(self, *args)
+  end
+
+  def perform(print_results_only = false)
+    if @benchmarks.size
+      unless print_results_only
+        puts Benchmark.header
+        @benchmarks.each do |b|
+          puts b.desc
+        end
+      end
+      puts Benchmark.result_header
+      @benchmarks.each{ |b| b.run }
     end
   end
 end

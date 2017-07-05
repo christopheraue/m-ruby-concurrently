@@ -4,6 +4,7 @@ Bundler.require :default
 Bundler.require :perf
 
 require_relative '../stage'
+require_relative '../stage/benchmark'
 
 class Stage
   def profile(seconds: 1, printer: 'flat')

@@ -1,51 +1,30 @@
 stage = Stage.new
-format = "  %-25s %7d executions in %2.4f seconds"
+batch_size = ARGV.fetch(0, 1).to_i
+print_results_only = ARGV[1] == 'skip_header'
 
-skip_header = ARGV[1] == 'skip_header'
+stage.benchmark :call,
+  batch_size: batch_size,
+  proc: "proc{}",
+  call: :call
 
-puts <<-DOC unless skip_header
-Benchmarked Code
-----------------
-  proc = proc{}
-  conproc = concurrent_proc{}
-  
-  while elapsed_seconds < 1
-    #CALL#
-  end
-DOC
+stage.benchmark :call,
+  batch_size: batch_size,
+  proc: "concurrent_proc{}",
+  call: :call
 
-result_header = "Results for #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}"
-puts <<-DOC
+stage.benchmark :call_nonblock,
+  batch_size: batch_size,
+  proc: "concurrent_proc{}",
+  call: :call_nonblock
 
-#{result_header}
-#{'-'*result_header.length}
-  #CALL#
-DOC
+stage.benchmark :call_detached,
+  batch_size: batch_size,
+  proc: "concurrent_proc{}",
+  call: :call_detached
 
-proc = proc{}
-conproc = concurrent_proc{}
+stage.benchmark :call_and_forget,
+  batch_size: batch_size,
+  proc: "concurrent_proc{}",
+  call: :call_and_forget
 
-result = stage.measure(seconds: 1) do
-  proc.call
-end
-puts sprintf(format, "proc.call:", result[:iterations], result[:time])
-
-result = stage.measure(seconds: 1) do
-  conproc.call
-end
-puts sprintf(format, "conproc.call:", result[:iterations], result[:time])
-
-result = stage.measure(seconds: 1) do
-  conproc.call_nonblock
-end
-puts sprintf(format, "conproc.call_nonblock:", result[:iterations], result[:time])
-
-result = stage.measure(seconds: 1) do
-  conproc.call_detached
-end
-puts sprintf(format, "conproc.call_detached:", result[:iterations], result[:time])
-
-result = stage.measure(seconds: 1) do
-  conproc.call_and_forget
-end
-puts sprintf(format, "conproc.call_and_forget:", result[:iterations], result[:time])
+stage.perform print_results_only
