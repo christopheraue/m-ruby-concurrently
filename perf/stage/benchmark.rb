@@ -15,6 +15,47 @@ DOC
       "#{RESULT_HEADER}\n#{'-'*RESULT_HEADER.length}"
     end
 
+    class SingleCodeGen
+      def initialize(proc, call, args, sync)
+        @proc = proc
+        @call = call
+        @args = args
+        @sync = sync
+      end
+
+      def proc_lines
+        @proc.chomp.split("\n").tap do |lines|
+          lines[0].prepend "test_proc = "
+        end
+      end
+
+      def args_lines
+        return unless @args
+        @args.chomp.split("\n").tap do |lines|
+          next if lines.size == 1
+          lines.map!{ |l| l.prepend "  " }
+          lines.unshift "args = begin"
+          lines.push "end"
+        end
+      end
+
+      def call_lines
+        call_args = (@args ? "(*args)" : "")
+        ["test_proc.#{@call}#{call_args}"].tap do |lines|
+          next unless @sync
+          case @call
+          when :call_nonblock, :call_detached
+            lines[0].prepend "evaluation = "
+            lines.push "evaluation.await_result"
+          when :call
+            lines.push "# Concurrently::Proc#call already synchronizes the results of evaluations"
+          when :call_and_forget
+            lines.push "wait 0"
+          end
+        end
+      end
+    end
+
     def initialize(stage, name, opts = {})
       @stage = stage
       @name = name
@@ -23,8 +64,9 @@ DOC
       opts[:call] ||= :call_nonblock
       opts[:batch_size] ||= 1
 
-      proc_lines = opts[:proc].chomp.split "\n"
-      proc_lines[0] = "test_proc = #{proc_lines[0]}"
+      single_code_gen = SingleCodeGen.new(opts[:proc], opts[:call], opts[:args], opts[:sync])
+
+      proc_lines = single_code_gen.proc_lines
 
       args_lines = if opts[:batch_size] > 1
         if opts[:args]
@@ -33,14 +75,8 @@ DOC
         else
           ["batch = Array.new(#{opts[:batch_size]})"]
         end
-      elsif opts[:args]
-        args_lines = opts[:args].chomp.split("\n")
-        if args_lines.size > 1
-          args_lines.map!{ |line| line.prepend "  " }
-          ["args = begin", *args_lines, "end"]
-        else
-          args_lines
-        end
+      else
+        single_code_gen.args_lines
       end
 
       call_lines = if opts[:batch_size] > 1
@@ -63,20 +99,7 @@ DOC
           [call_raw]
         end
       else
-        call_raw = "test_proc.#{@opts[:call]}" << (opts[:args] ? "(*args)" : "")
-
-        if opts[:sync]
-          case @opts[:call]
-          when :call_nonblock, :call_detached
-            ["evaluation = #{call_raw}", "evaluation.await_result"]
-          when :call
-            [call_raw, "# Concurrently::Proc#call already synchronizes the results of evaluations"]
-          when :call_and_forget
-            [call_raw, "wait 0"]
-          end
-        else
-          [call_raw]
-        end
+        single_code_gen.call_lines
       end
 
       call_lines.map!{ |l| l.prepend '  '} if call_lines
