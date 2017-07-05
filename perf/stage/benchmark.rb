@@ -47,26 +47,72 @@ DOC
       end
     end
 
-    def desc
-      batch_args = @args_src ? <<ARGS.chomp! : nil
+    def desc_batch_args
+      @args_src ? <<ARGS.chomp! : nil
 do |idx|
       #{@args_src}
     end
 ARGS
+    end
+
+    def desc_code
+        if @args_src
+          <<ARGS.chomp!
+args = begin
+      #{@args_src}
+    end
+    proc.#{@call} *args
+ARGS
+        else
+          "proc.#{@call}"
+        end
+    end
+
+    def desc_batch_test
       synchronize = @synchronize ? <<SYNCHRONIZE.chomp! : nil
 .tap do |results|
         #{SYNCHRONIZE[@call]}
       end
 SYNCHRONIZE
 
-      <<DOC
-  #{@name}:
-    proc = #{@proc_src.gsub("\n", "\n    ")}
-    batch = Array.new(#{@batch.size}) #{batch_args}
+      <<DESC.chomp!
+batch = Array.new(#{@batch.size}) #{desc_batch_args}
 
     while elapsed_seconds < #{SECONDS}
       batch.map{ |*args| proc.#{@call} *args }#{synchronize}
     end
+DESC
+    end
+
+    def desc_single_test
+      if @synchronize
+        <<DESC.chomp!
+while elapsed_seconds < #{SECONDS}
+      #{desc_code}
+    end
+DESC
+      else
+        <<DESC.chomp!
+while elapsed_seconds < #{SECONDS}
+      #{desc_code}
+    end
+DESC
+      end
+    end
+
+    def desc_test
+      if @batch.size > 1
+        desc_batch_test
+      else
+        desc_single_test
+      end
+    end
+
+    def desc
+      <<DOC
+  #{@name}:
+    proc = #{@proc_src.gsub("\n", "\n    ")}
+    #{desc_test}
 
 DOC
     end
