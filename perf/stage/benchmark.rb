@@ -15,105 +15,6 @@ DOC
       "#{RESULT_HEADER}\n#{'-'*RESULT_HEADER.length}"
     end
 
-    class CodeGen
-      def initialize(proc, call, args, sync)
-        @proc = proc
-        @call = call
-        @args = args
-        @sync = sync
-      end
-
-      def proc_lines
-        @proc.chomp.split("\n").tap do |lines|
-          lines[0].prepend "test_proc = "
-        end
-      end
-
-      def args_lines
-        if @args
-          @args.chomp.split("\n")
-        else
-          []
-        end
-      end
-
-      def call_lines
-        ["proc do", "test_proc.#{@call}#{(@args ? "(*args)" : "")}", "end"]
-      end
-    end
-
-    class SingleCodeGen < CodeGen
-      def args_lines
-        case (lines = super).size
-        when 0
-          lines
-        when 1
-          lines[0].prepend "args = "
-        else
-          lines.map!{ |l| l.prepend "  " }
-          lines.unshift "args = begin"
-          lines.push "end"
-        end
-      end
-
-      def call_lines
-        lines = super
-        if @sync
-          case @call
-          when :call_nonblock, :call_detached
-            lines[1].prepend "evaluation = "
-            lines.insert 2, "evaluation.await_result"
-          when :call
-            lines.insert 2, "# Concurrently::Proc#call already synchronizes the results of evaluations"
-          when :call_and_forget
-            lines.insert 2, "wait 0"
-          end
-        end
-        lines[1..-2].each{ |l| l.prepend '  ' }
-        lines
-      end
-    end
-
-    class BatchCodeGen < CodeGen
-      def initialize(*args, batch_size)
-        super *args
-        @batch_size = batch_size
-      end
-
-      def args_lines
-        case (lines = super).size
-        when 0
-          ["batch = Array.new(#{@batch_size})"]
-        else
-          lines.map!{ |l| l.prepend "  " }
-          lines.unshift "batch = Array.new(#{@batch_size}) do |idx|"
-          lines.push "end"
-        end
-      end
-
-      def call_lines
-        lines = super
-        blk = "{#{@args ? " |*args|" : nil} #{lines[1]} }"
-        if @sync
-          case @call
-          when :call_nonblock, :call_detached
-            lines[1] = "evaluations = batch.map#{blk}"
-            lines.insert 2, "evaluations.each{ |evaluation| evaluation.await_result }"
-          when :call
-            lines[1] = "batch.each#{blk}"
-            lines.insert 2, "# Concurrently::Proc#call already synchronizes the results of evaluations"
-          when :call_and_forget
-            lines[1] = "batch.each#{blk}"
-            lines.insert 2, "wait 0"
-          end
-        else
-          lines[1] = "batch.each#{blk}"
-        end
-        lines[1..-2].each{ |l| l.prepend '  ' }
-        lines
-      end
-    end
-
     def initialize(stage, name, opts = {})
       @stage = stage
       @name = name
@@ -126,9 +27,9 @@ DOC
       batch_size = opts[:batch_size] || 1
 
       code_gen = if batch_size > 1
-        BatchCodeGen.new(proc, call, args, sync, batch_size)
+        CodeGen::Batch.new(proc, call, args, sync, batch_size)
       else
-        SingleCodeGen.new(proc, call, args, sync)
+        CodeGen::Single.new(proc, call, args, sync)
       end
 
       proc_lines = code_gen.proc_lines

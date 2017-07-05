@@ -3,8 +3,8 @@ require 'bundler'
 Bundler.require :default
 Bundler.require :perf
 
-require_relative '../stage'
-require_relative '../stage/benchmark'
+perf = File.dirname File.dirname __FILE__
+Dir["#{perf}/{stage.rb,stage/**/*.rb}"].sort.each{ |f| require f }
 
 class Stage
   def profile(seconds: 1, printer: 'flat')

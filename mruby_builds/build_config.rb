@@ -39,7 +39,7 @@ MRuby::Build.new 'benchmark', File.dirname(__FILE__) do
 
   gem_dir = File.expand_path File.dirname File.dirname __FILE__
   gem gem_dir do |gem|
-    gem.rbfiles << "#{gem_dir}/perf/stage.rb" << "#{gem_dir}/perf/stage/benchmark.rb"
+    gem.rbfiles += Dir["#{gem_dir}/perf/{stage.rb,stage/**/*.rb}"]
   end
 end
 
