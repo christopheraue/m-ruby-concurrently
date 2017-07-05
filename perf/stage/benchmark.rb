@@ -15,7 +15,7 @@ DOC
       "#{RESULT_HEADER}\n#{'-'*RESULT_HEADER.length}"
     end
 
-    class SingleCodeGen
+    class CodeGen
       def initialize(proc, call, args, sync)
         @proc = proc
         @call = call
@@ -30,9 +30,26 @@ DOC
       end
 
       def args_lines
-        return unless @args
-        @args.chomp.split("\n").tap do |lines|
-          next if lines.size == 1
+        if @args
+          @args.chomp.split("\n")
+        else
+          []
+        end
+      end
+
+      def call_lines
+        ["proc do", "test_proc.#{@call}#{(@args ? "(*args)" : "")}", "end"]
+      end
+    end
+
+    class SingleCodeGen < CodeGen
+      def args_lines
+        case (lines = super).size
+        when 0
+          lines
+        when 1
+          lines[0].prepend "args = "
+        else
           lines.map!{ |l| l.prepend "  " }
           lines.unshift "args = begin"
           lines.push "end"
@@ -40,70 +57,60 @@ DOC
       end
 
       def call_lines
-        call_args = (@args ? "(*args)" : "")
-        ["test_proc.#{@call}#{call_args}"].tap do |lines|
-          next unless @sync
+        lines = super
+        if @sync
           case @call
           when :call_nonblock, :call_detached
-            lines[0].prepend "evaluation = "
-            lines.push "evaluation.await_result"
+            lines[1].prepend "evaluation = "
+            lines.insert 2, "evaluation.await_result"
           when :call
-            lines.push "# Concurrently::Proc#call already synchronizes the results of evaluations"
+            lines.insert 2, "# Concurrently::Proc#call already synchronizes the results of evaluations"
           when :call_and_forget
-            lines.push "wait 0"
+            lines.insert 2, "wait 0"
           end
         end
+        lines[1..-2].each{ |l| l.prepend '  ' }
+        lines
       end
     end
 
-    class BatchCodeGen
-      def initialize(proc, call, args, sync, batch_size)
-        @proc = proc
-        @call = call
-        @args = args
-        @sync = sync
+    class BatchCodeGen < CodeGen
+      def initialize(*args, batch_size)
+        super *args
         @batch_size = batch_size
       end
 
-      def proc_lines
-        @proc.chomp.split("\n").tap do |lines|
-          lines[0].prepend "test_proc = "
-        end
-      end
-
       def args_lines
-        if @args
-          @args.chomp.split("\n").tap do |lines|
-            lines.map!{ |l| l.prepend "  " }
-            lines.unshift "batch = Array.new(#{@batch_size}) do |idx|"
-            lines.push "end"
-          end
-        else
+        case (lines = super).size
+        when 0
           ["batch = Array.new(#{@batch_size})"]
+        else
+          lines.map!{ |l| l.prepend "  " }
+          lines.unshift "batch = Array.new(#{@batch_size}) do |idx|"
+          lines.push "end"
         end
       end
 
       def call_lines
-        blk_args  = @args ? " |*args|" : nil
-        call_args = @args ? "(*args)" : nil
-
-        ["{#{blk_args} test_proc.#{@call}#{call_args} }"].tap do |lines|
-          if @sync
-            case @call
-            when :call_nonblock, :call_detached
-              lines[0].prepend "evaluations = batch.map"
-              lines.push "evaluations.each{ |evaluation| evaluation.await_result }"
-            when :call
-              lines[0].prepend "batch.each"
-              lines.push "# Concurrently::Proc#call already synchronizes the results of evaluations"
-            when :call_and_forget
-              lines[0].prepend "batch.each"
-              lines.push "wait 0"
-            end
-          else
-            lines[0].prepend "batch.each"
+        lines = super
+        blk = "{#{@args ? " |*args|" : nil} #{lines[1]} }"
+        if @sync
+          case @call
+          when :call_nonblock, :call_detached
+            lines[1] = "evaluations = batch.map#{blk}"
+            lines.insert 2, "evaluations.each{ |evaluation| evaluation.await_result }"
+          when :call
+            lines[1] = "batch.each#{blk}"
+            lines.insert 2, "# Concurrently::Proc#call already synchronizes the results of evaluations"
+          when :call_and_forget
+            lines[1] = "batch.each#{blk}"
+            lines.insert 2, "wait 0"
           end
+        else
+          lines[1] = "batch.each#{blk}"
         end
+        lines[1..-2].each{ |l| l.prepend '  ' }
+        lines
       end
     end
 
@@ -127,15 +134,13 @@ DOC
       proc_lines = code_gen.proc_lines
       args_lines = code_gen.args_lines
       call_lines = code_gen.call_lines
+      @code = eval [*proc_lines, *args_lines, "", *call_lines].join "\n"
 
-      call_lines.map!{ |l| l.prepend '  '} if call_lines
-      @src_lines = [*proc_lines, *args_lines, "", "proc do", *call_lines, "end"]
-      @code = eval @src_lines.join "\n"
+      call_lines[0] = "while elapsed_seconds < #{SECONDS}"
+      @desc = ["  #{@name}:", *proc_lines, *args_lines, "", *call_lines, ""].join "\n    "
     end
 
-    def desc
-      ["  #{@name}:", *@src_lines, ""].join "\n    "
-    end
+    attr_reader :desc
 
     def run
       result = @stage.gc_disabled do
