@@ -40,6 +40,7 @@ class Stage
       end
       puts Benchmark.result_header
       @benchmarks.each{ |b| b.run }
+      puts
     end
   end
 end
