@@ -1,13 +1,8 @@
 class Stage
   class Benchmark
     SECONDS = 1
-    SYNCHRONIZE = {
-      call: "# #call already synchronizes the results of evaluations",
-      call_nonblock: "results.each{ |eval| eval.await_result }",
-      call_detached: "results.each{ |eval| eval.await_result }",
-      call_and_forget: "wait 0" }
     RESULT_HEADER = "Results for #{RUBY_ENGINE} #{RUBY_ENGINE_VERSION}"
-    RESULT_FORMAT = "  %-25s %7d executions in %2.4f seconds"
+    RESULT_FORMAT = "  %-25s %8d executions in %2.4f seconds"
 
     def self.header
       <<DOC
@@ -23,128 +18,81 @@ DOC
     def initialize(stage, name, opts = {})
       @stage = stage
       @name = name
+      @opts = opts
 
-      @batch = Array.new(opts[:batch_size] || 1)
-      self.proc = opts[:proc]
-      self.call = opts[:call] || :call_nonblock
-      self.args = opts[:args]
-      self.sync = opts[:sync]
+      opts[:call] ||= :call_nonblock
+      opts[:batch_size] ||= 1
 
-      batch_size = opts[:batch_size] || 1
+      proc_lines = opts[:proc].chomp.split "\n"
+      proc_lines[0] = "test_proc = #{proc_lines[0]}"
 
-      if batch_size > 1
-        @code = proc do
-          results = @batch.map(&@tester)
-          @synchronize.call results if @synchronize
-        end
-      else
-        @code = eval <<-CODE
-          proc do
-            result = @proc.#{@call} @batch[0]
-            @synchronize.call [result] if @synchronize
-          end
-        CODE
-      end
-    end
-
-    def desc_batch_args
-      @args_src ? <<ARGS.chomp! : nil
-do |idx|
-      #{@args_src}
-    end
-ARGS
-    end
-
-    def desc_code
-        if @args_src
-          <<ARGS.chomp!
-args = begin
-      #{@args_src}
-    end
-    proc.#{@call} *args
-ARGS
+      args_lines = if opts[:batch_size] > 1
+        if opts[:args]
+          args_lines = opts[:args].chomp.split("\n").map!{ |line| line.prepend "  " }
+          ["batch = Array.new(#{opts[:batch_size]}) do |idx|", *args_lines, "end"]
         else
-          "proc.#{@call}"
+          ["batch = Array.new(#{opts[:batch_size]})"]
         end
-    end
-
-    def desc_batch_test
-      synchronize = @synchronize ? <<SYNCHRONIZE.chomp! : nil
-.tap do |results|
-        #{SYNCHRONIZE[@call]}
+      elsif opts[:args]
+        args_lines = opts[:args].chomp.split("\n")
+        if args_lines.size > 1
+          args_lines.map!{ |line| line.prepend "  " }
+          ["args = begin", *args_lines, "end"]
+        else
+          args_lines
+        end
       end
-SYNCHRONIZE
 
-      <<DESC.chomp!
-batch = Array.new(#{@batch.size}) #{desc_batch_args}
+      call_lines = if opts[:batch_size] > 1
+        call_raw = if opts[:args]
+          "batch.map{ |*args| test_proc.#{@opts[:call]}(*args) }"
+        else
+          "batch.map{ test_proc.#{@opts[:call]} }"
+        end
 
-    while elapsed_seconds < #{SECONDS}
-      batch.map{ |*args| proc.#{@call} *args }#{synchronize}
-    end
-DESC
-    end
-
-    def desc_single_test
-      if @synchronize
-        <<DESC.chomp!
-while elapsed_seconds < #{SECONDS}
-      #{desc_code}
-    end
-DESC
+        if opts[:sync]
+          case @opts[:call]
+          when :call_nonblock, :call_detached
+            ["evaluations = #{call_raw}", "evaluations.each{ |evaluation| evaluation.await_result }"]
+          when :call
+            [call_raw, "# Concurrently::Proc#call already synchronizes the results of evaluations"]
+          when :call_and_forget
+            [call_raw, "wait 0"]
+          end
+        else
+          [call_raw]
+        end
       else
-        <<DESC.chomp!
-while elapsed_seconds < #{SECONDS}
-      #{desc_code}
-    end
-DESC
-      end
-    end
+        call_raw = "test_proc.#{@opts[:call]}" << (opts[:args] ? "(*args)" : "")
 
-    def desc_test
-      if @batch.size > 1
-        desc_batch_test
-      else
-        desc_single_test
+        if opts[:sync]
+          case @opts[:call]
+          when :call_nonblock, :call_detached
+            ["evaluation = #{call_raw}", "evaluation.await_result"]
+          when :call
+            [call_raw, "# Concurrently::Proc#call already synchronizes the results of evaluations"]
+          when :call_and_forget
+            [call_raw, "wait 0"]
+          end
+        else
+          [call_raw]
+        end
       end
+
+      call_lines.map!{ |l| l.prepend '  '} if call_lines
+      @src_lines = [*proc_lines, *args_lines, "", "proc do", *call_lines, "end"]
+      @code = eval @src_lines.join "\n"
     end
 
     def desc
-      <<DOC
-  #{@name}:
-    proc = #{@proc_src.gsub("\n", "\n    ")}
-    #{desc_test}
-
-DOC
-    end
-
-    def proc=(proc)
-      @proc_src = proc
-      @proc = eval proc
-    end
-
-    def call=(call)
-      @call = call
-      @tester = eval "proc{ |*args| @proc.#{call} *args }"
-    end
-
-    def args=(args)
-      @args_src = args
-      eval "@batch.fill{ #{args} }"
-    end
-
-    def sync=(sync)
-      @synchronize = sync ? eval(<<-CODE) : nil
-        proc do |results|
-          #{SYNCHRONIZE[@call]}
-        end
-      CODE
+      ["  #{@name}:", *@src_lines, ""].join "\n    "
     end
 
     def run
       result = @stage.gc_disabled do
         @stage.execute(seconds: SECONDS, &@code)
       end
-      puts sprintf(RESULT_FORMAT, "#{@name}:", @batch.size*result[:iterations], result[:time])
+      puts sprintf(RESULT_FORMAT, "#{@name}:", @opts[:batch_size]*result[:iterations], result[:time])
     end
   end
 end
