@@ -9,7 +9,7 @@ class Stage
           when 1
             lines[0] = "args = #{lines[0]}"
           else
-            lines.each{ |l| l.insert 0, "  " }
+            lines.each{ |l| l.replace "  #{l}" }
             lines.unshift "args = begin"
             lines.push "end"
           end
@@ -28,7 +28,7 @@ class Stage
               lines.insert 2, "wait 0"
             end
           end
-          lines[1..-2].each{ |l| l.insert 0, "  " }
+          lines[1..-2].each{ |l| l.replace "  #{l}" }
           lines
         end
       end

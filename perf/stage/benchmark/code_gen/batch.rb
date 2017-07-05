@@ -12,7 +12,7 @@ class Stage
           when 0
             ["batch = Array.new(#{@batch_size})"]
           else
-            lines.each{ |l| l.insert 0, "  " }
+            lines.each{ |l| l.replace "  #{l}" }
             lines.unshift "batch = Array.new(#{@batch_size}) do |idx|"
             lines.push "end"
           end
@@ -36,7 +36,7 @@ class Stage
           else
             lines[1] = "batch.each#{blk}"
           end
-          lines[1..-2].each{ |l| l.insert 0, "  " }
+          lines[1..-2].each{ |l| l.replace "  #{l}" }
           lines
         end
       end
