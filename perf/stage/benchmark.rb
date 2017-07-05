@@ -29,6 +29,22 @@ DOC
       self.call = opts[:call] || :call_nonblock
       self.args = opts[:args]
       self.sync = opts[:sync]
+
+      batch_size = opts[:batch_size] || 1
+
+      if batch_size > 1
+        @code = proc do
+          results = @batch.map(&@tester)
+          @synchronize.call results if @synchronize
+        end
+      else
+        @code = eval <<-CODE
+          proc do
+            result = @proc.#{@call} @batch[0]
+            @synchronize.call [result] if @synchronize
+          end
+        CODE
+      end
     end
 
     def desc
@@ -63,11 +79,6 @@ DOC
     def call=(call)
       @call = call
       @tester = eval "proc{ |*args| @proc.#{call} *args }"
-      @synchronize = eval <<-CODE
-        proc do |results|
-          #{SYNCHRONIZE[call]}
-        end
-      CODE
     end
 
     def args=(args)
@@ -85,10 +96,7 @@ DOC
 
     def run
       result = @stage.gc_disabled do
-        @stage.execute(seconds: SECONDS) do
-          result = @batch.map(&@tester)
-          @synchronize.call result if @synchronize
-        end
+        @stage.execute(seconds: SECONDS, &@code)
       end
       puts sprintf(RESULT_FORMAT, "#{@name}:", @batch.size*result[:iterations], result[:time])
     end
