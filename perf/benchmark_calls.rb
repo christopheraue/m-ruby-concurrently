@@ -10,7 +10,7 @@ Benchmarked Code
   conproc = concurrent_proc{}
   
   while elapsed_seconds < 1
-    # CODE #
+    #CALL#
   end
 DOC
 
@@ -19,7 +19,7 @@ puts <<-DOC
 
 #{result_header}
 #{'-'*result_header.length}
-  # CODE #
+  #CALL#
 DOC
 
 proc = proc{}
