@@ -56,51 +56,77 @@ DOC
       end
     end
 
+    class BatchCodeGen
+      def initialize(proc, call, args, sync, batch_size)
+        @proc = proc
+        @call = call
+        @args = args
+        @sync = sync
+        @batch_size = batch_size
+      end
+
+      def proc_lines
+        @proc.chomp.split("\n").tap do |lines|
+          lines[0].prepend "test_proc = "
+        end
+      end
+
+      def args_lines
+        if @args
+          @args.chomp.split("\n").tap do |lines|
+            lines.map!{ |l| l.prepend "  " }
+            lines.unshift "batch = Array.new(#{@batch_size}) do |idx|"
+            lines.push "end"
+          end
+        else
+          ["batch = Array.new(#{@batch_size})"]
+        end
+      end
+
+      def call_lines
+        blk_args  = @args ? " |*args|" : nil
+        call_args = @args ? "(*args)" : nil
+
+        ["{#{blk_args} test_proc.#{@call}#{call_args} }"].tap do |lines|
+          if @sync
+            case @call
+            when :call_nonblock, :call_detached
+              lines[0].prepend "evaluations = batch.map"
+              lines.push "evaluations.each{ |evaluation| evaluation.await_result }"
+            when :call
+              lines[0].prepend "batch.each"
+              lines.push "# Concurrently::Proc#call already synchronizes the results of evaluations"
+            when :call_and_forget
+              lines[0].prepend "batch.each"
+              lines.push "wait 0"
+            end
+          else
+            lines[0].prepend "batch.each"
+          end
+        end
+      end
+    end
+
     def initialize(stage, name, opts = {})
       @stage = stage
       @name = name
       @opts = opts
 
-      opts[:call] ||= :call_nonblock
-      opts[:batch_size] ||= 1
+      proc = opts[:proc]
+      call = opts[:call] || :call_nonblock
+      args = opts[:args]
+      sync = opts[:sync]
+      batch_size = opts[:batch_size] || 1
 
-      single_code_gen = SingleCodeGen.new(opts[:proc], opts[:call], opts[:args], opts[:sync])
-
-      proc_lines = single_code_gen.proc_lines
-
-      args_lines = if opts[:batch_size] > 1
-        if opts[:args]
-          args_lines = opts[:args].chomp.split("\n").map!{ |line| line.prepend "  " }
-          ["batch = Array.new(#{opts[:batch_size]}) do |idx|", *args_lines, "end"]
-        else
-          ["batch = Array.new(#{opts[:batch_size]})"]
-        end
+      code_gen = if batch_size > 1
+        BatchCodeGen.new(proc, call, args, sync, batch_size)
       else
-        single_code_gen.args_lines
+        SingleCodeGen.new(proc, call, args, sync)
       end
 
-      call_lines = if opts[:batch_size] > 1
-        call_raw = if opts[:args]
-          "batch.map{ |*args| test_proc.#{@opts[:call]}(*args) }"
-        else
-          "batch.map{ test_proc.#{@opts[:call]} }"
-        end
-
-        if opts[:sync]
-          case @opts[:call]
-          when :call_nonblock, :call_detached
-            ["evaluations = #{call_raw}", "evaluations.each{ |evaluation| evaluation.await_result }"]
-          when :call
-            [call_raw, "# Concurrently::Proc#call already synchronizes the results of evaluations"]
-          when :call_and_forget
-            [call_raw, "wait 0"]
-          end
-        else
-          [call_raw]
-        end
-      else
-        single_code_gen.call_lines
-      end
+      proc_lines = code_gen.proc_lines
+      args_lines = code_gen.args_lines
+      call_lines = code_gen.call_lines
 
       call_lines.map!{ |l| l.prepend '  '} if call_lines
       @src_lines = [*proc_lines, *args_lines, "", "proc do", *call_lines, "end"]
