@@ -11,8 +11,8 @@ class Stage
 
     def self.header
       <<DOC
-Benchmark
-=========
+Benchmarks
+----------
 DOC
     end
 
