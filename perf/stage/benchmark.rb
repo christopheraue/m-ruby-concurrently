@@ -27,8 +27,10 @@ DOC
       proc_lines = code_gen.proc_lines
       args_lines = code_gen.args_lines
       call_lines = code_gen.call_lines
-      @code = eval [*proc_lines, *args_lines, "", *call_lines].join "\n"
 
+      @code = eval [*proc_lines, *args_lines, *call_lines].join "\n"
+
+      proc_lines << "" if proc_lines.size > 1
       call_lines[0] = "while elapsed_seconds < #{SECONDS}"
       @desc = ["  #{@name}:", *proc_lines, *args_lines, "", *call_lines, ""].join "\n    "
     end
