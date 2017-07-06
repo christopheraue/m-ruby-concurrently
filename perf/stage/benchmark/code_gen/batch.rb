@@ -2,11 +2,6 @@ class Stage
   class Benchmark
     class CodeGen
       class Batch < CodeGen
-        def initialize(*args, batch_size)
-          super *args
-          @batch_size = batch_size
-        end
-
         def args_lines
           case (lines = super).size
           when 0

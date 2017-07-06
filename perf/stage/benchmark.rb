@@ -20,18 +20,10 @@ DOC
       @name = name
       @opts = opts
 
-      proc = opts[:proc]
-      call = opts[:call] || :call_nonblock
-      args = opts[:args]
-      sync = opts[:sync]
-      batch_size = opts[:batch_size] || 1
+      opts[:call] ||= :call_nonblock
+      opts[:batch_size] ||= 1
 
-      code_gen = if batch_size > 1
-        CodeGen::Batch.new(proc, call, args, sync, batch_size)
-      else
-        CodeGen::Single.new(proc, call, args, sync)
-      end
-
+      code_gen = CodeGen.const_get(opts[:batch_size] > 1 ? :Batch : :Single).new(opts)
       proc_lines = code_gen.proc_lines
       args_lines = code_gen.args_lines
       call_lines = code_gen.call_lines

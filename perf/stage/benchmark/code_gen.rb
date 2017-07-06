@@ -1,11 +1,10 @@
 class Stage
   class Benchmark
     class CodeGen
-      def initialize(proc, call, args, sync)
-        @proc = proc
-        @call = call
-        @args = args
-        @sync = sync
+      def initialize(opts)
+        opts.each do |key, value|
+          instance_variable_set "@#{key}", value
+        end
       end
 
       def proc_lines
