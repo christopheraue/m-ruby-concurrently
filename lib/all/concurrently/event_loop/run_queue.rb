@@ -86,9 +86,11 @@ module Concurrently
       when Proc::Evaluation
         @current_evaluation = evaluation
         evaluation.fiber.resume result
-      else
+      when Evaluation
         @current_evaluation = nil
         Fiber.yield result
+      else
+        raise Error, "#{evaluation.inspect} cannot be resumed"
       end
     ensure
       @current_evaluation = previous_evaluation
