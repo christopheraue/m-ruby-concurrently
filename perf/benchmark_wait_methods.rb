@@ -45,4 +45,9 @@ w.write '0'*65536 # jam pipe
 [r,w,chunk]
 RUBY
 
+# Warm up
+wait_proc = concurrent_proc{ wait 0 }
+stage.execute{ wait_proc.call }
+
+# Performance
 stage.perform print_results_only
