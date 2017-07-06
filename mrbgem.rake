@@ -40,12 +40,10 @@ evaluations).
   spec.add_dependency 'mruby-io'
   spec.add_dependency 'mruby-callbacks_attachable', '~> 2.2', github: 'christopheraue/m-ruby-callbacks_attachable'
 
-  # Deactivate mruby-poll until https://github.com/Asmod4n/mruby-poll/issues/2
-  # is fixed.
   # use mruby-poll only on unix-like OSes
-  #if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
     spec.rbfiles.delete "#{spec.dir}/lib/mruby/concurrently/event_loop/io_selector.rb"
-  # else
-  #   spec.add_dependency 'mruby-poll'
-  # end
+  else
+    spec.add_dependency 'mruby-poll'
+  end
 end
