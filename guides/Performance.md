@@ -7,10 +7,8 @@ reduce the overhead of the benchmark harness.
 ## Calling a (Concurrent) Proc
 
 This benchmark compares all `#call` methods of a concurrent proc and a regular
-proc. The mere invocation of the method is measured. The proc itself does
-nothing. The results represent the baseline for how fast Concurrently is able
-to work if it — well — does nothing. It can't get any faster than that. It also
-means your code is to blame if its performance is far below these values.
+proc. The procs itself do nothing. The results represent the baseline for how
+fast Concurrently is able to work. It can't get any faster than that.
 
     Benchmarks
     ----------
@@ -76,7 +74,7 @@ means your code is to blame if its performance is far below these values.
 batch so the scheduled evaluations have [a chance to run]
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]. Otherwise,
 their evaluations were merely scheduled and not started and concluded like it
-is happening in the other cases. This makes the benchmarks better comparable.
+is happening in the other cases. This makes the benchmarks comparable.
 
 Explanation of the results:
 
@@ -92,18 +90,18 @@ Explanation of the results:
   foreground because their evaluations need to be scheduled.
 * Overall, mruby is about half as fast as Ruby.
 
-You can run the benchmark yourself by running:
+You can run the benchmark yourself by executing:
 
     $ rake benchmark[call_methods]
 
 
 ## Calling `#wait` and `#await_*` methods
 
-This benchmark measures the maximum number of executions per second for
+This benchmark measures the number of times per second we can
 
-* waiting an amount of time,
-* awaiting readability and
-* awaiting writability.
+* wait an amount of time,
+* await readability of an IO object and
+* await writability of an IO object.
 
 Like with calling a proc doing nothing this defines what maximum performance
 to expect in these cases.
@@ -161,14 +159,15 @@ to expect in these cases.
 
 Explanation of the results:
 
-* In Ruby, waiting an amount of time is faster than awaiting readiness of I/O
-  because it does not need to enter the underlying poll call.
-* In mruby, awaiting readiness of I/O is actually faster than waiting.
-  Scheduling an evaluation to resume at a specific time involves inserting it
-  into an array at the right index. mruby implements many Array methods in
-  plain ruby which makes them noticeably slower.
+* In Ruby, waiting an amount of time is much faster than awaiting readiness of
+  I/O because it does not need to enter the underlying poll call.
+* In mruby, awaiting readiness of I/O is actually faster than just waiting an
+  amount of time. Scheduling an evaluation to resume at a specific time
+  involves amongst other things inserting it into an array at the right index.
+  mruby implements many Array methods in plain ruby which makes them noticeably
+  slower.
 
-You can run the benchmark yourself by running:
+You can run the benchmark yourself by executing:
 
     $ rake benchmark[wait_methods]
 
