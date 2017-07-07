@@ -20,11 +20,13 @@ stage.benchmark 'conproc.call_nonblock',
 stage.benchmark 'conproc.call_detached',
   batch_size: batch_size,
   proc: "concurrent_proc{}",
-  call: :call_detached
+  call: :call_detached,
+  sync: :wait
 
 stage.benchmark 'conproc.call_and_forget',
   batch_size: batch_size,
   proc: "concurrent_proc{}",
-  call: :call_and_forget
+  call: :call_and_forget,
+  sync: :wait
 
 stage.perform print_results_only
