@@ -17,14 +17,15 @@ class Stage
           lines = super
           blk = "{#{@args ? " |*args|" : nil} #{lines[1]} }"
           if @sync
-            case @call
-            when :call_nonblock, :call_detached
+            @sync = @call if @sync == true
+            case @sync
+            when :call_nonblock, :call_detached, :await_result
               lines[1] = "evaluations = batch.map#{blk}"
               lines.insert 2, "evaluations.each{ |evaluation| evaluation.await_result }"
             when :call
               lines[1] = "batch.each#{blk}"
               lines.insert 2, "# Concurrently::Proc#call already synchronizes the results of evaluations"
-            when :call_and_forget
+            when :call_and_forget, :wait
               lines[1] = "batch.each#{blk}"
               lines.insert 2, "wait 0"
             end
