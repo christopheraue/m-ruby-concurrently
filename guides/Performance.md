@@ -97,98 +97,80 @@ You can run the benchmark yourself by running:
     $ rake benchmark[call_methods,100]
 
 
-## Scheduling (Concurrent) Procs
+## Calling `#wait` and `#await_*` methods
 
-This benchmark is closer to the real usage of Concurrently. It includes waiting
-inside a concurrent proc.
+This benchmark measures the maximum number of executions per second for
 
-    Benchmarked Code
-    ----------------
-      conproc = concurrent_proc{ wait 0 }
-      
-      while elapsed_seconds < 1
-        1.times{ # CODE # }
-        wait 0 # to enter the event loop
-      end
-    
+* waiting an amount of time,
+* awaiting readability and
+* awaiting writability.
+
+Like with calling a proc doing nothing this defines what maximum performance
+to expect in these cases.
+
+    Benchmarks
+    ----------
+      wait:
+        test_proc = proc do
+          wait 0 # schedule the proc be resumed ASAP
+        end
+        
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call }
+        end
+        
+      await_readable:
+        test_proc = proc do |r,w|
+          r.await_readable
+        end
+        
+        batch = Array.new(100) do |idx|
+          IO.pipe.tap{ |r,w| w.write '0' }
+        end
+        
+        while elapsed_seconds < 1
+          batch.each{ |*args| test_proc.call(*args) }
+        end
+        
+      await_writable:
+        test_proc = proc do |r,w|
+          w.await_writable
+        end
+        
+        batch = Array.new(100) do |idx|
+          IO.pipe
+        end
+        
+        while elapsed_seconds < 1
+          batch.each{ |*args| test_proc.call(*args) }
+        end
+        
     Results for ruby 2.4.1
     ----------------------
-      # CODE #
-      conproc.call:               76395 executions in 1.0000 seconds
-      conproc.call_nonblock:     107481 executions in 1.0000 seconds
-      conproc.call_detached:     118984 executions in 1.0000 seconds
-      conproc.call_and_forget:   123408 executions in 1.0000 seconds
+      wait:                       291100 executions in 1.0001 seconds
+      await_readable:             147800 executions in 1.0005 seconds
+      await_writable:             148300 executions in 1.0003 seconds
     
     Results for mruby 1.3.0
     -----------------------
-      # CODE #
-      conproc.call:               30003   executions in 1.0000 seconds
-      conproc.call_nonblock:      38709   executions in 1.0000 seconds
-      conproc.call_detached:      47200   executions in 1.0000 seconds
-      conproc.call_and_forget:    49503   executions in 1.0000 seconds
+      wait:                       104300 executions in 1.0002 seconds
+      await_readable:             132600 executions in 1.0006 seconds
+      await_writable:             130500 executions in 1.0005 seconds
 
 Explanation of the results:
 
-* Because scheduling is now the dominant factor, there is a large drop in the
-  number of executions compared to just calling the procs. This makes the
-  number of executions when calling the proc in a non-blocking way comparable.
-* Calling the proc in a blocking manner with `#call` is costly. A lot of time
-  is spend waiting for the result.
+* In Ruby, waiting an amount of time is faster than awaiting readiness of I/O
+  because it does not need to enter the underlying poll call.
+* In mruby, awaiting readiness of I/O is actually faster than waiting.
+  Scheduling an evaluation to resume at a specific time involves inserting it
+  into an array at the right index. mruby implements many Array methods in
+  plain ruby which makes them noticeably slower.
 
 You can run the benchmark yourself by running:
 
-    $ rake benchmark[wait]
-
-
-## Scheduling (Concurrent) Procs and Evaluating Them in Batches
-
-Additional to waiting inside a proc, it calls the proc 100 times at once. All
-100 evaluations will then be evaluated in one batch during the next iteration
-of the event loop.
-
-This is a simulation for a server receiving multiple messages during one
-iteration of the event loop and processing all of them in one go.
-
-    Benchmarked Code
-    ----------------
-      conproc = concurrent_proc{ wait 0 }
-      
-      while elapsed_seconds < 1
-        100.times{ # CODE # }
-        wait 0 # to enter the event loop
-      end
-    
-    Results for ruby 2.4.1
-    ----------------------
-      # CODE #
-      conproc.call:               77700 executions in 1.0008 seconds
-      conproc.call_nonblock:     198800 executions in 1.0001 seconds
-      conproc.call_detached:     197800 executions in 1.0003 seconds
-      conproc.call_and_forget:   207700 executions in 1.0001 seconds
-    
-    Results for mruby 1.3.0
-    -----------------------
-      # CODE #
-      conproc.call:               30300   executions in 1.0024 seconds
-      conproc.call_nonblock:      74700   executions in 1.0013 seconds
-      conproc.call_detached:      76600   executions in 1.0003 seconds
-      conproc.call_and_forget:    81900   executions in 1.0013 seconds
-
-Explanation of the results:
-
-* `#call` does not profit from batching due to is synchronizing nature.
-* The other methods show an increased throughput compared to running just a
-  single evaluation per event loop iteration.
-
-The result of this benchmark is the upper bound for how many concurrent
-evaluations Concurrently is able to run per second. The number of executions
-does not change much with a varying batch size. Larger batches (e.g. 200+)
-gradually start to get a bit slower. A batch of 1000 evaluations still leads to
-around 160k executions in Ruby and around 65k in mruby.
-
-You can run the benchmark yourself by running:
-
-    $ rake benchmark[wait,100]
+    $ rake benchmark[wait_methods,100]
 
 
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
