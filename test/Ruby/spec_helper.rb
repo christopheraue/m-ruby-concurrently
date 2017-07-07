@@ -1,7 +1,8 @@
-require 'bundler'
+require "bundler/setup"
 
-Bundler.require :default
 Bundler.require :test
+
+require "concurrently"
 
 # Load test helpers
 Dir["#{File.dirname __FILE__}/_shared/**/*.rb"].sort.each{ |f| require f }
