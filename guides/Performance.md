@@ -1,7 +1,8 @@
 # Performance of Concurrently
 
 The measurements were executed on an Intel i7-5820K 3.3 GHz running Linux 4.10.
-Garbage collection was disabled.
+Garbage collection was disabled. The benchmark runs the code in batches to
+reduce the overhead of the benchmark harness.
 
 ## Calling a (Concurrent) Proc
 
@@ -71,9 +72,8 @@ means your code is to blame if its performance is far below these values.
       conproc.call_detached:      188900 executions in 1.0005 seconds
       conproc.call_and_forget:    383400 executions in 1.0002 seconds
 
-The benchmark runs the code in batches to reduce the overhead of the benchmark
-harness. *conproc.call_detached* and *conproc.call_and_forget* call `wait 0`
-after each batch so the scheduled evaluations have [a chance to run]
+*conproc.call_detached* and *conproc.call_and_forget* call `wait 0` after each
+batch so the scheduled evaluations have [a chance to run]
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]. Otherwise,
 their evaluations were merely scheduled and not started and concluded like it
 is happening in the other cases. This makes the benchmarks better comparable.
@@ -94,7 +94,7 @@ Explanation of the results:
 
 You can run the benchmark yourself by running:
 
-    $ rake benchmark[call_methods,100]
+    $ rake benchmark[call_methods]
 
 
 ## Calling `#wait` and `#await_*` methods
@@ -170,7 +170,7 @@ Explanation of the results:
 
 You can run the benchmark yourself by running:
 
-    $ rake benchmark[wait_methods,100]
+    $ rake benchmark[wait_methods]
 
 
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run

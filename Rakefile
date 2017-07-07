@@ -34,14 +34,14 @@ task test: %w(test:ruby test:mruby)
 namespace :benchmark do
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb with Ruby"
   task :ruby, [:name, :batch_size] do |t, args|
-    args.with_defaults name: "wait_methods", batch_size: 1
+    args.with_defaults name: "wait_methods", batch_size: 100
     file = "#{perf_dir}/benchmark_#{args.name}.rb"
     sh "#{ruby[:benchmark]} #{file} #{args.batch_size}"
   end
 
   desc "Run the benchmark #{perf_dir}/benchmark_[name].rb with mruby"
   task :mruby, [:name, :batch_size] => "mruby:build" do |t, args|
-    args.with_defaults name: "wait_methods", batch_size: 1
+    args.with_defaults name: "wait_methods", batch_size: 100
     file = "#{perf_dir}/benchmark_#{args.name}.rb"
     sh "#{mruby[:benchmark]} #{file} #{args.batch_size}"
   end
@@ -49,7 +49,7 @@ end
 
 desc "Run the benchmark #{perf_dir}/benchmark_[name].rb for Ruby and mruby"
 task :benchmark, [:name, :batch_size] => "mruby:build" do |t, args|
-  args.with_defaults name: "wait_methods", batch_size: 1
+  args.with_defaults name: "wait_methods", batch_size: 100
   file = "#{perf_dir}/benchmark_#{args.name}.rb"
   sh "#{ruby[:benchmark]} #{file} #{args.batch_size}", verbose: false
   sh "#{mruby[:benchmark]} #{file} #{args.batch_size} skip_header", verbose: false
