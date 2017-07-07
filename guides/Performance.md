@@ -7,34 +7,76 @@ Garbage collection was disabled.
 
 This benchmark compares all `#call` methods of a concurrent proc and a regular
 proc. The mere invocation of the method is measured. The proc itself does
-nothing.
+nothing. The results represent the baseline for how fast Concurrently is able
+to work if it — well — does nothing. It can't get any faster than that. It also
+means your code is to blame if its performance is far below these values.
 
-    Benchmarked Code
-    ----------------
-      proc = proc{}
-      conproc = concurrent_proc{}
-      
-      while elapsed_seconds < 1
-        # CODE #
-      end
-    
+    Benchmarks
+    ----------
+      proc.call:
+        test_proc = proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call }
+        end
+        
+      conproc.call:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call }
+        end
+        
+      conproc.call_nonblock:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call_nonblock }
+        end
+        
+      conproc.call_detached:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call_detached }
+          wait 0
+        end
+        
+      conproc.call_and_forget:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call_and_forget }
+          wait 0
+        end
+        
     Results for ruby 2.4.1
     ----------------------
-      # CODE #
-      proc.call:                5266268 executions in 1.0000 seconds
-      conproc.call:              636313 executions in 1.0000 seconds
-      conproc.call_nonblock:     760222 executions in 1.0000 seconds
-      conproc.call_detached:     290855 executions in 1.0000 seconds
-      conproc.call_and_forget:   325831 executions in 1.0000 seconds
+      proc.call:                11048400 executions in 1.0000 seconds
+      conproc.call:               734000 executions in 1.0000 seconds
+      conproc.call_nonblock:      857800 executions in 1.0001 seconds
+      conproc.call_detached:      464800 executions in 1.0002 seconds
+      conproc.call_and_forget:    721800 executions in 1.0001 seconds
     
     Results for mruby 1.3.0
     -----------------------
-      # CODE #
-      proc.call:                1718814 executions in 1.0000 seconds
-      conproc.call:              338579  executions in 1.0000 seconds
-      conproc.call_nonblock:     368053  executions in 1.0000 seconds
-      conproc.call_detached:     273152  executions in 1.0000 seconds
-      conproc.call_and_forget:   385587  executions in 1.0000 seconds
+      proc.call:                 4771700 executions in 1.0000 seconds
+      conproc.call:               362000 executions in 1.0002 seconds
+      conproc.call_nonblock:      427400 executions in 1.0000 seconds
+      conproc.call_detached:      188900 executions in 1.0005 seconds
+      conproc.call_and_forget:    383400 executions in 1.0002 seconds
+
+The benchmark runs the code in batches to reduce the overhead of the benchmark
+harness. *conproc.call_detached* and *conproc.call_and_forget* call `wait 0`
+after each batch so the scheduled evaluations have [a chance to run]
+[Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]. Otherwise,
+their evaluations were merely scheduled and not started and concluded like it
+is happening in the other cases. This makes the benchmarks better comparable.
 
 Explanation of the results:
 
@@ -46,18 +88,13 @@ Explanation of the results:
 * Of the two methods evaluating the proc in the background, `#call_and_forget`
   is faster because `#call_detached` additionally creates an evaluation
   object.
-* Running concurrent procs in the background is considerably slower because
-  in this setup `#call_detached` and `#call_and_forget` cannot reuse fibers.
-  Their evaluation is merely scheduled and not started and concluded. This
-  would happen during the next iteration of the event loop. But since the
-  `while` loop never waits for something [the loop is never entered]
-  [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run].
-  All this leads to the creation of a new fiber for each evaluation. This is
-  responsible for the largest chunk of time needed during the measurement.
+* Running concurrent procs in the background is slower than running them in the
+  foreground because their evaluations need to be scheduled.
+* Overall, mruby is about half as fast as Ruby.
 
 You can run the benchmark yourself by running:
 
-    $ rake benchmark[calls]
+    $ rake benchmark[call_methods,100]
 
 
 ## Scheduling (Concurrent) Procs
