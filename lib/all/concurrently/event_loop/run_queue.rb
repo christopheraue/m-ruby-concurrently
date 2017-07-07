@@ -18,6 +18,14 @@ module Concurrently
       def bisect_left
         bsearch_index{ |item| yield item } || length
       end
+
+      def next
+        idx = size-1
+        while idx >= 0
+          return self[idx] if self[idx][EVALUATION]
+          idx -= 1
+        end
+      end
     end
 
     def initialize(loop)
@@ -54,8 +62,11 @@ module Concurrently
       if @deferred_track.size > 0
         now = @loop.lifetime
         index = @deferred_track.bisect_left{ |cart| cart[TIME] <= now }
-        @deferred_track.pop(@deferred_track.length-index).reverse_each do |cart|
-          processing << cart
+
+        processable_count = @deferred_track.size-index
+        while processable_count > 0
+          processing << @deferred_track.pop
+          processable_count -= 1
         end
       end
 
@@ -68,8 +79,8 @@ module Concurrently
     def waiting_time
       if @immediate_track.size > 0
         0
-      elsif next_cart = @deferred_track.reverse_each.find{ |cart| cart[EVALUATION] }
-        waiting_time = next_cart[TIME] - @loop.lifetime
+      elsif cart = @deferred_track.next
+        waiting_time = cart[TIME] - @loop.lifetime
         waiting_time < 0 ? 0 : waiting_time
       else
         Float::INFINITY
