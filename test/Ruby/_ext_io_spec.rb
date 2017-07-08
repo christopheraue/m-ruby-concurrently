@@ -49,6 +49,20 @@ describe IO do
     end
   end
 
+  describe "#concurrently_read" do
+    subject { reader.concurrently_read(10).await_result }
+
+    context "when it is readable" do
+      before { writer.write "Hello!" }
+      it { is_expected.to eq "Hello!" }
+    end
+
+    context "when it is not readable at first" do
+      before { concurrently{ writer.write "Hello!" } }
+      it { is_expected.to eq "Hello!" }
+    end
+  end
+
   describe "#await_writable" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
       let(:wait_proc) { proc do
@@ -68,6 +82,22 @@ describe IO do
 
   describe "#await_written" do
     subject { writer.await_written "Hello!" }
+
+    after { expect(reader.read 6).to eq "Hello!" }
+
+    context "when it is writable" do
+      it { is_expected.to eq 6 }
+    end
+
+    context "when it is not writable at first" do
+      before { writer.write ' '*(2**16) } # jam the pipe
+      before { concurrently{ reader.readpartial 2**16 } }
+      it { is_expected.to eq 6 }
+    end
+  end
+
+  describe "#concurrently_write" do
+    subject { writer.concurrently_write("Hello!").await_result }
 
     after { expect(reader.read 6).to eq "Hello!" }
 

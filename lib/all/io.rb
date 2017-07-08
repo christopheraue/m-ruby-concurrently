@@ -125,6 +125,44 @@ class IO
     retry
   end
 
+  # Reads from IO concurrently.
+  #
+  # Reading is done in a concurrent proc in the background.
+  #
+  # This method is a shortcut for:
+  #
+  # ```
+  # concurrently{ io.await_read(maxlen, outbuf) }
+  # ```
+  #
+  # @see https://ruby-doc.org/core/IO.html#method-i-read_nonblock
+  #   Ruby documentation for `IO#read_nonblock` for details about parameters and return values.
+  #
+  # @example
+  #   r,w = IO.pipe
+  #   w.write "Hello!"
+  #   r.concurrently_read 1024 # => "Hello!"
+  #
+  # @overload concurrently_read(maxlen)
+  #   Reads maxlen bytes from IO and returns it as new string
+  #
+  #   @param [Integer] maxlen
+  #   @return [String] read string
+  #
+  # @overload concurrently_read(maxlen, outbuf)
+  #   Reads maxlen bytes from IO and fills the given buffer with them.
+  #
+  #   @param [Integer] maxlen
+  #   @param [String] outbuf
+  #   @return [outbuf] outbuf filled with read string
+  def concurrently_read(maxlen, outbuf = nil)
+    READ_PROC.call_detached(self, maxlen, outbuf)
+  end
+
+  READ_PROC = Concurrently::Proc.new do |io, maxlen, outbuf|
+    io.await_read(maxlen, outbuf)
+  end
+
   # Suspends the current evaluation until IO is writable. It can be used inside
   # and outside of concurrent procs.
   #
@@ -244,5 +282,33 @@ class IO
   rescue IO::WaitWritable
     await_writable
     retry
+  end
+
+  # Writes to IO concurrently.
+  #
+  # Writing is done in a concurrent proc in the background.
+  #
+  # This method is a shortcut for:
+  #
+  # ```
+  # concurrently{ io.await_written(string) }
+  # ```
+  #
+  # @param [String] string to write
+  # @return [Integer] bytes written
+  #
+  # @see https://ruby-doc.org/core/IO.html#method-i-write_nonblock
+  #   Ruby documentation for `IO#write_nonblock` for details about parameters and return values.
+  #
+  # @example
+  #   r,w = IO.pipe
+  #   w.concurrently_write "Hello!"
+  #   r.read 1024 # => "Hello!"
+  def concurrently_write(string)
+    WRITE_PROC.call_detached(self, string)
+  end
+
+  WRITE_PROC = Concurrently::Proc.new do |io, string|
+    io.await_written(string)
   end
 end
