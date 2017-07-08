@@ -4,11 +4,12 @@ The measurements were executed on an Intel i7-5820K 3.3 GHz running Linux 4.10.
 Garbage collection was disabled. The benchmark runs the code in batches to
 reduce the overhead of the benchmark harness.
 
-## Mere Invocation of (Concurrent) Procs
+## Mere Invocation of Concurrent Procs
 
-This benchmark compares all `#call` methods of a concurrent proc and a regular
-proc. The procs itself do nothing. The results represent the baseline for how
-fast Concurrently is able to work. It can't get any faster than that.
+This benchmark compares all call methods of a [concurrent proc][Concurrently::Proc] 
+and a regular proc. The procs itself do nothing. The results represent the
+baseline for how fast Concurrently is able to work. It can't get any faster
+than that.
 
     Benchmarks
     ----------
@@ -80,11 +81,13 @@ Explanation of the results:
 
 * The difference between a regular and a concurrent proc is caused by
   concurrent procs being evaluated in a fiber and doing some bookkeeping.
-* Of the two methods evaluating the proc in the foreground `#call_nonblock`
-  is faster than `#call`, because the implementation of `#call` uses
-  `#call_nonblock` and does a little bit more on top.
-* Of the two methods evaluating the proc in the background, `#call_and_forget`
-  is faster because `#call_detached` additionally creates an evaluation
+* Of the two methods evaluating the proc in the foreground
+  [Concurrently::Proc#call_nonblock][] is faster than [Concurrently::Proc#call][],
+  because the implementation of [Concurrently::Proc#call][] uses
+  [Concurrently::Proc#call_nonblock][] and does a little bit more on top.
+* Of the two methods evaluating the proc in the background,
+  [Concurrently::Proc#call_and_forget][] is faster because
+  [Concurrently::Proc#call_detached][] additionally creates an evaluation
   object.
 * Running concurrent procs in the background is slower than running them in the
   foreground because their evaluations need to be scheduled.
@@ -172,7 +175,7 @@ You can run this benchmark yourself by executing:
     $ rake benchmark[wait_methods]
 
 
-## Waiting Concurrent Procs
+## Waiting Inside Concurrent Procs
 
 Concurrent procs show different performance depending on how they are called
 and if their evaluation needs to wait or not. This benchmark explores these
@@ -274,22 +277,26 @@ performance in these scenarios.
       waiting call_detached:       73300 executions in 1.0006 seconds
       waiting call_and_forget:     85200 executions in 1.0008 seconds
 
-Measurements of concurrent procs doing nothing are included for comparision.
+`wait 0` is used as a stand in for all wait methods. Measurements of concurrent
+procs doing nothing are included for comparision.
 
 Explanation of the results:
 
-* `#call` is the slowest if the concurrent proc needs to wait. Immediately
-  synchronizing the result for each and every evaluation introduces a
-  noticeable overhead.
-* `#call_nonblock` and `#call_detached` perform similarly. When started
-  `#call_nonblock` skips some work related to waiting that `#call_detached` is
-  already doing. Now, when the concurrent proc actually waits `#call_nonblock`
-  needs to make up for this skipped work. This puts its performance in the same
-  region as the one of `#call_detached`.
-* `#call_and_forget` is the fastest way to wait inside a concurrent proc. It
-  comes at the cost that the result of the evaluation cannot be returned.
+* [Concurrently::Proc#call][] is the slowest if the concurrent proc needs to
+  wait. Immediately synchronizing the result for each and every evaluation
+  introduces a noticeable overhead.
+* [Concurrently::Proc#call_nonblock][] and [Concurrently::Proc#call_detached][]
+  perform similarly. When started [Concurrently::Proc#call_nonblock][] skips
+  some work related to waiting that [Concurrently::Proc#call_detached][] is
+  already doing. Now, when the concurrent proc actually waits
+  [Concurrently::Proc#call_nonblock][] needs to make up for this skipped work.
+  This puts its performance in the same region as the one of
+  [Concurrently::Proc#call_detached][].
+* [Concurrently::Proc#call_and_forget][] is the fastest way to wait inside a
+  concurrent proc. It comes at the cost that the result of the evaluation
+  cannot be returned.
 
-To achieve maximum performance it has to be considered if the concurrent proc
+To find the fastest way to evaluate a proc it has to be considered if the proc
 does or does not wait most of the time and if its result is needed:
 
 <table>
@@ -299,22 +306,23 @@ does or does not wait most of the time and if its result is needed:
     <th>result not needed</th>
   </tr>
   <tr>
-    <th>waits</th>
+    <th>waits almost always</th>
     <td><code>#call_nonblock</code> or<br/><code>#call_detached</code></td>
     <td><code>#call_and_forget</code></td>
   </tr>
   <tr>
-    <th>does not wait</th>
+    <th>waits almost never</th>
     <td><code>#call_nonblock</code></td>
     <td><code>#call_nonblock</code></td>
   </tr>
 </table>
 
-`concurrently(&block)` calls `#call_detached` under the hood as a reasonable
-default. `#call_detached` has the easiest interface and provides good
-performance especially in the most common use case of Concurrently: waiting
-for an event to happen. `call_nonblock` and `call_and_forget` are there to
-squeeze out more performance in some edge cases.
+[Kernel#concurrently][] calls [Concurrently::Proc#call_detached][] under the
+hood as a reasonable default. [Concurrently::Proc#call_detached][] has the
+easiest interface and provides good performance especially in the most common
+use case of Concurrently: waiting for an event to happen.
+[Concurrently::Proc#call_nonblock][] and [Concurrently::Proc#call_and_forget][]
+are there to squeeze out more performance in some edge cases.
 
 You can run this benchmark yourself by executing:
 
@@ -322,3 +330,9 @@ You can run this benchmark yourself by executing:
 
 
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
+[Concurrently::Proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc
+[Concurrently::Proc#call]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call-instance_method
+[Concurrently::Proc#call_nonblock]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_nonblock-instance_method
+[Concurrently::Proc#call_detached]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_detached-instance_method
+[Concurrently::Proc#call_and_forget]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_and_forget-instance_method
+[Kernel#concurrently]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrently-instance_method
