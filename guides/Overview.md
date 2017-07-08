@@ -109,15 +109,15 @@ To defer the current evaluation for a fixed time use [Kernel#wait][].
 ## Handling I/O
 
 Readiness of I/O is awaited with [IO#await_readable][] and [IO#await_writable][].
-To read and write from an IO concurrently you can use [IO#concurrently_read][]
-and [IO#concurrently_write][].
+To read and write from an IO and wait until the operation is complete without
+blocking other evaluations you can use [IO#await_read][] and [IO#await_written][].
 
 ```ruby
 r,w = IO.pipe
 
 concurrently do
   wait 1
-  w.concurrently_write "Continue!"
+  w.await_written "Continue!"
 end
 
 concurrently do
@@ -129,7 +129,7 @@ concurrently do
 end
 
 # Read from r. It will take one second until there is input.
-message = r.concurrently_read 1024
+message = r.await_read 1024
 
 puts message # prints "Continue!"
 
@@ -330,6 +330,6 @@ into account.
 [Kernel#wait]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#wait-instance_method
 [IO#await_readable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_readable-instance_method
 [IO#await_writable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_writable-instance_method
-[IO#concurrently_read]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_read-instance_method
-[IO#concurrently_write]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#concurrently_write-instance_method
+[IO#await_read]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_read-instance_method
+[IO#await_written]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_written-instance_method
 [Troubleshooting]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md

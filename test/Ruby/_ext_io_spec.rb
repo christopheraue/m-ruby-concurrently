@@ -18,9 +18,9 @@ describe IO do
     end
   end
 
-  describe "#concurrently_read" do
+  describe "#await_read" do
     context "without output buffer" do
-      subject { reader.concurrently_read 10 }
+      subject { reader.await_read 10 }
 
       context "when it is readable" do
         before { writer.write "Hello!" }
@@ -34,7 +34,7 @@ describe IO do
     end
 
     context "with output buffer" do
-      subject { reader.concurrently_read 10, outbuf }
+      subject { reader.await_read 10, outbuf }
       let(:outbuf) { "" }
 
       context "when it is readable" do
@@ -66,8 +66,8 @@ describe IO do
     end
   end
 
-  describe "#concurrently_write" do
-    subject { writer.concurrently_write "Hello!" }
+  describe "#await_written" do
+    subject { writer.await_written "Hello!" }
 
     context "when it is writable" do
       it { is_expected.to eq 6 }

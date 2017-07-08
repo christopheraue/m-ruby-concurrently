@@ -103,22 +103,22 @@ class IO
   #
   # @example
   #   r,w = IO.pipe
-  #   w.concurrently_write "Hello!"
-  #   r.concurrently_read 1024 # => "Hello!"
+  #   w.await_written "Hello!"
+  #   r.await_read 1024 # => "Hello!"
   #
-  # @overload concurrently_read(maxlen)
+  # @overload await_read(maxlen)
   #   Reads maxlen bytes from IO and returns it as new string
   #
   #   @param [Integer] maxlen
   #   @return [String] read string
   #
-  # @overload concurrently_read(maxlen, outbuf)
+  # @overload await_read(maxlen, outbuf)
   #   Reads maxlen bytes from IO and fills the given buffer with them.
   #
   #   @param [Integer] maxlen
   #   @param [String] outbuf
   #   @return [outbuf] outbuf filled with read string
-  def concurrently_read(maxlen, outbuf = nil)
+  def await_read(maxlen, outbuf = nil)
     read_nonblock(maxlen, outbuf)
   rescue IO::WaitReadable
     await_readable
@@ -237,9 +237,9 @@ class IO
   #
   # @example
   #   r,w = IO.pipe
-  #   w.concurrently_write "Hello!"
-  #   r.concurrently_read 1024 # => "Hello!"
-  def concurrently_write(string)
+  #   w.await_written "Hello!"
+  #   r.await_read 1024 # => "Hello!"
+  def await_written(string)
     write_nonblock(string)
   rescue IO::WaitWritable
     await_writable
