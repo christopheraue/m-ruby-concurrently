@@ -172,4 +172,153 @@ You can run this benchmark yourself by executing:
     $ rake benchmark[wait_methods]
 
 
+## Waiting Concurrent Procs
+
+Concurrent procs show different performance depending on how they are called
+and if their evaluation needs to wait or not. This benchmark explores these
+differences and serves as a guide which call method provides the best
+performance in these scenarios.
+
+    Benchmarks
+    ----------
+      call:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call }
+          # Concurrently::Proc#call already synchronizes the results of evaluations
+        end
+        
+      call_nonblock:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call_nonblock }
+        end
+        
+      call_detached:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          evaluations = batch.map{ test_proc.call_detached }
+          evaluations.each{ |evaluation| evaluation.await_result }
+        end
+        
+      call_and_forget:
+        test_proc = concurrent_proc{}
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call_and_forget }
+          wait 0
+        end
+        
+      waiting call:
+        test_proc = concurrent_proc{ wait 0 }
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call }
+          # Concurrently::Proc#call already synchronizes the results of evaluations
+        end
+        
+      waiting call_nonblock:
+        test_proc = concurrent_proc{ wait 0 }
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          evaluations = batch.map{ test_proc.call_nonblock }
+          evaluations.each{ |evaluation| evaluation.await_result }
+        end
+        
+      waiting call_detached:
+        test_proc = concurrent_proc{ wait 0 }
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          evaluations = batch.map{ test_proc.call_detached }
+          evaluations.each{ |evaluation| evaluation.await_result }
+        end
+        
+      waiting call_and_forget:
+        test_proc = concurrent_proc{ wait 0 }
+        batch = Array.new(100)
+        
+        while elapsed_seconds < 1
+          batch.each{ test_proc.call_and_forget }
+          wait 0
+        end
+        
+    Results for ruby 2.4.1
+    ----------------------
+      call:                       687600 executions in 1.0001 seconds
+      call_nonblock:              855600 executions in 1.0001 seconds
+      call_detached:              426400 executions in 1.0000 seconds
+      call_and_forget:            722200 executions in 1.0000 seconds
+      waiting call:                90300 executions in 1.0005 seconds
+      waiting call_nonblock:      191800 executions in 1.0001 seconds
+      waiting call_detached:      190300 executions in 1.0003 seconds
+      waiting call_and_forget:    207100 executions in 1.0001 seconds
+    
+    Results for mruby 1.3.0
+    -----------------------
+      call:                       319900 executions in 1.0003 seconds
+      call_nonblock:              431700 executions in 1.0002 seconds
+      call_detached:              158400 executions in 1.0006 seconds
+      call_and_forget:            397700 executions in 1.0002 seconds
+      waiting call:                49900 executions in 1.0015 seconds
+      waiting call_nonblock:       74600 executions in 1.0001 seconds
+      waiting call_detached:       73300 executions in 1.0006 seconds
+      waiting call_and_forget:     85200 executions in 1.0008 seconds
+
+Measurements of concurrent procs doing nothing are included for comparision.
+
+Explanation of the results:
+
+* `#call` is the slowest if the concurrent proc needs to wait. Immediately
+  synchronizing the result for each and every evaluation introduces a
+  noticeable overhead.
+* `#call_nonblock` and `#call_detached` perform similarly. When started
+  `#call_nonblock` skips some work related to waiting that `#call_detached` is
+  already doing. Now, when the concurrent proc actually waits `#call_nonblock`
+  needs to make up for this skipped work. This puts its performance in the same
+  region as the one of `#call_detached`.
+* `#call_and_forget` is the fastest way to wait inside a concurrent proc. It
+  comes at the cost that the result of the evaluation cannot be returned.
+
+To achieve maximum performance it has to be considered if the concurrent proc
+does or does not wait most of the time and if its result is needed:
+
+<table>
+  <tr>
+    <th></th>
+    <th>result needed</th>
+    <th>result not needed</th>
+  </tr>
+  <tr>
+    <th>waits</th>
+    <td><code>#call_nonblock</code> or<br/><code>#call_detached</code></td>
+    <td><code>#call_and_forget</code></td>
+  </tr>
+  <tr>
+    <th>does not wait</th>
+    <td><code>#call_nonblock</code></td>
+    <td><code>#call_nonblock</code></td>
+  </tr>
+</table>
+
+`concurrently(&block)` calls `#call_detached` under the hood as a reasonable
+default. `#call_detached` has the easiest interface and provides good
+performance especially in the most common use case of Concurrently: waiting
+for an event to happen. `call_nonblock` and `call_and_forget` are there to
+squeeze out more performance in some edge cases.
+
+You can run this benchmark yourself by executing:
+
+    $ rake benchmark[call_methods_waiting]
+
+
 [Troubleshooting/A_concurrent_proc_is_scheduled_but_never_run]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Troubleshooting.md#A_concurrent_proc_is_scheduled_but_never_run
