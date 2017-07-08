@@ -32,7 +32,7 @@ end
 Concurrent procs can be used the same way regular procs are. For example, they
 can be passed around or called multiple times with different arguments.
     
-[Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_and_forget][]:
+[Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_detached][]:
     
 ```ruby
 concurrently do
@@ -43,7 +43,7 @@ end
 
 concurrent_proc do
   # code to run concurrently
-end.call_and_forget
+end.call_detached
 ```
 
 ### Calling Concurrent Procs

@@ -29,8 +29,8 @@ module Concurrently
   # registering callbacks for the `:error` event as shown in the example below.
   # This is useful as a central hook to all errors inside concurrent procs for
   # monitoring or logging purposes. Also, concurrent procs evaluated with
-  # {Kernel#concurrently} resp. {Proc#call_and_forget} are run in the
-  # background and will fail silently. The callbacks are the only way to be
+  # {Proc#call_and_forget} are run in the background with no access to their
+  # evaluation and will fail silently. The callbacks are the only way to be
   # notified about errors inside them.
   #
   # The callbacks can be registered for all procs or only for one specific
@@ -187,6 +187,9 @@ module Concurrently
     # thread of execution and schedules its start during the next iteration of
     # the event loop.
     #
+    # To execute code this way you can also use the shortcut
+    # {Kernel#concurrently}.
+    #
     # @return [Evaluation]
     #
     # @example
@@ -207,9 +210,6 @@ module Concurrently
     # Once called, there is no way to control the evaluation anymore. But,
     # because we save creating an {Evaluation} instance this is slightly faster
     # than {#call_detached}.
-    #
-    # To execute code this way you can also use the shortcut
-    # {Kernel#concurrently}.
     #
     # @return [nil]
     #

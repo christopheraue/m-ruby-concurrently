@@ -23,7 +23,7 @@ Running it will only print:
 Unicorns!
 ```
 
-`concurrently{}` is a shortcut for `concurrent_proc{}.call_and_forget`
+`concurrently{}` is a shortcut for `concurrent_proc{}.call_detached`
 which in turn does not evaluate its code right away but schedules it to run
 during the next iteration of the event loop. But, since the root evaluation did
 not await anything the event loop has never been entered and the evaluation of
