@@ -69,6 +69,8 @@ describe IO do
   describe "#await_written" do
     subject { writer.await_written "Hello!" }
 
+    after { expect(reader.read 6).to eq "Hello!" }
+
     context "when it is writable" do
       it { is_expected.to eq 6 }
     end

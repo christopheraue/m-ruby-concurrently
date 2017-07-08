@@ -82,7 +82,7 @@ class IO
     io_selector.cancel_reader(self)
   end
 
-  # Reads from IO concurrently.
+  # Waits until successfully read from IO with blocking other evaluations.
   #
   # If IO is not readable right now it blocks the current concurrent evaluation
   # and tries again after it became readable.
@@ -91,9 +91,9 @@ class IO
   #
   # ```
   # begin
-  #   read_nonblock(maxlen, buf)
+  #   io.read_nonblock(maxlen, outbuf)
   # rescue IO::WaitReadable
-  #   await_readable
+  #   io.await_readable
   #   retry
   # end
   # ```
@@ -103,7 +103,7 @@ class IO
   #
   # @example
   #   r,w = IO.pipe
-  #   w.await_written "Hello!"
+  #   w.write "Hello!"
   #   r.await_read 1024 # => "Hello!"
   #
   # @overload await_read(maxlen)
@@ -213,7 +213,7 @@ class IO
     io_selector.cancel_writer(self)
   end
 
-  # Writes to IO concurrently.
+  # Waits until successfully written to IO with blocking other evaluations.
   #
   # If IO is not writable right now it blocks the current concurrent proc
   # and tries again after it became writable.
@@ -222,9 +222,9 @@ class IO
   #
   # ```
   # begin
-  #   write_nonblock(string)
+  #   io.write_nonblock(string)
   # rescue IO::WaitWritable
-  #   await_writable
+  #   io.await_writable
   #   retry
   # end
   # ```
@@ -238,7 +238,7 @@ class IO
   # @example
   #   r,w = IO.pipe
   #   w.await_written "Hello!"
-  #   r.await_read 1024 # => "Hello!"
+  #   r.read 1024 # => "Hello!"
   def await_written(string)
     write_nonblock(string)
   rescue IO::WaitWritable
