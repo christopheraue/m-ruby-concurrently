@@ -4,7 +4,7 @@ The measurements were executed on an Intel i7-5820K 3.3 GHz running Linux 4.10.
 Garbage collection was disabled. The benchmark runs the code in batches to
 reduce the overhead of the benchmark harness.
 
-## Calling a (Concurrent) Proc
+## Mere Invocation of (Concurrent) Procs
 
 This benchmark compares all `#call` methods of a concurrent proc and a regular
 proc. The procs itself do nothing. The results represent the baseline for how
@@ -90,12 +90,12 @@ Explanation of the results:
   foreground because their evaluations need to be scheduled.
 * Overall, mruby is about half as fast as Ruby.
 
-You can run the benchmark yourself by executing:
+You can run this benchmark yourself by executing:
 
     $ rake benchmark[call_methods]
 
 
-## Calling `#wait` and `#await_*` methods
+## Mere Waiting
 
 This benchmark measures the number of times per second we can
 
@@ -167,7 +167,7 @@ Explanation of the results:
   mruby implements many Array methods in plain ruby which makes them noticeably
   slower.
 
-You can run the benchmark yourself by executing:
+You can run this benchmark yourself by executing:
 
     $ rake benchmark[wait_methods]
 
