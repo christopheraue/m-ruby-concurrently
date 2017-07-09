@@ -59,45 +59,53 @@ Evaluating a piece of code concurrently involves three distinct phases:
 Every tool Concurrently offers is linked to one of these phases.
 
 
+### Invocation
 
-
-
-## Concurrent Procs
-
-The [concurrent proc][Concurrently::Proc] is Concurrently's concurrency
-primitive. It looks and feels just like a regular proc. In fact,
-[Concurrently::Proc][] inherits from `Proc`.
-
-Concurrent procs are created with [Kernel#concurrent_proc][]:
+To start evaluating code concurrently use [Kernel#concurrently][]:
 
 ```ruby
-concurrent_proc do
+evaluation = concurrently do
+  # code to run concurrently
+end
+```
+
+It returns immediately with a handle to the started evaluation. The evaluation
+will be processed in the background.
+
+[Kernel#concurrently][] is actually a shortcut for
+
+```ruby
+evaluation = concurrent_proc do
+  # code to run concurrently
+end.call_detached
+```
+
+In general, you do not need to work with concurrent procs directly. Just use
+[Kernel#concurrently][]. But concurrent procs give you a finer control over
+how the code is evaluated. This comes in handy for optimizing performance.
+
+
+#### Concurrent Procs
+
+The [concurrent proc][Concurrently::Proc] looks and feels just like a regular
+proc. In fact, [Concurrently::Proc][] inherits from `Proc`. It is created with
+[Kernel#concurrent_proc][]:
+
+```ruby
+conproc = concurrent_proc do
   # code to run concurrently
 end
 ```
 
 Concurrent procs can be used the same way regular procs are. For example, they
 can be passed around or called multiple times with different arguments.
-    
-[Kernel#concurrently] is a shortcut for [Concurrently::Proc#call_detached][]:
-    
-```ruby
-concurrently do
-  # code to run concurrently
-end
 
-# is equivalent to:
+When called a concurrent proc kicks of an evaluation of its code. A concurrent
+proc has four methods to call it. Depending on which method is used the code
+is evaluated slightly differently.
 
-concurrent_proc do
-  # code to run concurrently
-end.call_detached
-```
-
-### Calling Concurrent Procs
-
-A concurrent proc has four methods to call it.
-
-The first two evaluate the concurrent proc immediately in the foreground:
+The first two methods evaluate the concurrent proc immediately in the
+foreground:
 
 * [Concurrently::Proc#call][] blocks the evaluation it has been called from
   until its own evaluation is concluded. Then it returns the result. This
@@ -115,6 +123,12 @@ iteration of the event loop:
 * [Concurrently::Proc#call_and_forget][] does not give access to the evaluation
     and returns `nil`.
 
+The different methods to call a concurrent proc have an impact on the execution
+speed. In general, [Concurrently::Proc#call_detached][] represents a good
+middle ground between ease of use and performance. For an in-depth analysis of
+the performance implications of each call method have a look at the
+[performance documentation][performance]. It offers a guide what to use if
+every cpu cycle counts.
 
 ## Timing Code
 
@@ -366,6 +380,7 @@ into account.
 
 [README]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/README.md
 [API documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/index
+[performance]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Performance.md
 [Concurrently::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation
 [Concurrently::Proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc
 [Concurrently::Proc#call]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call-instance_method
