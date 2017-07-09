@@ -1,8 +1,9 @@
 # An Overview of Concurrently
 
-This document is meant as a general overview of what can be done with
-Concurrently and how all its parts work together. For more information and
-examples about a topic follow the interspersed links to the documentation.
+The [README][] already introduced the basic interface of Concurrently. 
+This document explores the underlying concepts and explains how all parts work
+together. For even more details and examples about a specific topic follow the
+interspersed links to the [API documentation][].
 
 ## Evaluations
 
@@ -317,6 +318,8 @@ Keep in mind, that to focus on the use of Concurrently the example does not
 take error handling for I/O, properly closing all connections and other details
 into account.
 
+[README]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/README.md
+[API documentation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/index
 [Concurrently::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Evaluation
 [Concurrently::Proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc
 [Concurrently::Proc#call]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call-instance_method
