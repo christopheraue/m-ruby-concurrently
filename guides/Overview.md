@@ -134,14 +134,23 @@ the performance implications of each call method have a look at the
 [performance documentation][performance]. It offers a guide what to use if
 every cpu cycle counts.
 
-## Timing Code
 
-To defer the current evaluation for a fixed time use [Kernel#wait][].
+### Computation
+
+In the computation phase the evaluation works through its code. While doing so
+it can synchronize itself with different events.
+
+All synchronization methods are named `await_*`. As usual, there is an exception
+to the rule: Waiting an amount of time is done with [Kernel#wait][].
+
+#### Synchronization with Time
+
+To defer the current evaluation for a fixed amount of time use [Kernel#wait][].
 
 * Doing something after X seconds:
     
     ```ruby
-    concurrent_proc do
+    concurrently do
       wait X
       do_it!
     end
@@ -150,7 +159,7 @@ To defer the current evaluation for a fixed time use [Kernel#wait][].
 * Doing something every X seconds. This is a timer:
     
     ```ruby
-    concurrent_proc do
+    concurrently do
       loop do
         wait X
         do_it!
@@ -161,7 +170,7 @@ To defer the current evaluation for a fixed time use [Kernel#wait][].
 * Doing something after X seconds, every Y seconds, Z times:
     
     ```ruby
-    concurrent_proc do
+    concurrently do
       wait X
       Z.times do
         do_it!
@@ -171,11 +180,10 @@ To defer the current evaluation for a fixed time use [Kernel#wait][].
     ```
 
 
-## Handling I/O
+#### Synchronization with I/O
 
-Readiness of I/O is awaited with [IO#await_readable][] and [IO#await_writable][].
 To read and write from an IO and wait until the operation is complete without
-blocking other evaluations you can use [IO#await_read][] and [IO#await_written][].
+blocking other evaluations use [IO#await_read][] and [IO#await_written][].
 
 ```ruby
 r,w = IO.pipe
@@ -185,18 +193,10 @@ concurrently do
   w.await_written "Continue!"
 end
 
-concurrently do
-  # This runs while r awaits readability.
-end
 
-concurrently do
-  # This runs while r awaits readability.
-end
-
-# Read from r. It will take one second until there is input.
-message = r.await_read 1024
-
-puts message # prints "Continue!"
+# Read from r. It will take one second until there is input because r must
+# wait until the string has been written to w.
+r.await_read 1024 # prints "Continue!"
 
 r.close
 w.close
@@ -219,6 +219,26 @@ rescue IO::WaitReadable
 end
 
 # socket is an accepted socket.
+```
+
+
+#### Synchronization with Results of Evaluations
+
+Results of other evaluations can be waited for with
+[Concurrently::Proc::Evaluation#await_result][]
+
+```ruby
+mailbox = concurrently do
+  wait 1
+  'message'
+end
+
+forwarder = concurrently do
+  "FW: #{mailbox.await_result}"
+end
+
+# It will take one second until there is a message in the mailbox
+puts forwarder.await_result # prints "FW: message"
 ```
 
 
@@ -392,6 +412,7 @@ into account.
 [Concurrently::Proc#call_detached]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_detached-instance_method
 [Concurrently::Proc#call_and_forget]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#call_and_forget-instance_method
 [Concurrently::Proc::Evaluation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc/Evaluation
+[Concurrently::Proc::Evaluation#await_result]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc/Evaluation#await_result-instance_method
 [Concurrently::EventLoop]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/EventLoop
 [Kernel#concurrent_proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrent_proc-instance_method
 [Kernel#concurrently]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrently-instance_method
