@@ -5,6 +5,27 @@ This document explores the underlying concepts and explains how all parts work
 together. For even more details and examples about a specific topic follow the
 interspersed links to the [API documentation][].
 
+
+## Concurrent Evaluation of Code
+
+Evaluating a piece of code concurrently involves three distinct phases:
+
+                   1)     2)     3)
+    evaluation0 ---+-------------+--->
+                   |             |
+    evaluation1    `-------------´
+
+1) Invocation: evaluation0 creates a separate execution context evaluation1 to
+   evaluate the code in. It does not wait for evaluation1 to finish.
+2) Asynchronicity: evaluation0 and evaluation1 run independently from each
+   other. evaluation0 does not know whether evaluation1 has finished or not.
+3) Synchronization: If evaluation0 needs the result of evaluation1 it has to
+   wait for it. This synchronizes evaluation1 with evaluation0 again. If
+   evaluation1 has not finished yet evaluation0 blocks until it has.
+
+Every tool Concurrently offers is linked to one of these phases.
+
+
 ## Evaluations
 
 An evaluation is an atomic thread of execution leading to a result. It is
