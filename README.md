@@ -21,8 +21,8 @@ end
 puts "#{hello.await_result} #{world.await_result}" 
 ```
 
-In this example we have three evaluations: The main evaluation and two more
-concurrent evaluations started by said main evaluation. The main evaluation
+In this example we have three evaluations: The root evaluation and two more
+concurrent evaluations started by said root evaluation. The root evaluation
 waits until both concurrent evaluations were concluded and then prints "hello
 world".
 
@@ -79,7 +79,7 @@ while true
 end
 ```
 
-The main evaluation is effectively blocked by waiting or writing messages.
+The root evaluation is effectively blocked by waiting or writing messages.
 But since the server runs concurrently it is not affected by this and happily
 prints its received messages.
 

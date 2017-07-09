@@ -5,6 +5,39 @@ This document explores the underlying concepts and explains how all parts work
 together. For even more details and examples about a specific topic follow the
 interspersed links to the [API documentation][].
 
+Let's start with the concept of an *evaluation*.
+
+
+## Evaluations
+
+An evaluation is an independent execution context. It is similar to a thread or
+a fiber since it can be suspended and resumed independently from other
+evaluations.
+
+Every ruby program already has an implicit [root evaluation][Concurrently::Evaluation]
+running. Unless you explicitly tell your program to evaluate code concurrently
+it is evaluated in the root evaluation. The root evaluation runs as long as
+your program is running. Thus it is never concluded and its result cannot be
+awaited.
+
+Evaluating code with `concurrently(&block)` is done in its own type of
+[evaluation][Concurrently::Proc::Evaluation]. Contrary to the root evaluation,
+this evaluation has an end with a result. Next to its similarity to a thread
+resp. fiber it is also similar to a future or a promise. It provides access
+to its (future) result and offers the ability to shortcut its execution by
+manually injecting a result. Once the evaluation has a result it is *concluded*.
+
+```ruby
+# This is the root evaluation
+
+concurrently do
+  # This is a concurrent evaluation
+end
+
+concurrently do
+  # This is another concurrent evaluation
+end
+```
 
 ## Concurrent Evaluation of Code
 
@@ -26,16 +59,8 @@ Evaluating a piece of code concurrently involves three distinct phases:
 Every tool Concurrently offers is linked to one of these phases.
 
 
-## Evaluations
 
-An evaluation is an atomic thread of execution leading to a result. It is
-similar to a thread or a fiber. It can be suspended and resumed independently
-from other evaluations. It is also similar to a future or a promise by
-providing access to its future result or offering the ability to inject a
-result manually. Once the evaluation has a result it is *concluded*.
 
-Every ruby program already has an implicit [main evaluation][Concurrently::Evaluation]
-running. Calling a concurrent proc creates a [proc evaluation][Concurrently::Proc::Evaluation].
 
 ## Concurrent Procs
 
