@@ -2,84 +2,86 @@
 
 [![Build Status](https://secure.travis-ci.org/christopheraue/m-ruby-concurrently.svg?branch=master)](http://travis-ci.org/christopheraue/m-ruby-concurrently)
 
-Concurrently is a concurrency framework for Ruby and mruby. With it, concurrent
-code can be written sequentially similar to async/await.
+Concurrently is a concurrency framework for Ruby and mruby built upon
+fibers. With it code can be evaluated independently in its own execution
+context similar to a thread. Execution contexts are called *evaluations* in
+Concurrently and are created with [Kernel#concurrently][]:
 
-The concurrency primitive of Concurrently is the concurrent proc. It is very
-similar to a regular proc. Calling a concurrent proc creates a concurrent
-evaluation which is kind of a lightweight thread: It can wait for stuff without
-blocking other concurrent evaluations.
+```ruby
+hello = concurrently do
+  wait 0.2 # seconds
+  "hello"
+end
 
-Under the hood, concurrent procs are evaluated inside fibers. They can wait for
-readiness of I/O or a period of time (or the result of other concurrent
-evaluations). The interface is comparable to plain Ruby:
+world = concurrently do
+  wait 0.1 # seconds
+  "world"
+end
 
-<table>
-  <tr>
-    <th>Plain Ruby</th>
-    <th>Concurrently</th>
-  </tr>
-  <tr>
-    <td><code>Fiber.new(&block).resume</code></td>
-    <td><code>concurrent_proc(&block).call</code></td>
-  </tr>
-  <tr>
-    <td><code>IO.select([io])</code></td>
-    <td><code>io.await_readable</code></td>
-  </tr>
-  <tr>
-    <td><code>IO.select(nil, [io])</code></td>
-    <td><code>io.await_writable</code></td>
-  </tr>
-  <tr>
-    <td><code>IO.select(nil, nil, nil, seconds)</code></td>
-    <td><code>wait(seconds)</code></td>
-  </tr>
-</table>
+puts "#{hello.await_result} #{world.await_result}" 
+```
 
-Beyond the mere beautification of the interface, Concurrently also takes care
-of the management of the event loop and the coordination between all concurrent
-evaluations.
+In this example we have three evaluations: The main evaluation and two more
+concurrent evaluations started by said main evaluation. The main evaluation
+waits until both concurrent evaluations were concluded and then prints "hello
+world".
 
 
-## A Basic Example
+## Synchronization with events
+
+Evaluations can be synchronized with certain events by waiting for them. These
+events are:
+
+* an elapsed time period ([Kernel#wait][]),
+* readability and writability of IO ([IO#await_readable][],
+  [IO#await_writable][]) and
+* the result of another evaluation ([Concurrently::Proc::Evaluation#await_result][]).
+
+Since evaluations run independently they are not blocking other evaluations
+while waiting.
+
+
+## Concurrent I/O
+
+When doing I/O it is important to do it **non-blocking**. If the IO object is
+not ready use [IO#await_readable][] and [IO#await_writable][] to await
+readiness.
+
+For more about non-blocking I/O, see the core ruby docs for
+[IO#read_nonblock][] and [IO#write_nonblock][].
 
 This is a little server reading from an IO and printing the received messages:
 
 ```ruby
-server = concurrent_proc do |io|
+# Let's start with creating a pipe to connect client and server
+r,w = IO.pipe
+
+# Server:
+# We let the server code run concurrently so it runs independently. It reads
+# from the pipe non-blocking and awaits readability if the pipe is not readable.
+concurrently do
   while true
     begin
-      puts io.read_nonblock 32
+      puts r.read_nonblock 32
     rescue IO::WaitReadable
-      io.await_readable
+      r.await_readable
       retry
     end
   end
 end
-```
 
-Now, we create a pipe and start the server with the read end of it:
-
-```ruby
-r,w = IO.pipe
-server.call_detached r
-```
-
-Finally, we write messages to the write end of the pipe every 0.5 seconds:
-
-```ruby
+# Client:
+# The client writes to the pipe every 0.5 seconds
 puts "#{Time.now.strftime('%H:%M:%S.%L')} (Start time)"
-
 while true
   wait 0.5
   w.write Time.now.strftime('%H:%M:%S.%L')
 end
 ```
 
-The evaluation of the root fiber is effectively blocked by waiting or writing
-messages. But since the server runs concurrently it is not affected by this and
-happily prints its received messages.
+The main evaluation is effectively blocked by waiting or writing messages.
+But since the server runs concurrently it is not affected by this and happily
+prints its received messages.
 
 This is the output:
 
@@ -120,6 +122,14 @@ Copyright 2016-present Christopher Aue
 Concurrently is licensed under the Apache License, Version 2.0. Please see the
 file called LICENSE.
 
+
+[Kernel#concurrently]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrently-instance_method
+[Kernel#wait]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#wait-instance_method
+[IO#await_readable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_readable-instance_method
+[IO#await_writable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_writable-instance_method
+[Concurrently::Proc::Evaluation#await_result]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc/Evaluation#await_result-instance_method
+[IO#read_nonblock]: https://ruby-doc.org/core/IO.html#method-i-read_nonblock
+[IO#write_nonblock]: https://ruby-doc.org/core/IO.html#method-i-write_nonblock
 
 [installation]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Installation.md
 [overview]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/file/guides/Overview.md
