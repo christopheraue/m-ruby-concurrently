@@ -99,7 +99,7 @@ namespace :mruby do
   end
 
   desc "Update the source of mruby"
-  task pull: mruby[:src] do
+  task pull: :clean do
     sh "cd #{mruby[:src]} && git pull"
   end
 
