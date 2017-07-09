@@ -39,22 +39,26 @@ concurrently do
 end
 ```
 
+
 ## Concurrent Evaluation of Code
 
 Evaluating a piece of code concurrently involves three distinct phases:
 
-                   1)     2)     3)
+                   1      2      3
     evaluation0 ---+-------------+--->
                    |             |
-    evaluation1    `-------------´
+    evaluation1    `--+-----+----´
+                      |     |
+                      t     io
 
-1) Invocation: evaluation0 creates a separate execution context evaluation1 to
-   evaluate the code in. It does not wait for evaluation1 to finish.
-2) Asynchronicity: evaluation0 and evaluation1 run independently from each
-   other. evaluation0 does not know whether evaluation1 has finished or not.
-3) Synchronization: If evaluation0 needs the result of evaluation1 it has to
-   wait for it. This synchronizes evaluation1 with evaluation0 again. If
-   evaluation1 has not finished yet evaluation0 blocks until it has.
+1. Invocation: evaluation0 kicks off evaluation1 to process the code in. It
+   does it asynchronously by not waiting for evaluation1 to finish.
+2. Computation: evaluation0 and evaluation1 run independently from each
+   other. evaluation1 synchronizes itself with other events (e.g. with time or
+   I/O).
+3. Synchronization: If evaluation0 is interested in the result of evaluation1
+   it has to wait for it. This synchronizes evaluation1 with evaluation0 again.
+   If evaluation1 has not finished yet evaluation0 blocks until it has.
 
 Every tool Concurrently offers is linked to one of these phases.
 
