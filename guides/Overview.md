@@ -242,6 +242,13 @@ puts forwarder.await_result # prints "FW: message"
 ```
 
 
+### Synchronization
+
+Synchronizing the invoking evaluation with the result of the invoked one is
+done as described in the section about [synchronizing results of evaluations]
+(#Synchronization_with_Results_of_Evaluations).
+
+
 ## Flow of Control
 
 To understand when code is run (and when it is not) it is necessary to know
