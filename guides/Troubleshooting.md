@@ -3,7 +3,7 @@
 To get an idea about the inner workings of Concurrently have a look at the
 [Flow of control][] section in the overview.
 
-## A concurrent proc is scheduled but never run
+## An evaluation is scheduled but never run
 
 Consider the following script:
 
@@ -26,8 +26,8 @@ Unicorns!
 `concurrently{}` is a shortcut for `concurrent_proc{}.call_detached`
 which in turn does not evaluate its code right away but schedules it to run
 during the next iteration of the event loop. But, since the main evaluation did
-not await anything the event loop has never been entered and the evaluation of
-the concurrent proc has never been started.
+not await anything the event loop has never been entered and the concurrent
+evaluation has never been started.
 
 A more subtle variation of this behavior occurs in the following scenario:
 
@@ -105,28 +105,28 @@ end
 
 ## The event loop is jammed by too many or too expensive evaluations
 
-Let's talk about a concurrent proc with an infinite loop:
+Let's talk about a concurrent evaluation with an infinite loop:
 
 ```ruby
-evaluation = concurrent_proc do
+evaluation = concurrently do
   loop do
     puts "To infinity! And beyond!"
   end
-end.call_detached
+end
 
 concurrently do
   evaluation.conclude_to :cancelled
 end
 ```
 
-When the concurrent proc is scheduled to run it runs and runs and runs and
-never finishes. The event loop is never entered again and the other concurrent
-proc concluding the evaluation is never started.
+When the loop evaluation is scheduled to run it runs and runs and runs and
+never finishes. The event loop is never entered again and the other evaluation
+concluding the evaluation is never started.
 
 A less extreme example is something like:
 
 ```ruby
-concurrent_proc do
+concurrently do
   loop do
     wait 0.1
     puts "timer triggered at: #{Time.now.strftime('%H:%M:%S.%L')}"
@@ -134,7 +134,7 @@ concurrent_proc do
       sleep 1 # defers the entire event loop
     end
   end
-end.call
+end.await_result
 
 # => timer triggered at: 16:08:17.704
 # => timer triggered at: 16:08:18.705
@@ -175,20 +175,20 @@ managing IOs (e.g. closing them).
 
 ## Errors tear down the event loop
   
-Every concurrent proc rescues the following errors happening during its
-evaluation: `NoMemoryError`, `ScriptError`, `SecurityError`, `StandardError`
-and `SystemStackError`. These are all errors that should not have an immediate
-influence on other evaluations or the application as a whole. They will not
-leak to the event loop and will not tear it down.
+Every evaluation rescues the following errors: `NoMemoryError`, `ScriptError`,
+`SecurityError`, `StandardError` and `SystemStackError`. These are all errors
+that should not have an immediate influence on other evaluations or the
+application as a whole. They will not leak to the event loop and will not tear
+it down.
 
-All other errors happening inside a concurrent proc *will* tear down the
-event loop. These error types are: `SignalException`, `SystemExit` and the
-general `Exception`. In such a case the event loop exits by raising a
-[Concurrently::Error][].
+All other errors happening during an evaluation *will* tear down the event
+loop. These error types are: `SignalException`, `SystemExit` and the general
+`Exception`. In such a case the event loop exits by re-raising the causing
+error.
 
 If your application rescues the error when the event loop is teared down
 and continues running (irb does this, for example) it will do so with a
-[reinitialized event loop] [Concurrently::EventLoop#reinitialize!].
+[reinitialized event loop][Concurrently::EventLoop#reinitialize!].
 
 ## Using Plain Fibers
 
@@ -196,7 +196,7 @@ In principle, you can safely use plain ruby fibers alongside concurrent procs.
 Just make sure you are exclusively operating on these fibers to not
 accidentally interfere with the fibers managed by Concurrently. Be
 especially careful with `Fiber.yield` and `Fiber.current` inside a concurrent
-proc.
+evaluation.
 
 ## Fiber-local variables are treated as thread-local
 
