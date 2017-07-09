@@ -13,7 +13,7 @@ from other evaluations. It is also similar to a future or a promise by
 providing access to its future result or offering the ability to inject a
 result manually. Once the evaluation has a result it is *concluded*.
 
-Every ruby program already has an implicit [root evaluation][Concurrently::Evaluation]
+Every ruby program already has an implicit [main evaluation][Concurrently::Evaluation]
 running. Calling a concurrent proc creates a [proc evaluation][Concurrently::Proc::Evaluation].
 
 ## Concurrent Procs
@@ -53,13 +53,13 @@ A concurrent proc has four methods to call it.
 
 The first two evaluate the concurrent proc immediately in the foreground:
 
-* [Concurrently::Proc#call][] blocks the (root or proc) evaluation it has been
-  called from until its own evaluation is concluded. Then it returns the
-  result. This behaves just like `Proc#call`.
-* [Concurrently::Proc#call_nonblock][] will not block the (root or proc)
-  evaluation it has been called from if it needs to wait. Instead, it
-  immediately returns its [evaluation][Concurrently::Proc::Evaluation]. If it
-  can be evaluated without waiting it returns the result.
+* [Concurrently::Proc#call][] blocks the evaluation it has been called from
+  until its own evaluation is concluded. Then it returns the result. This
+  behaves just like `Proc#call`.
+* [Concurrently::Proc#call_nonblock][] will not block the evaluation it has
+  been called from if it needs to wait. Instead, it immediately returns its 
+  own [evaluation][Concurrently::Proc::Evaluation]. If it can be evaluated
+  without waiting it returns the result.
 
 The other two schedule the concurrent proc to be run in the background. The
 evaluation is not started right away but is deferred until the the next

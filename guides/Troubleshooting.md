@@ -25,7 +25,7 @@ Unicorns!
 
 `concurrently{}` is a shortcut for `concurrent_proc{}.call_detached`
 which in turn does not evaluate its code right away but schedules it to run
-during the next iteration of the event loop. But, since the root evaluation did
+during the next iteration of the event loop. But, since the main evaluation did
 not await anything the event loop has never been entered and the evaluation of
 the concurrent proc has never been started.
 
@@ -49,10 +49,10 @@ Running it will also only print:
 Unicorns!
 ```
 
-This time, the root evaluation does await something, namely the end of a one
+This time, the main evaluation does await something, namely the end of a one
 second time frame. Because of this, the evaluation of the `concurrently` block
 is indeed started and immediately waits for two seconds. After one second the
-root evaluation is resumed and exits. The `concurrently` block is never awoken
+main evaluation is resumed and exits. The `concurrently` block is never awoken
 again from its now eternal beauty sleep.
 
 ## A call is blocking the entire execution.
@@ -83,8 +83,8 @@ r.await_readable
 r.readpartial 32
 ```
 
-we suspend the root evaluation, switch to the event loop which runs the
-`concurrently` block and once there is something to read from `r` the root
+we suspend the main evaluation, switch to the event loop which runs the
+`concurrently` block and once there is something to read from `r` the main
 evaluation is resumed.
 
 This approach is not perfect. It is not very efficient if we do not need to
