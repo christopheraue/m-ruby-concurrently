@@ -249,23 +249,24 @@ done as described in the section about [synchronizing results of evaluations]
 (#Synchronization_with_Results_of_Evaluations).
 
 
-## Flow of Control
+## About the Event Loop
 
 To understand when code is run (and when it is not) it is necessary to know
 a little bit more about the way Concurrently works.
 
-Concurrently lets every (real) thread run an [event loop][Concurrently::EventLoop].
-These event loops are responsible for watching IOs and scheduling evaluations
-of concurrent procs. Evaluations are scheduled by putting them into a run queue
-ordered by the time they are supposed to run. The run queue is then worked off
-sequentially. If two evaluations are scheduled to run at the same time the
+Concurrently lets every thread run an [event loop][Concurrently::EventLoop].
+These event loops work silently in the background and are responsible for
+watching IOs and scheduling evaluations. Evaluations are scheduled by putting
+them into a run queue ordered by the time they are supposed to run. The run
+queue is then worked off sequentially up to the point corresponding to the
+current time. If two evaluations are scheduled to run at the same time the
 evaluation scheduled first is run first.
 
 Event loops *do not* run parallel to your application's code at the exact same
 time (e.g. on another cpu core). Instead, your code yields to them if it
 waits for something: **The event loop is (and only is) entered if your code
-calls `#wait` or one of the `#await_*` methods.** Later, when your code can
-be resumed the event loop schedules the corresponding evaluation to run again.
+calls one of the synchronization methods.** Later, when your code can be
+resumed the event loop schedules the corresponding evaluation to run again.
 
 Keep in mind, that an event loop **must never be interrupted, blocked or
 overloaded.** A healthy event loop is one that can respond to new events
