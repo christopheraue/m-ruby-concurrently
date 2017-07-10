@@ -33,7 +33,7 @@ module Kernel
   #
   # @example
   #   wait_proc = concurrent_proc do |seconds|
-  #      wait seconds
+  #     wait seconds
   #   end
   #
   #   wait_proc.call 2 # waits 2 seconds and then resumes
@@ -68,9 +68,9 @@ module Kernel
   #
   #   # (1)
   #   evaluation = concurrent_proc do
-  #      # (4)
-  #      await_resume!
-  #      # (7)
+  #     # (4)
+  #     await_resume!
+  #     # (7)
   #   end.call_nonblock
   #
   #   # (2)

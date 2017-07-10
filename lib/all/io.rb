@@ -25,10 +25,10 @@ class IO
   #
   #   # (1)
   #   wait_proc = concurrent_proc do
-  #      # (4)
-  #      r.await_readable
-  #      # (6)
-  #      r.read
+  #     # (4)
+  #     r.await_readable
+  #     # (6)
+  #     r.read
   #   end
   #
   #   # (2)
@@ -193,11 +193,11 @@ class IO
   #
   #   # (1)
   #   wait_proc = concurrent_proc do
-  #      # (4)
-  #      w.await_writable
-  #      # (6)
-  #      w.write 'I can write again!'
-  #      :written
+  #     # (4)
+  #     w.await_writable
+  #     # (6)
+  #     w.write 'I can write again!'
+  #     :written
   #   end
   #
   #   # (2)

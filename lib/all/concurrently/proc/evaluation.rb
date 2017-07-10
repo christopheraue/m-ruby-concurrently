@@ -113,7 +113,7 @@ module Concurrently
     #
     #   # (1)
     #   evaluation = concurrent_proc do
-    #      # (3)
+    #     # (3)
     #     :result
     #   end.call_detached
     #
