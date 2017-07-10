@@ -22,6 +22,12 @@ describe Concurrently::Proc::Evaluation do
       def resume
         inner_evaluation.resume! result
       end
+
+      context "when the evaluations is already concluded" do
+        subject { wait_proc.call }
+        before { inner_evaluation.resume! result }
+        it { is_expected.to be result }
+      end
     end
 
     context "when it evaluates to a result" do
