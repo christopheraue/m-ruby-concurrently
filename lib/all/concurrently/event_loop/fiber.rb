@@ -15,7 +15,7 @@ module Concurrently
               io_selector.process_ready_in waiting_time if io_selector.awaiting?
 
               run_queue.process_pending
-            elsif io_selector.awaiting? or waiting_time
+            elsif io_selector.awaiting? or waiting_time < Float::INFINITY
               io_selector.process_ready_in waiting_time
             else
               # Having no pending timeouts or IO events would make run this loop
