@@ -234,7 +234,7 @@ end
 #### Synchronization with Results of Evaluations
 
 Results of other evaluations can be waited for with
-[Concurrently::Proc::Evaluation#await_result][]
+[Concurrently::Proc::Evaluation#await_result][]:
 
 ```ruby
 mailbox = concurrently do
@@ -248,6 +248,24 @@ end
 
 # It will take one second until there is a message in the mailbox
 puts forwarder.await_result # prints "FW: message"
+```
+
+To wait for the fastest in a list of evaluations use
+[Kernel#await_fastest][]:
+
+```ruby
+mailbox1 = concurrently do
+  wait 1
+  'slow message'
+end
+
+mailbox2 = concurrently do
+  wait 0.5
+  'fast message'
+end
+
+mailbox = await_fastest(mailbox1, mailbox2)
+mailbox.await_result # => "fast message"
 ```
 
 
@@ -434,6 +452,7 @@ into account.
 [Kernel#concurrent_proc]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrent_proc-instance_method
 [Kernel#concurrently]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#concurrently-instance_method
 [Kernel#wait]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#wait-instance_method
+[Kernel#await_fastest]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#await_fastest-instance_method
 [IO#await_readable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_readable-instance_method
 [IO#await_writable]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_writable-instance_method
 [IO#await_read]: http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_read-instance_method
