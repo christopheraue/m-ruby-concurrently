@@ -1,5 +1,4 @@
 # @api public
-# @since 1.0.0
 #
 # Concurrently adds a few methods to `IO` which make them available
 # for every IO instance.
@@ -74,6 +73,8 @@ class IO
   #   r,w = IO.pipe
   #   r.await_readable(within: 0.1, timeout_result: false)
   #   # => returns false after 0.1 seconds
+  #
+  # @since 1.0.0
   def await_readable(opts = {})
     io_selector = Concurrently::EventLoop.current.io_selector
     io_selector.await_reader(self, Concurrently::Evaluation.current)
@@ -118,6 +119,8 @@ class IO
   #   @param [Integer] maxlen
   #   @param [String] outbuf
   #   @return [outbuf] outbuf filled with read string
+  #
+  # @since 1.1.0
   def await_read(maxlen, outbuf = nil)
     read_nonblock(maxlen, outbuf)
   rescue IO::WaitReadable
@@ -155,6 +158,8 @@ class IO
   #   @param [Integer] maxlen
   #   @param [String] outbuf
   #   @return [outbuf] outbuf filled with read string
+  #
+  # @since 1.0.0
   def concurrently_read(maxlen, outbuf = nil)
     READ_PROC.call_detached(self, maxlen, outbuf)
   end
@@ -243,6 +248,8 @@ class IO
   #
   #   w.await_writable(within: 0.1, timeout_result: false)
   #   # => returns false after 0.1 seconds
+  #
+  # @since 1.0.0
   def await_writable(opts = {})
     io_selector = Concurrently::EventLoop.current.io_selector
     io_selector.await_writer(self, Concurrently::Evaluation.current)
@@ -277,6 +284,8 @@ class IO
   #   r,w = IO.pipe
   #   w.await_written "Hello!"
   #   r.read 1024 # => "Hello!"
+  #
+  # @since 1.1.0
   def await_written(string)
     write_nonblock(string)
   rescue IO::WaitWritable
@@ -304,6 +313,8 @@ class IO
   #   r,w = IO.pipe
   #   w.concurrently_write "Hello!"
   #   r.read 1024 # => "Hello!"
+  #
+  # @since 1.0.0
   def concurrently_write(string)
     WRITE_PROC.call_detached(self, string)
   end

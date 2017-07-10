@@ -1,5 +1,4 @@
 # @api public
-# @since 1.0.0
 #
 # Concurrently adds a few methods to `Kernel` which makes them available
 # for every object.
@@ -16,6 +15,8 @@ module Kernel
   #   concurrently(a,b,c) do |a,b,c|
   #     # ...
   #   end
+  #
+  # @since 1.0.0
   private def concurrently(*args)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new.call_detached *args
@@ -36,6 +37,8 @@ module Kernel
   #   end
   #
   #   wait_proc.call 2 # waits 2 seconds and then resumes
+  #
+  # @since 1.0.0
   private def concurrent_proc(evaluation_class = Concurrently::Proc::Evaluation)
     # Concurrently::Proc.new claims the method's block just like Proc.new does
     Concurrently::Proc.new(evaluation_class)
@@ -106,6 +109,8 @@ module Kernel
   # @example Waiting with a timeout and a timeout result
   #   await_resume! within: 0.1, timeout_result: false
   #   # => returns false after 0.1 seconds
+  #
+  # @since 1.0.0
   private def await_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue
@@ -184,6 +189,8 @@ module Kernel
   #   # (2)
   #   wait 1
   #   # (4)
+  #
+  # @since 1.0.0
   private def wait(seconds)
     run_queue = Concurrently::EventLoop.current.run_queue
     evaluation = run_queue.current_evaluation
