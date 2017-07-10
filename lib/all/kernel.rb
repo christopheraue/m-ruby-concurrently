@@ -192,4 +192,21 @@ module Kernel
   ensure
     run_queue.cancel evaluation
   end
+
+  private def await_fastest(eval0, eval1, *evaluations)
+    opts = (evaluations.last.is_a? Hash) ? evaluations.pop : {}
+    evaluations.unshift eval0, eval1
+
+    if concluded = evaluations.find(&:concluded?)
+      concluded
+    else
+      begin
+        curr_eval = Concurrently::Evaluation.current
+        evaluations.each{ |e| e.instance_eval{ @awaiting_result.store curr_eval, self } }
+        await_resume! opts
+      ensure
+        evaluations.each{ |e| e.instance_eval{ @awaiting_result.delete curr_eval } }
+      end
+    end
+  end
 end

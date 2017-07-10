@@ -176,7 +176,7 @@ module Concurrently
       else
         result = begin
           evaluation = Concurrently::Evaluation.current
-          @awaiting_result.store evaluation, true
+          @awaiting_result.store evaluation, false
           await_resume! opts
         rescue Exception => error
           error
@@ -239,7 +239,7 @@ module Concurrently
         @fiber.resume @fiber
       end
 
-      @awaiting_result.each_key{ |evaluation| evaluation.resume! result }
+      @awaiting_result.each{ |evaluation, override| evaluation.resume! (override or result) }
       :concluded
     end
   end

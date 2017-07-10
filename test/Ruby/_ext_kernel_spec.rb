@@ -213,4 +213,26 @@ describe Kernel do
       end
     end
   end
+
+  describe "#await_fastest" do
+    it_behaves_like "awaiting the result of a deferred evaluation" do
+      let(:evaluation0) { concurrently{ await_resume! } }
+      let(:evaluation1) { concurrently{ await_resume! } }
+      let(:wait_proc) { proc{ await_fastest evaluation0, evaluation1, wait_options } }
+      let(:result) { evaluation1 }
+
+      # check concluding the other evaluation does not cause trouble
+      after { evaluation0.resume! }
+
+      def resume
+        evaluation1.resume!
+      end
+
+      context "when one of the evaluations is already concluded" do
+        subject { wait_proc.call }
+        before { evaluation1.resume! }
+        it { is_expected.to be evaluation1 }
+      end
+    end
+  end
 end
