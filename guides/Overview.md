@@ -179,6 +179,15 @@ To defer the current evaluation for a fixed amount of time use [Kernel#wait][].
     end
     ```
 
+* Doing something at a given point in time:
+
+    ```ruby
+    concurrently do
+      time = Time.new(2042,7,10, 16,13,26) # 10 July 2042, 16:13:26
+      wait (time-Time.now).to_f
+      do_it!
+    end
+    ```
 
 #### Synchronization with I/O
 
