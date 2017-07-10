@@ -1,5 +1,20 @@
 # Release Notes
- 
+
+## 1.1.0 (2017-07-10)
+
+### Improvements
+* Improved error reporting
+* Improved benchmarks and profiling and made them work for mruby
+* Improved documentation
+* Improved overall performance
+
+### Extended [IO](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO) interface
+* [#await_read](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_read-instance_method)
+* [#await_written](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/IO#await_written-instance_method)
+
+### Extended [Kernel](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel) interface
+* [#await_fastest](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Kernel#await_fastest-instance_method)
+
 ## 1.0.0 (2017-06-26)
 
 ### Added Support for
