@@ -193,6 +193,43 @@ module Kernel
     run_queue.cancel evaluation
   end
 
+  # Waits for the first in a list of evaluations to be concluded.
+  #
+  # @overload await_fastest(evaluation0, evaluation1, *more_evaluations, opts = {})
+  #
+  #   @param [Concurrently::Proc::Evaluation] evaluation0
+  #   @param [Concurrently::Proc::Evaluation] evaluation1
+  #   @param [Concurrently::Proc::Evaluation] *more_evaluations
+  #   @param [Hash] opts
+  #   @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
+  #   @option opts [Object] :timeout_result result to return in case of an exceeded
+  #     waiting time *(defaults to raising {Concurrently::Evaluation::TimeoutError})*
+  #
+  # @return [Concurrently::Proc::Evaluation] the evaluation been concluded first
+  # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
+  #   is exceeded and no custom timeout result is given.
+  #
+  # @example
+  #   evaluation0 = concurrently{ wait 2 }
+  #   evaluation1 = concurrently{ wait 1 }
+  #
+  #   await_fastest(evaluation0, evaluation1) # => evaluation1
+  #
+  # @example Waiting with a timeout
+  #   evaluation0 = concurrently{ wait 2 }
+  #   evaluation1 = concurrently{ wait 1 }
+  #
+  #   await_fastest(evaluation0, evaluation1, within: 0.1)
+  #   # => raises a TimeoutError after 0.1 seconds
+  #
+  # @example Waiting with a timeout and a timeout result
+  #   evaluation0 = concurrently{ wait 2 }
+  #   evaluation1 = concurrently{ wait 1 }
+  #
+  #   await_fastest(evaluation0, evaluation1, within: 0.1, timeout_result: false)
+  #   # => returns false after 0.1 seconds
+  #
+  # @since 1.1.0
   private def await_fastest(eval0, eval1, *evaluations)
     opts = (evaluations.last.is_a? Hash) ? evaluations.pop : {}
     evaluations.unshift eval0, eval1
