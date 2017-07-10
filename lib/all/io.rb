@@ -164,6 +164,7 @@ class IO
     READ_PROC.call_detached(self, maxlen, outbuf)
   end
 
+  # @private
   READ_PROC = Concurrently::Proc.new do |io, maxlen, outbuf|
     io.await_read(maxlen, outbuf)
   end
@@ -319,6 +320,7 @@ class IO
     WRITE_PROC.call_detached(self, string)
   end
 
+  # @private
   WRITE_PROC = Concurrently::Proc.new do |io, string|
     io.await_written(string)
   end
