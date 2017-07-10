@@ -73,7 +73,7 @@ class IO
   # @example Waiting with a timeout and a timeout result
   #   r,w = IO.pipe
   #   r.await_readable(within: 0.1, timeout_result: false)
-  #   # => returns false after 0.1 second
+  #   # => returns false after 0.1 seconds
   def await_readable(opts = {})
     io_selector = Concurrently::EventLoop.current.io_selector
     io_selector.await_reader(self, Concurrently::Evaluation.current)
@@ -242,7 +242,7 @@ class IO
   #   w.write 'x'*65536
   #
   #   w.await_writable(within: 0.1, timeout_result: false)
-  #   # => returns false after 0.1 second
+  #   # => returns false after 0.1 seconds
   def await_writable(opts = {})
     io_selector = Concurrently::EventLoop.current.io_selector
     io_selector.await_writer(self, Concurrently::Evaluation.current)

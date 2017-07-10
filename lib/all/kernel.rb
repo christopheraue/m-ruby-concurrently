@@ -105,7 +105,7 @@ module Kernel
   #
   # @example Waiting with a timeout and a timeout result
   #   await_resume! within: 0.1, timeout_result: false
-  #   # => returns false after 0.1 second
+  #   # => returns false after 0.1 seconds
   private def await_resume!(opts = {})
     event_loop = Concurrently::EventLoop.current
     run_queue = event_loop.run_queue

@@ -128,7 +128,7 @@ module Concurrently
     #   end.call_detached
     #
     #   evaluation.await_result within: 0.1
-    #   # => raises a TimeoutError after 0.1 second
+    #   # => raises a TimeoutError after 0.1 seconds
     #
     # @example Waiting with a timeout and a timeout result
     #   evaluation = concurrent_proc do
@@ -137,7 +137,7 @@ module Concurrently
     #   end.call_detached
     #
     #   evaluation.await_result within: 0.1, timeout_result: false
-    #   # => returns false after 0.1 second
+    #   # => returns false after 0.1 seconds
     #
     # @example When the evaluation raises or returns an error
     #   evaluation = concurrent_proc do
