@@ -48,8 +48,7 @@ module Kernel
   #   This method needs to be complemented with a later call to
   #   {Concurrently::Evaluation#resume!}.
   #
-  # Suspends the current evaluation until it is resumed manually. It can be
-  # used inside and outside of concurrent procs.
+  # Suspends the current evaluation until it is resumed manually.
   #
   # It needs to be complemented with a later call of {Concurrently::Evaluation#resume!}.
   #
@@ -63,15 +62,15 @@ module Kernel
   # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
   #   is exceeded and no custom timeout result is given.
   #
-  # @example Waiting inside a concurrent proc
+  # @example Waiting inside a concurrent evaluation
   #   # Control flow is indicated by (N)
   #
   #   # (1)
-  #   evaluation = concurrent_proc do
+  #   evaluation = concurrently do
   #     # (4)
   #     await_resume!
   #     # (7)
-  #   end.call_nonblock
+  #   end
   #
   #   # (2)
   #   concurrently do
@@ -85,7 +84,7 @@ module Kernel
   #   evaluation.await_result # => :result
   #   # (8)
   #
-  # @example Waiting outside a concurrent proc
+  # @example Waiting outside a concurrent evaluation
   #   # Control flow is indicated by (N)
   #
   #   evaluation = Concurrently::Evaluation.current
@@ -148,21 +147,20 @@ module Kernel
     end
   end
 
-  # Suspends the current evaluation for the given number of seconds. It can be
-  # used inside and outside of concurrent procs.
+  # Suspends the current evaluation for the given number of seconds.
   #
   # While waiting, the code jumps to the event loop and executes other
-  # concurrent procs that are ready to run in the meantime.
+  # evaluations that are ready to run in the meantime.
   #
   # @return [true]
   #
-  # @example Waiting inside a concurrent proc
+  # @example Waiting inside a concurrent evaluation
   #   # Control flow is indicated by (N)
   #
   #   # (1)
-  #   wait_proc = concurrent_proc do |seconds|
+  #   wait_eval = concurrently do
   #     # (4)
-  #     wait seconds
+  #     wait 1
   #     # (6)
   #     :waited
   #   end
@@ -174,10 +172,10 @@ module Kernel
   #   end
   #
   #   # (3)
-  #   wait_proc.call 1 # => :waited
+  #   wait_eval.await_result # => :waited
   #   # (7)
   #
-  # @example Waiting outside a concurrent proc
+  # @example Waiting outside a concurrent evaluation
   #   # Control flow is indicated by (N)
   #
   #   # (1)

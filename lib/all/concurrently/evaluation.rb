@@ -3,13 +3,12 @@ module Concurrently
   # @since 1.0.0
   #
   # `Concurrently::Evaluation` represents the evaluation of the main thread
-  # outside of any concurrent procs.
+  # outside of any concurrent evaluations.
   #
   # @note Evaluations are **not thread safe**. They are operating on a fiber.
   #   Fibers cannot be resumed inside a thread they were not created in.
   #
-  # An instance will be returned by {current} if called outside of any
-  # concurrent procs.
+  # An instance will be returned by {current} if called by the root evaluation.
   class Evaluation
     # The evaluation that is currently running in the current thread.
     #
@@ -19,9 +18,9 @@ module Concurrently
     # @return [Evaluation]
     #
     # @example
-    #   concurrent_proc do
+    #   concurrently do
     #     Concurrently::Evaluation.current # => #<Concurrently::Proc::Evaluation:0x00000000e56910>
-    #   end.call_nonblock
+    #   end
     #
     #   Concurrently::Evaluation.current # => #<Concurrently::Evaluation0x00000000e5be10>
     def self.current
@@ -62,10 +61,10 @@ module Concurrently
     # actually awaiting has not happened yet:
     #
     # ```ruby
-    # conproc = concurrent_proc do
+    # evaluation = concurrent_proc do
     #   wait 1
     #   await_resume!
-    # end
+    # end.call_nonblock
     #
     # conproc.resume! # resumes the wait call prematurely
     # ```

@@ -24,7 +24,7 @@ module Concurrently
               # is complete. Therefore, we never reach this part of the code unless
               # there is a bug or it is messed around with the internals of this gem.
               raise Error, "Infinitely running event loop detected: There " <<
-                "are no concurrent procs or fibers scheduled and no IOs to await."
+                "are no evaluations scheduled and no IOs to await."
             end
           end
         rescue Exception => e

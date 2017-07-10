@@ -8,8 +8,8 @@ module Concurrently
   # @note Evaluations are **not thread safe**. They are operating on a fiber.
   #   Fibers cannot be resumed inside a thread they were not created in.
   #
-  # An instance will be returned by {Evaluation.current} if called from inside
-  # a concurrent proc. It will also be returned by every call of
+  # An instance will be returned by {Evaluation.current} if called by code
+  # inside a concurrent proc. It will also be returned by every call of
   # {Concurrently::Proc#call_detached} and also by
   # {Concurrently::Proc#call_nonblock} if the evaluation cannot be concluded in
   # one go and needs to wait.
@@ -29,7 +29,7 @@ module Concurrently
     # @return [value]
     #
     # @example
-    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation = concurrently{ :result }
     #   evaluation[:key] = :value
     #   evaluation[:key]  # => :value
     def []=(key, value)
@@ -42,7 +42,7 @@ module Concurrently
     # @return [Object] the stored value
     #
     # @example
-    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation = concurrently{ :result }
     #   evaluation[:key] = :value
     #   evaluation[:key]  # => :value
     def [](key)
@@ -55,7 +55,7 @@ module Concurrently
     # @return [Boolean]
     #
     # @example
-    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation = concurrently{ :result }
     #   evaluation[:key] = :value
     #   evaluation.key? :key          # => true
     #   evaluation.key? :another_key  # => false
@@ -68,7 +68,7 @@ module Concurrently
     # @return [Array]
     #
     # @example
-    #   evaluation = concurrent_proc{ :result }.call_detached
+    #   evaluation = concurrently{ :result }
     #   evaluation[:key1] = :value1
     #   evaluation[:key2] = :value2
     #   evaluation.keys  # => [:key1, :key2]
@@ -91,14 +91,14 @@ module Concurrently
     # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
     #   is exceeded and no custom timeout result is given.
     #
-    # @example Waiting inside another concurrent proc
+    # @example Waiting inside another concurrent evaluation
     #   # Control flow is indicated by (N)
     #
     #   # (1)
-    #   evaluation = concurrent_proc do
+    #   evaluation = concurrently do
     #     # (4)
     #     :result
-    #   end.call_detached
+    #   end
     #
     #   # (2)
     #   concurrent_proc do
@@ -108,41 +108,41 @@ module Concurrently
     #   end.call # => :result
     #   # (6)
     #
-    # @example Waiting outside a concurrent proc
+    # @example Waiting outside a concurrent evaluation
     #   # Control flow is indicated by (N)
     #
     #   # (1)
-    #   evaluation = concurrent_proc do
+    #   evaluation = concurrently do
     #     # (3)
     #     :result
-    #   end.call_detached
+    #   end
     #
     #   # (2)
     #   evaluation.await_result # => :result
     #   # (4)
     #
     # @example Waiting with a timeout
-    #   evaluation = concurrent_proc do
+    #   evaluation = concurrently do
     #     wait 1
     #     :result
-    #   end.call_detached
+    #   end
     #
     #   evaluation.await_result within: 0.1
     #   # => raises a TimeoutError after 0.1 seconds
     #
     # @example Waiting with a timeout and a timeout result
-    #   evaluation = concurrent_proc do
+    #   evaluation = concurrently do
     #     wait 1
     #     :result
-    #   end.call_detached
+    #   end
     #
     #   evaluation.await_result within: 0.1, timeout_result: false
     #   # => returns false after 0.1 seconds
     #
     # @example When the evaluation raises or returns an error
-    #   evaluation = concurrent_proc do
+    #   evaluation = concurrently do
     #     RuntimeError.new("self destruct!") # equivalent: raise "self destruct!"
-    #   end.call_detached
+    #   end
     #
     #   evaluation.await_result # => raises "self destruct!"
     #
@@ -156,17 +156,17 @@ module Concurrently
     #   @yieldreturn [Object] a (potentially) transformed result
     #
     #   @example Transforming a result
-    #     evaluation = concurrent_proc do
+    #     evaluation = concurrently do
     #       :result
-    #     end.call_detached
+    #     end
     #
     #     evaluation.await_result{ |result| "transformed_#{result}" }
     #     # => "transformed_result"
     #
     #   @example Validating a result
-    #     evaluation = concurrent_proc do
+    #     evaluation = concurrently do
     #       :invalid_result
-    #     end.call_detached
+    #     end
     #
     #     evaluation.await_result{ |result| raise "invalid result" if result != :result }
     #     # => raises "invalid result"
@@ -210,12 +210,12 @@ module Concurrently
     #   # Control flow is indicated by (N)
     #
     #   # (1)
-    #   evaluation = concurrent_proc do
+    #   evaluation = concurrently do
     #     # (4)
     #     wait 1
     #     # never reached
     #     :result
-    #   end.call_nonblock
+    #   end
     #
     #   # (2)
     #   concurrently do

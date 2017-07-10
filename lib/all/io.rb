@@ -3,11 +3,10 @@
 # Concurrently adds a few methods to `IO` which make them available
 # for every IO instance.
 class IO
-  # Suspends the current evaluation until IO is readable. It can be used inside
-  # and outside of concurrent procs.
+  # Suspends the current evaluation until IO is readable.
   #
   # While waiting, the code jumps to the event loop and executes other
-  # concurrent procs that are ready to run in the meantime.
+  # evaluations that are ready to run in the meantime.
   #
   # @param [Hash] opts
   # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
@@ -18,13 +17,13 @@ class IO
   # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
   #   is exceeded and no custom timeout result is given.
   #
-  # @example Waiting inside a concurrent proc
+  # @example Waiting inside a concurrent evaluation
   #   # Control flow is indicated by (N)
   #
   #   r,w = IO.pipe
   #
   #   # (1)
-  #   wait_proc = concurrent_proc do
+  #   reader = concurrently do
   #     # (4)
   #     r.await_readable
   #     # (6)
@@ -39,12 +38,12 @@ class IO
   #   end
   #
   #   # (3)
-  #   wait_proc.call # => 'Hey from the other proc!'
+  #   reader.await_result # => 'Hey from the other proc!'
   #   # (7)
   #
   #   r.close
   #
-  # @example Waiting outside a concurrent proc
+  # @example Waiting outside a concurrent evaluation
   #   # Control flow is indicated by (N)
   #
   #   r,w = IO.pipe
@@ -130,7 +129,7 @@ class IO
 
   # Reads from IO concurrently.
   #
-  # Reading is done in a concurrent proc in the background.
+  # Reading is done in a concurrent evaluation in the background.
   #
   # This method is a shortcut for:
   #
@@ -169,11 +168,10 @@ class IO
     io.await_read(maxlen, outbuf)
   end
 
-  # Suspends the current evaluation until IO is writable. It can be used inside
-  # and outside of concurrent procs.
+  # Suspends the current evaluation until IO is writable.
   #
   # While waiting, the code jumps to the event loop and executes other
-  # concurrent procs that are ready to run in the meantime.
+  # evaluations that are ready to run in the meantime.
   #
   # @param [Hash] opts
   # @option opts [Numeric] :within maximum time to wait *(defaults to: Float::INFINITY)*
@@ -184,7 +182,7 @@ class IO
   # @raise [Concurrently::Evaluation::TimeoutError] if a given maximum waiting time
   #   is exceeded and no custom timeout result is given.
   #
-  # @example Waiting inside a concurrent proc
+  # @example Waiting inside a evaluation
   #   # Control flow is indicated by (N)
   #
   #   r,w = IO.pipe
@@ -193,7 +191,7 @@ class IO
   #   w.write 'x'*65536
   #
   #   # (1)
-  #   wait_proc = concurrent_proc do
+  #   writer = concurrently do
   #     # (4)
   #     w.await_writable
   #     # (6)
@@ -208,12 +206,12 @@ class IO
   #   end
   #
   #   # (3)
-  #   wait_proc.call # => :written
+  #   writer.await_result # => :written
   #   # (7)
   #
   #   r.close; w.close
   #
-  # @example Waiting outside a concurrent proc
+  # @example Waiting outside a evaluation
   #   # Control flow is indicated by (N)
   #
   #   r,w = IO.pipe
@@ -261,7 +259,7 @@ class IO
 
   # Waits until successfully written to IO with blocking other evaluations.
   #
-  # If IO is not writable right now it blocks the current concurrent proc
+  # If IO is not writable right now it blocks the current evaluation
   # and tries again after it became writable.
   #
   # This methods is a shortcut for:
@@ -296,7 +294,7 @@ class IO
 
   # Writes to IO concurrently.
   #
-  # Writing is done in a concurrent proc in the background.
+  # Writing is done in a concurrent evaluation in the background.
   #
   # This method is a shortcut for:
   #

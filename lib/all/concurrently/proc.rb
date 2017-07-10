@@ -21,17 +21,17 @@ module Concurrently
   #
   # A `Concurrently::Proc` is like a regular Proc except its block of code is
   # evaluated concurrently. Its evaluation can wait for other stuff to happen
-  # (e.g. result of another concurrent proc or readiness of an IO) without
-  # blocking the execution of its thread.
+  # (e.g. result of evaluations or readiness of an IO) without blocking the
+  # execution of its thread.
   #
-  # Errors raised inside concurrent procs are re-raised when getting their
-  # result with {Evaluation#await_result}. They can also be watched by
+  # Errors raised inside concurrent evaluations are re-raised when getting
+  # their result with {Evaluation#await_result}. They can also be watched by
   # registering callbacks for the `:error` event as shown in the example below.
-  # This is useful as a central hook to all errors inside concurrent procs for
-  # monitoring or logging purposes. Also, concurrent procs evaluated with
-  # {Proc#call_and_forget} are run in the background with no access to their
-  # evaluation and will fail silently. The callbacks are the only way to be
-  # notified about errors inside them.
+  # This is useful as a central hook to all errors inside concurrent
+  # evaluations for monitoring or logging purposes. Also, concurrent procs
+  # evaluated with {Proc#call_and_forget} are evaluated in the background with
+  # no access to their evaluation and will fail silently. The callbacks are the
+  # only way to be notified about errors inside them.
   #
   # The callbacks can be registered for all procs or only for one specific
   # proc:

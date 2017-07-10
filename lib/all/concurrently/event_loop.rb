@@ -72,7 +72,7 @@ module Concurrently
 
     # @private
     #
-    # Its run queue keeping track of and scheduling all concurrent procs
+    # Its run queue keeping track of and scheduling all evaluations
     attr_reader :run_queue
 
     # @private
