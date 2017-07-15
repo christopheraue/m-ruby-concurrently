@@ -178,8 +178,8 @@ managing IOs (e.g. closing them).
 Every evaluation rescues the following errors: `NoMemoryError`, `ScriptError`,
 `SecurityError`, `StandardError` and `SystemStackError`. These are all errors
 that should not have an immediate influence on other evaluations or the
-application as a whole. They will not leak to the event loop and will not tear
-it down.
+application as a whole. They will be rescued and do not leak to the event loop
+and thus will not tear it down.
 
 All other errors happening during an evaluation *will* tear down the event
 loop. These error types are: `SignalException`, `SystemExit` and the general
