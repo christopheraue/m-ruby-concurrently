@@ -31,9 +31,9 @@ module Concurrently
 
             :cancelled
           elsif not Proc === proc
-            # This should never happen. If it does it means something with code
-            # of this library is not right.
-            raise Concurrently::Error, "concurrent proc not started properly."
+            raise Concurrently::Error, "Concurrent evaluation not started " <<
+              "properly. This should never happen and if it does it means " <<
+              "there is a bug in Concurrently."
           else
             begin
               result = proc.__proc_call__ *args
