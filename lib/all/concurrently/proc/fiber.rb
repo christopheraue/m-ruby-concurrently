@@ -20,7 +20,7 @@ module Concurrently
         while true
           evaluation_bucket ||= EMPTY_EVALUATION_BUCKET
 
-          result = if proc == self
+          result = if proc.equal? Proc::Evaluation::Cancelled
             # If we are given this very fiber when starting itself it means it
             # has been evaluated right before its start. In this case just
             # yield back to the evaluating fiber.

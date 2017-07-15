@@ -235,8 +235,8 @@ module Concurrently
       @concluded = true
 
       if Fiber.current != @fiber
-        # Cancel fiber by resuming it with itself as argument
-        @fiber.resume @fiber
+        # Cancel its fiber by resuming it with itself as argument
+        @fiber.resume Cancelled
       end
 
       @awaiting_result.each{ |evaluation, override| evaluation.resume! (override or result) }

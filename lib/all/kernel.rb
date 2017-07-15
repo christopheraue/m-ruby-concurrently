@@ -131,9 +131,7 @@ module Kernel
     end
     evaluation.instance_variable_set :@waiting, false
 
-    # If result is this very evaluation it means this evaluation has been evaluated
-    # prematurely.
-    if evaluation.fiber == result
+    if Concurrently::Proc::Evaluation::Cancelled.equal? result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
       raise Concurrently::Proc::Evaluation::Cancelled, ''
     elsif Concurrently::Evaluation::TimeoutError == result
