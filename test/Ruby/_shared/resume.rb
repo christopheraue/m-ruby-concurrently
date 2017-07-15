@@ -15,4 +15,9 @@ shared_examples_for "#resume!" do
     let(:result) { :result }
     it { is_expected.to eq result }
   end
+
+  context "if it has already been manually scheduled to be resumed" do
+    subject { evaluation.resume! }
+    it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled to resume" }
+  end
 end
