@@ -176,5 +176,12 @@ describe Concurrently::Proc::Evaluation do
     let!(:evaluation) { concurrent_proc{ await_resume! }.call_nonblock }
 
     it_behaves_like "#resume!"
+
+    context "if it is concluded" do
+      subject { evaluation.resume! }
+      before { evaluation.conclude_to :premature_result }
+      it { is_expected.to raise_error Concurrently::Evaluation::Error,
+        "already concluded to :premature_result" }
+    end
   end
 end

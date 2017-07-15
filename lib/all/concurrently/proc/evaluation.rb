@@ -242,5 +242,10 @@ module Concurrently
       @awaiting_result.each{ |evaluation, override| evaluation.resume! (override or result) }
       :concluded
     end
+
+    def resume!(*)
+      raise Evaluation::Error, "already concluded to #{@result.inspect}" if @concluded
+      super
+    end
   end
 end
