@@ -35,7 +35,9 @@ module Concurrently
     # @private
     #
     # The fiber the evaluation runs inside.
-    attr_reader :fiber
+    def __resume__(result)
+      @fiber.resume result
+    end
 
     # @!attribute [r] waiting?
     #

@@ -96,7 +96,7 @@ module Concurrently
         evaluation.resume result
       when Proc::Evaluation
         @current_evaluation = evaluation
-        evaluation.fiber.resume result
+        evaluation.__resume__ result
       when Evaluation
         @current_evaluation = nil
         Fiber.yield result
