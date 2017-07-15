@@ -76,7 +76,7 @@ module Concurrently
     # because of a manual call of {Kernel#await_resume!}.
     #
     # @return [:resumed]
-    # @raise [Error] if the evaluation is not waiting
+    # @raise [Error] if the evaluation is already scheduled to resume
     #
     # @example
     #   # Control flow is indicated by (N)

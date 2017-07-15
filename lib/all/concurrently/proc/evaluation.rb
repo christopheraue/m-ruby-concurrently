@@ -243,6 +243,11 @@ module Concurrently
       :concluded
     end
 
+    # Schedules the evaluation to be resumed
+    #
+    # For details see: {Concurrently::Evaluation#resume!}
+    #
+    # @raise [Evaluation::Error] if the evaluation is already concluded
     def resume!(*)
       raise Evaluation::Error, "already concluded to #{@result.inspect}" if @concluded
       super
