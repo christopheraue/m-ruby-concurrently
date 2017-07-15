@@ -134,8 +134,8 @@ module Kernel
     if Concurrently::Proc::Evaluation::Cancelled.equal? result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
       raise Concurrently::Proc::Evaluation::Cancelled, ''
-    elsif Concurrently::Evaluation::TimeoutError == result
-      raise result, "evaluation timed out after #{seconds} second(s)"
+    elsif Concurrently::Evaluation::TimeoutError.equal? result
+      raise Concurrently::Evaluation::TimeoutError, "evaluation timed out after #{seconds} second(s)"
     else
       result
     end
