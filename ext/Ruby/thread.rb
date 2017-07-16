@@ -1,11 +1,6 @@
 # @api ruby_patches
 # @since 1.0.0
 class Thread
-  # Attach an event loop to every thread in Ruby.
-  def __concurrently_event_loop__
-    @__concurrently_event_loop__ ||= Concurrently::EventLoop.new
-  end
-
   # Disable fiber-local variables and treat variables using the fiber-local
   # interface as thread-local. Most of the code out there is not using
   # fibers explicitly and really intends to attach values to the current
