@@ -25,9 +25,12 @@ DESC
   spec.license      = 'Apache-2.0'
   spec.authors      = ['Christopher Aue']
 
-  # patch build process so we can set source files with spec.rbfiles
-  @generate_functions = true
-  @objs << objfile("#{build_dir}/gem_init")
+  unless system("git merge-base --is-ancestor 5a9eedf5417266b82e3695ae0c29797182a5d04e HEAD")
+    # mruby commit 5a9eedf fixed the usage of spec.rbfiles. mruby 1.3.0
+    # did not have that commit, yet. Add the patch for this case:
+    @generate_functions = true
+    @objs << objfile("#{build_dir}/gem_init")
+  end
 
   spec.rbfiles      =
     Dir["#{spec.dir}/ext/all/**/*.rb"].sort +
