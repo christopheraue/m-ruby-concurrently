@@ -8,15 +8,29 @@ module Concurrently
     # There are two tracks. The fast track and the regular cart track. The
     # fast track exists for evaluations to be scheduled immediately. Having a
     # dedicated track lets us just push carts to the track in the order they
-    # appear. This saves us the rather expensive #bisect_left computation where
+    # appear. This saves us the rather expensive #find_index computation where
     # on the regular cart track to insert the cart.
 
     # The additional cart index exists so carts can be cancelled by their
     # evaluation. Cancelled carts have their evaluation set to false.
 
     class Track < Array
-      def bisect_left
-        bsearch_index{ |item| yield item } || length
+      def find_index(ref)
+        # For a track size < 64, a linear search is faster than a binary one.
+        if (len = size) < 64
+          idx = 0
+          while idx < len
+            break if self[idx][TIME] <= ref
+            idx += 1
+          end
+          idx
+        else
+          bsearch_index{ |cart| cart[TIME] <= ref } || length
+        end
+      end
+
+      def insert(cart)
+        super find_index(cart[TIME]), cart
       end
 
       def next
@@ -43,8 +57,7 @@ module Concurrently
     def schedule_deferred(evaluation, seconds, result = nil)
       cart = [evaluation, @loop.lifetime+seconds, result]
       evaluation.instance_variable_set :@__cart__, cart
-      index = @deferred_track.bisect_left{ |tcart| tcart[TIME] <= cart[TIME] }
-      @deferred_track.insert(index, cart)
+      @deferred_track.insert(cart)
     end
 
     def cancel(evaluation, only_if_deferred = false)
@@ -61,7 +74,7 @@ module Concurrently
 
       if @deferred_track.size > 0
         now = @loop.lifetime
-        index = @deferred_track.bisect_left{ |cart| cart[TIME] <= now }
+        index = @deferred_track.find_index now
 
         processable_count = @deferred_track.size-index
         while processable_count > 0
