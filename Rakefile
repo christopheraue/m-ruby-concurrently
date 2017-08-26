@@ -73,7 +73,7 @@ end
 
 namespace :mruby do
   file mruby[:src] do
-    sh "git clone --depth=1 git://github.com/mruby/mruby.git #{mruby[:src]}"
+    sh "git clone --shallow-since='2017-07-19' git://github.com/mruby/mruby.git #{mruby[:src]}"
   end
 
   desc "Checkout a tag or commit of the mruby source. Executes: git checkout reference"
