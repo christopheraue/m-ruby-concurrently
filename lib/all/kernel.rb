@@ -9,7 +9,7 @@ module Kernel
   #
   # This is a shortcut for {Concurrently::Proc#call_detached}.
   #
-  # @return [nil]
+  # @return [Evaluation]
   #
   # @example
   #   concurrently(a,b,c) do |a,b,c|
