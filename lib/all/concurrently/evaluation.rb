@@ -22,7 +22,7 @@ module Concurrently
     #     Concurrently::Evaluation.current # => #<Concurrently::Proc::Evaluation:0x00000000e56910>
     #   end
     #
-    #   Concurrently::Evaluation.current # => #<Concurrently::Evaluation0x00000000e5be10>
+    #   Concurrently::Evaluation.current # => #<Concurrently::Evaluation:0x00000000e5be10>
     def self.current
       EventLoop.current.run_queue.current_evaluation
     end
