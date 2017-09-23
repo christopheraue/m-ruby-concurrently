@@ -36,15 +36,19 @@ module Concurrently
               "there is a bug in Concurrently."
           else
             begin
+              Logger.current.log "ENTER".freeze, proc
               result = proc.__proc_call__ *args
+              Logger.current.log "LEAVE".freeze, proc
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_to result
               result
             rescue Proc::Evaluation::Cancelled
               # raised in Kernel#await_resume!
+              Logger.current.log "LEAVE (CANCEL)".freeze, proc
               :cancelled
             rescue Proc::Evaluation::RescueableError => error
               # Rescue all errors not critical for other concurrent evaluations
               # and don't let them leak to the loop to keep it up and running.
+              Logger.current.log "LEAVE (ERROR)".freeze, proc
               STDERR.puts error
               proc.trigger :error, error
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_to error
