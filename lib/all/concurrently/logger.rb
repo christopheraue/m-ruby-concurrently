@@ -52,6 +52,10 @@ module Concurrently
     #   # Then, the logged location will be /path/to/loc2/file.rb
     attr_writer :locations
 
+    def active?
+      !!@logger
+    end
+
     # @private
     def log(action, reference = nil)
       return unless @logger
@@ -59,6 +63,8 @@ module Concurrently
       locations = case reference
                   when Proc
                     [reference.source_location.join(':')]
+                  when Evaluation
+                    reference.suspend_caller
                   when nil
                     caller
                   else
