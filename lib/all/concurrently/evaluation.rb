@@ -30,11 +30,31 @@ module Concurrently
     # @private
     def initialize(fiber)
       @fiber = fiber
+      @waiting = false
     end
 
     # @private
     #
-    # The fiber the evaluation runs inside.
+    # Suspends the evaluation. This is a method called internally only.
+    def __suspend__(event_loop_fiber)
+      Concurrently::Logger.current.log "SUSPEND".freeze
+      @waiting = true
+      case self
+      when Concurrently::Proc::Evaluation
+        # Yield back to the event loop fiber or the evaluation evaluating this one.
+        # Pass along itself to indicate it is not yet fully evaluated.
+        Fiber.yield self
+      else
+        event_loop_fiber.resume
+      end
+    ensure
+      @waiting = false
+      Concurrently::Logger.current.log "RESUME".freeze
+    end
+
+    # @private
+    #
+    # Resumes the evaluation. This is a method called internally only.q
     def __resume__(result)
       @scheduled = false
       @fiber.resume result

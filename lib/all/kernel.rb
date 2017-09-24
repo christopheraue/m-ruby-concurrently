@@ -120,20 +120,7 @@ module Kernel
       run_queue.schedule_deferred(evaluation, seconds, timeout_result)
     end
 
-    Concurrently::Logger.current.log "SUSPEND".freeze
-
-    evaluation.instance_variable_set :@waiting, true
-    result = case evaluation
-    when Concurrently::Proc::Evaluation
-      # Yield back to the event loop fiber or the evaluation evaluating this one.
-      # Pass along itself to indicate it is not yet fully evaluated.
-      Fiber.yield evaluation
-    else
-      event_loop.fiber.resume
-    end
-    evaluation.instance_variable_set :@waiting, false
-
-    Concurrently::Logger.current.log "RESUME".freeze
+    result = evaluation.__suspend__ event_loop.fiber
 
     if Concurrently::Proc::Evaluation::Cancelled.equal? result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
