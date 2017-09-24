@@ -41,7 +41,7 @@ DESC
 
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
   spec.add_dependency 'mruby-numeric-ext', :core => 'mruby-numeric-ext'
-  spec.add_dependency 'mruby-proc-ext', :core => 'mruby-numeric-ext'
+  spec.add_dependency 'mruby-proc-ext', :core => 'mruby-proc-ext'
   spec.add_dependency 'mruby-enumerator', :core => 'mruby-enumerator'
   spec.add_dependency 'mruby-fiber', :core => 'mruby-fiber'
   spec.add_dependency 'mruby-time', :core => 'mruby-time'
