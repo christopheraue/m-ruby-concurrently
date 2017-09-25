@@ -10,7 +10,7 @@ module Concurrently
     class Proc < ::Proc
       # @private
       # Calls the concurrent proc like a normal proc
-      alias_method :__proc_call__, :call
+      alias_method :__sync_call__, :call
     end
   end
 
@@ -76,6 +76,22 @@ module Concurrently
     #   {Evaluation} for them.
     def initialize(evaluation_class = Evaluation)
       @evaluation_class = evaluation_class
+    end
+
+    # @private
+    # Calls the concurrent proc like a normal proc
+    def __call__(*args)
+      Logger.current.log "ENTER".freeze, self
+      result = __sync_call__ *args
+    rescue Evaluation::Cancelled => e
+      Logger.current.log "LEAVE (CANCEL)".freeze
+      raise e
+    rescue Exception => e
+      Logger.current.log "LEAVE (ERROR)".freeze
+      raise e
+    else
+      Logger.current.log "LEAVE".freeze
+      result
     end
 
     # Evaluates the concurrent proc in a blocking manner.

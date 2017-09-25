@@ -10,11 +10,15 @@ module Concurrently
       @proc = proc
     end
 
+    def source_location
+      @proc.source_location
+    end
+
     def arity
       @proc.arity
     end
 
-    def __proc_call__(*args)
+    def __sync_call__(*args)
       @proc.call *args
     end
   end
