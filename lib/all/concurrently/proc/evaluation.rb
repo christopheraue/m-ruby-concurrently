@@ -93,7 +93,7 @@ module Concurrently
     # Resumes the evaluation. This is a method called internally only.
     def __resume__(result)
       @scheduled = false
-      @fiber.resume result
+      @fiber.resume result, @scheduled_caller
     end
 
     # Waits for the evaluation to be concluded with a result.

@@ -81,16 +81,16 @@ module Concurrently
     # @private
     # Calls the concurrent proc like a normal proc
     def __call__(*args)
-      Logger.current.log "ENTER".freeze, self
+      Logger.current.log "  BEGIN".freeze, [source_location.join(':')]
       result = __sync_call__ *args
     rescue Evaluation::Cancelled => e
-      Logger.current.log "LEAVE (CANCEL)".freeze
+      Logger.current.log " CANCEL".freeze, [source_location.join(':')]
       raise e
     rescue Exception => e
-      Logger.current.log "LEAVE (ERROR)".freeze
+      Logger.current.log "  ERROR".freeze, [source_location.join(':')]
       raise e
     else
-      Logger.current.log "LEAVE".freeze
+      Logger.current.log "    END".freeze, [source_location.join(':')]
       result
     end
 

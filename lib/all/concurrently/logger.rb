@@ -57,17 +57,8 @@ module Concurrently
     end
 
     # @private
-    def log(action, reference = nil)
+    def log(action, locations)
       return unless @logger
-
-      locations = case reference
-                  when Proc
-                    [reference.source_location.join(':')]
-                  when nil
-                    caller
-                  else
-                    raise Error, "invalid log reference"
-                  end
 
       location = if @locations
                    locations.find{ |loc| @locations.any?{ |match| loc.include? match } }

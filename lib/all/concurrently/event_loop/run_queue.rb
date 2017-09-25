@@ -51,12 +51,14 @@ module Concurrently
     def schedule_immediately(evaluation, result = nil, cancellable = true)
       cart = [evaluation, false, result]
       evaluation.instance_variable_set :@__cart__, cart if cancellable
+      evaluation.instance_variable_set :@scheduled_caller, caller if cancellable
       @immediate_track << cart
     end
 
     def schedule_deferred(evaluation, seconds, result = nil)
       cart = [evaluation, @loop.lifetime+seconds, result]
       evaluation.instance_variable_set :@__cart__, cart
+      evaluation.instance_variable_set :@scheduled_caller, caller
       @deferred_track.insert(cart)
     end
 

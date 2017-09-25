@@ -11,7 +11,7 @@ module Concurrently
     end
 
     def source_location
-      @proc.source_location
+      @proc.source_location || ['main', 0]
     end
 
     def arity

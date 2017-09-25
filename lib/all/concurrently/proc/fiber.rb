@@ -62,17 +62,17 @@ module Concurrently
     end
 
     def self.yield(*)
-      Logger.current.log "SUSPEND".freeze
+      Concurrently::Logger.current.log "SUSPEND".freeze, caller
       super
     ensure
-      Logger.current.log "RESUME".freeze
+      Concurrently::Logger.current.log " RESUME".freeze, caller
     end
 
-    def resume(*)
-      Logger.current.log "SUSPEND".freeze
-      super
+    def resume(result, stacktrace = caller)
+      Concurrently::Logger.current.log "SUSPEND".freeze, stacktrace
+      super result
     ensure
-      Logger.current.log "RESUME".freeze
+      Concurrently::Logger.current.log " RESUME".freeze, stacktrace
     end
   end
 end

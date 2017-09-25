@@ -104,7 +104,6 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def resume!(result = nil)
-      Concurrently::Logger.current.log "SCHEDULE".freeze if @waiting
       raise Error, "already scheduled to resume" if @scheduled
       @scheduled = true
 
