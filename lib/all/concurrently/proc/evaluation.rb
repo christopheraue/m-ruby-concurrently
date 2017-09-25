@@ -76,6 +76,26 @@ module Concurrently
       @data.keys
     end
 
+    # @private
+    #
+    # Suspends the evaluation. This is a method called internally only.
+    def __suspend__(event_loop_fiber)
+      @suspend_caller = Logger.current.active? ? caller : true
+      # Yield back to the event loop fiber or the evaluation evaluating this one.
+      # Pass along itself to indicate it is not yet fully evaluated.
+      Proc::Fiber.yield self
+    ensure
+      @suspend_caller = nil
+    end
+
+    # @private
+    #
+    # Resumes the evaluation. This is a method called internally only.
+    def __resume__(result)
+      @scheduled = false
+      @fiber.resume result
+    end
+
     # Waits for the evaluation to be concluded with a result.
     #
     # The result can be awaited from multiple places at once. All of them are

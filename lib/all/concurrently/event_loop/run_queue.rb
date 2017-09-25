@@ -107,12 +107,9 @@ module Concurrently
       when Proc::Fiber # this will only happen when calling Concurrently::Proc#call_and_forget
         @current_evaluation = nil
         evaluation.resume result
-      when Proc::Evaluation
+      when Evaluation
         @current_evaluation = evaluation
         evaluation.__resume__ result
-      when Evaluation
-        @current_evaluation = nil
-        Fiber.yield result
       else
         raise Error, "#{evaluation.inspect} cannot be resumed"
       end
