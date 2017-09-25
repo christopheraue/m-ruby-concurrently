@@ -63,8 +63,6 @@ module Concurrently
       locations = case reference
                   when Proc
                     [reference.source_location.join(':')]
-                  when Evaluation
-                    reference.suspend_caller
                   when nil
                     caller
                   else

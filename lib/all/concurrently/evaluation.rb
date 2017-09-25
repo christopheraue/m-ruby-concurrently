@@ -30,19 +30,17 @@ module Concurrently
     # @private
     def initialize(fiber)
       @fiber = fiber
-      @suspend_caller = nil
+      @waiting = false
     end
-
-    attr_reader :suspend_caller
 
     # @private
     #
     # Suspends the evaluation. This is a method called internally only.
     def __suspend__(event_loop_fiber)
-      @suspend_caller = Logger.current.active? ? caller : true
+      @waiting = true
       event_loop_fiber.resume
     ensure
-      @suspend_caller = nil
+      @waiting = false
     end
 
     # @private
@@ -59,7 +57,7 @@ module Concurrently
     #
     # @return [Boolean]
     def waiting?
-      !!@suspend_caller
+      !!@waiting
     end
     
     # @note The exclamation mark in its name stands for: Watch out!
@@ -106,7 +104,7 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def resume!(result = nil)
-      Concurrently::Logger.current.log "SCHEDULE".freeze, self if suspend_caller
+      Concurrently::Logger.current.log "SCHEDULE".freeze if @waiting
       raise Error, "already scheduled to resume" if @scheduled
       @scheduled = true
 

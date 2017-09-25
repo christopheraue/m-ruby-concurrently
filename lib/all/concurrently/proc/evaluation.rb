@@ -80,12 +80,12 @@ module Concurrently
     #
     # Suspends the evaluation. This is a method called internally only.
     def __suspend__(event_loop_fiber)
-      @suspend_caller = Logger.current.active? ? caller : true
+      @waiting = true
       # Yield back to the event loop fiber or the evaluation evaluating this one.
       # Pass along itself to indicate it is not yet fully evaluated.
       Proc::Fiber.yield self
     ensure
-      @suspend_caller = nil
+      @waiting = false
     end
 
     # @private
