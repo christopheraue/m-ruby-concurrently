@@ -64,5 +64,19 @@ module Concurrently
         end
       end
     end
+
+    def self.yield(*)
+      Logger.current.log "SUSPEND".freeze
+      super
+    ensure
+      Logger.current.log "RESUME".freeze
+    end
+
+    def resume(*)
+      Logger.current.log "SUSPEND".freeze
+      super
+    ensure
+      Logger.current.log "RESUME".freeze
+    end
   end
 end

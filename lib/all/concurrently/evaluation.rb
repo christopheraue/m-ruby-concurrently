@@ -39,9 +39,7 @@ module Concurrently
     #
     # Suspends the evaluation. This is a method called internally only.
     def __suspend__(event_loop_fiber)
-      logger = Concurrently::Logger.current
-      logger.log "SUSPEND".freeze
-      @suspend_caller = logger.active? ? caller : true
+      @suspend_caller = Logger.current.active? ? caller : true
       case self
       when Concurrently::Proc::Evaluation
         # Yield back to the event loop fiber or the evaluation evaluating this one.
@@ -52,7 +50,6 @@ module Concurrently
       end
     ensure
       @suspend_caller = nil
-      logger.log "RESUME".freeze
     end
 
     # @private
