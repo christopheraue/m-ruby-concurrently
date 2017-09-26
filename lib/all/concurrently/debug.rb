@@ -2,12 +2,33 @@ module Concurrently
   # @api public
   # @since 1.2.0
   #
-  # `Concurrently::Debug` offers an interface to configure functionality
-  # being helpful while debugging applications build with Concurrently.
+  # With `Concurrently::Debug` the locations where concurrent procs are
+  # entered, suspended, resumed and exited at can be logged. The log shows
+  # the subsequent order in which concurrent procs are executed.
   #
-  # Enabling debugging logs the locations concurrent procs are entered,
-  # suspended, resumed and left at. With its help the path an application takes
-  # through all concurrent procs can be traced.
+  # It looks like:
+  #
+  #     .---- BEGIN 94khk test/Ruby/event_loop_spec.rb:16
+  #     '-> SUSPEND 94khk lib/all/concurrently/proc/evaluation.rb:86:in `__suspend__'
+  #     ... [other entries] ...
+  #     .--- RESUME 94khk lib/all/concurrently/proc/evaluation.rb:86:in `__suspend__'
+  #     '-----> END 94khk test/Ruby/event_loop_spec.rb:16
+  #
+  # This log section indicates that the concurrent proc defined at
+  # `test/Ruby/event_loop_spec.rb:16` has been started to be evaluated. It is
+  # assigned the id `94khk`. The code of the proc is evaluated until it is
+  # suspended at `lib/all/concurrently/proc/evaluation.rb:86`. After other
+  # concurrent procs where scheduled to run, proc `94khk` is resumed again and
+  # from there on is evaluated until its end.
+  #
+  # Next to `END`, there are two other variations how the evaluation of a
+  # concurrent proc can be marked as concluded. These are
+  # * `CANCEL` if the evaluation is prematurely concluded with
+  #   {Proc::Evaluation#conclude_to} and
+  # * `ERROR` if the evaluation raises an error.
+  #
+  # The id of an evaluation may (and very likely will) be reused after the
+  # evaluation was concluded.
   module Debug
     @overwrites = []
     @fibers = {}
