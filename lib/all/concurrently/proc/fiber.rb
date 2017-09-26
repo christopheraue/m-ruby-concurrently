@@ -61,18 +61,20 @@ module Concurrently
       end
     end
 
-    def self.yield(*)
-      Concurrently::Logger.current.log_suspend Fiber.current, caller
-      super
-    ensure
-      Concurrently::Logger.current.log_resume Fiber.current, caller
-    end
+    Concurrently::Debug.overwrite(self) do
+      def self.yield(*)
+        Concurrently::Logger.current.log_suspend Fiber.current, caller
+        super
+      ensure
+        Concurrently::Logger.current.log_resume Fiber.current, caller
+      end
 
-    def resume(result, stacktrace = caller)
-      Concurrently::Logger.current.log_suspend Fiber.current, stacktrace
-      super result
-    ensure
-      Concurrently::Logger.current.log_resume Fiber.current, stacktrace
+      def resume(result, stacktrace = caller)
+        Concurrently::Logger.current.log_suspend Fiber.current, stacktrace
+        super result
+      ensure
+        Concurrently::Logger.current.log_resume Fiber.current, stacktrace
+      end
     end
   end
 end

@@ -93,7 +93,14 @@ module Concurrently
     # Resumes the evaluation. This is a method called internally only.
     def __resume__(result)
       @scheduled = false
-      @fiber.resume result, @scheduled_caller
+      @fiber.resume result
+    end
+
+    Concurrently::Debug.overwrite(self) do
+      def __resume__(result)
+        @scheduled = false
+        @fiber.resume result, @scheduled_caller
+      end
     end
 
     # Waits for the evaluation to be concluded with a result.

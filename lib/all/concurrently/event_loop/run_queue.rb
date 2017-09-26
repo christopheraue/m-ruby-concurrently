@@ -48,18 +48,32 @@ module Concurrently
       @immediate_track = Track.new
     end
 
-    def schedule_immediately(evaluation, result = nil, cancellable = true)
+    def __schedule_immediately__(evaluation, result = nil, cancellable = true)
       cart = [evaluation, false, result]
       evaluation.instance_variable_set :@__cart__, cart if cancellable
-      evaluation.instance_variable_set :@scheduled_caller, caller if cancellable
       @immediate_track << cart
     end
+    alias schedule_immediately __schedule_immediately__
 
-    def schedule_deferred(evaluation, seconds, result = nil)
+    Concurrently::Debug.overwrite(self) do
+      def schedule_immediately(evaluation, result = nil, cancellable = true)
+        evaluation.instance_variable_set :@scheduled_caller, caller if cancellable
+        __schedule_immediately__(evaluation, result, cancellable)
+      end
+    end
+
+    def __schedule_deferred__(evaluation, seconds, result = nil)
       cart = [evaluation, @loop.lifetime+seconds, result]
       evaluation.instance_variable_set :@__cart__, cart
-      evaluation.instance_variable_set :@scheduled_caller, caller
       @deferred_track.insert(cart)
+    end
+    alias schedule_deferred __schedule_deferred__
+
+    Concurrently::Debug.overwrite(self) do
+      def schedule_deferred(evaluation, seconds, result = nil)
+        evaluation.instance_variable_set :@scheduled_caller, caller
+        __schedule_deferred__(evaluation, seconds, result)
+      end
     end
 
     def cancel(evaluation, only_if_deferred = false)
