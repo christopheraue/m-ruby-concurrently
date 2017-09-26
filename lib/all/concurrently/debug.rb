@@ -57,7 +57,7 @@ module Concurrently
         return if @filter and not @filter.any?{ |match| location.include? match }
 
         @fibers[fiber.__id__] = location
-        @logger.debug ".---- BEGIN #{location}"
+        @logger.debug ".---- BEGIN #{fiber.__id__.to_s 36} #{location}"
       end
 
       # @private
@@ -70,7 +70,7 @@ module Concurrently
                    else
                      locations.first
                    end
-        @logger.debug "'-> SUSPEND #{location}"
+        @logger.debug "'-> SUSPEND #{fiber.__id__.to_s 36} #{location}"
       end
 
       # @private
@@ -83,28 +83,28 @@ module Concurrently
                    else
                      locations.first
                    end
-        @logger.debug ".--- RESUME #{location}"
+        @logger.debug ".--- RESUME #{fiber.__id__.to_s 36} #{location}"
       end
 
       # @private
       def log_end(fiber)
         return unless @logger
         return unless location = @fibers.delete(fiber.__id__)
-        @logger.debug "'-----> END #{location}"
+        @logger.debug "'-----> END #{fiber.__id__.to_s 36} #{location}"
       end
 
       # @private
       def log_cancel(fiber)
         return unless @logger
         return unless location = @fibers.delete(fiber.__id__)
-        @logger.debug "'--> CANCEL #{location}"
+        @logger.debug "'--> CANCEL #{fiber.__id__.to_s 36} #{location}"
       end
 
       # @private
       def log_error(fiber)
         return unless @logger
         return unless location = @fibers.delete(fiber.__id__)
-        @logger.debug "'---> ERROR #{location}"
+        @logger.debug "'---> ERROR #{fiber.__id__.to_s 36} #{location}"
       end
     end
   end
