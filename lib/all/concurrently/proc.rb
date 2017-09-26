@@ -86,16 +86,16 @@ module Concurrently
 
     Concurrently::Debug.overwrite(self) do
       def __fiber_call__(fiber, args)
-        Logger.current.log_begin fiber, source_location.join(':')
+        Debug.log_begin fiber, source_location.join(':')
         result = __sync_call__ *args
       rescue Evaluation::Cancelled => e
-        Logger.current.log_cancel fiber
+        Debug.log_cancel fiber
         raise e
       rescue Exception => e
-        Logger.current.log_error fiber
+        Debug.log_error fiber
         raise e
       else
-        Logger.current.log_end fiber
+        Debug.log_end fiber
         result
       end
     end

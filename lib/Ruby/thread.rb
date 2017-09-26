@@ -5,8 +5,4 @@ class Thread
   def __concurrently_event_loop__
     @__concurrently_event_loop__ ||= Concurrently::EventLoop.new
   end
-
-  def __concurrently_logger__
-    @__concurrently_logger__ ||= Concurrently::Logger.new
-  end
 end

@@ -63,17 +63,17 @@ module Concurrently
 
     Concurrently::Debug.overwrite(self) do
       def self.yield(*)
-        Concurrently::Logger.current.log_suspend Fiber.current, caller
+        Concurrently::Debug.log_suspend Fiber.current, caller
         super
       ensure
-        Concurrently::Logger.current.log_resume Fiber.current, caller
+        Concurrently::Debug.log_resume Fiber.current, caller
       end
 
       def resume(result, stacktrace = caller)
-        Concurrently::Logger.current.log_suspend Fiber.current, stacktrace
+        Concurrently::Debug.log_suspend Fiber.current, stacktrace
         super result
       ensure
-        Concurrently::Logger.current.log_resume Fiber.current, stacktrace
+        Concurrently::Debug.log_resume Fiber.current, stacktrace
       end
     end
   end
