@@ -10,7 +10,7 @@ Dir["#{File.dirname __FILE__}/_shared/**/*.rb"].sort.each{ |f| require f }
 require 'logger'
 Concurrently::Debug.enable Logger.new File.open(File::NULL, "w")
 
-Concurrently::Proc.on :error do |proc, error|
+Concurrently::Proc.on :error do |error|
   puts error
   puts error.backtrace
 end
