@@ -7,6 +7,9 @@ require "concurrently"
 # Load test helpers
 Dir["#{File.dirname __FILE__}/_shared/**/*.rb"].sort.each{ |f| require f }
 
+require 'logger'
+Concurrently::Debug.enable Logger.new File.open(File::NULL, "w")
+
 Concurrently::Proc.on :error do |proc, error|
   puts error
   puts error.backtrace
