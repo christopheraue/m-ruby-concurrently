@@ -79,18 +79,18 @@ module Concurrently
     end
 
     # @private
-    # Calls the concurrent proc like a normal proc
-    def __call__(*args)
-      Logger.current.log "  BEGIN".freeze, [source_location.join(':')]
+    # Calls the concurrent proc from a fiber
+    def __fiber_call__(fiber, args)
+      Logger.current.log_begin fiber, source_location.join(':')
       result = __sync_call__ *args
     rescue Evaluation::Cancelled => e
-      Logger.current.log " CANCEL".freeze, [source_location.join(':')]
+      Logger.current.log_cancel fiber
       raise e
     rescue Exception => e
-      Logger.current.log "  ERROR".freeze, [source_location.join(':')]
+      Logger.current.log_error fiber
       raise e
     else
-      Logger.current.log "    END".freeze, [source_location.join(':')]
+      Logger.current.log_end fiber
       result
     end
 

@@ -20,6 +20,11 @@ module Concurrently
       @current ||= new
     end
 
+    # @private
+    def initialize
+      @fibers = {}
+    end
+
     # @!attribute [w] logger
     #
     # Sets the logger.
@@ -57,16 +62,59 @@ module Concurrently
     end
 
     # @private
-    def log(action, locations)
+    def log_begin(fiber, location)
       return unless @logger
+      return unless @locations.any?{ |match| location.include? match }
+
+      @fibers[fiber.__id__] = location
+      @logger.debug ".---- BEGIN #{location}"
+    end
+
+    # @private
+    def log_suspend(fiber, locations)
+      return unless @logger
+      return unless @fibers.key? fiber.__id__
 
       location = if @locations
                    locations.find{ |loc| @locations.any?{ |match| loc.include? match } }
                  else
                    locations.first
                  end
+      @logger.debug "'-> SUSPEND #{location}"
+    end
 
-      @logger.debug "#{action} #{location}" if location
+    # @private
+    def log_resume(fiber, locations)
+      return unless @logger
+      return unless @fibers.key? fiber.__id__
+
+      location = if @locations
+                   locations.find{ |loc| @locations.any?{ |match| loc.include? match } }
+                 else
+                   locations.first
+                 end
+      @logger.debug ".--- RESUME #{location}"
+    end
+
+    # @private
+    def log_end(fiber)
+      return unless @logger
+      return unless location = @fibers.delete(fiber.__id__)
+      @logger.debug "'-----> END #{location}"
+    end
+
+    # @private
+    def log_cancel(fiber)
+      return unless @logger
+      return unless location = @fibers.delete(fiber.__id__)
+      @logger.debug "'--> CANCEL #{location}"
+    end
+
+    # @private
+    def log_error(fiber)
+      return unless @logger
+      return unless location = @fibers.delete(fiber.__id__)
+      @logger.debug "'---> ERROR #{location}"
     end
   end
 end

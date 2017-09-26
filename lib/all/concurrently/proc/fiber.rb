@@ -36,7 +36,7 @@ module Concurrently
               "there is a bug in Concurrently."
           else
             begin
-              result = proc.__call__ *args
+              result = proc.__fiber_call__ self, args
               (evaluation = evaluation_bucket[0]) and evaluation.conclude_to result
               result
             rescue Proc::Evaluation::Cancelled
@@ -56,23 +56,23 @@ module Concurrently
 
           # Yield back to the event loop fiber or the fiber evaluating this one
           # and wait for the next proc to evaluate.
-          proc, args, evaluation_bucket = Fiber.yield result
+          proc, args, evaluation_bucket = Proc::Fiber.yield result
         end
       end
     end
 
     def self.yield(*)
-      Concurrently::Logger.current.log "SUSPEND".freeze, caller
+      Concurrently::Logger.current.log_suspend Fiber.current, caller
       super
     ensure
-      Concurrently::Logger.current.log " RESUME".freeze, caller
+      Concurrently::Logger.current.log_resume Fiber.current, caller
     end
 
     def resume(result, stacktrace = caller)
-      Concurrently::Logger.current.log "SUSPEND".freeze, stacktrace
+      Concurrently::Logger.current.log_suspend Fiber.current, stacktrace
       super result
     ensure
-      Concurrently::Logger.current.log " RESUME".freeze, stacktrace
+      Concurrently::Logger.current.log_resume Fiber.current, stacktrace
     end
   end
 end
