@@ -54,7 +54,7 @@ module Concurrently
       # @private
       def log_begin(fiber, location)
         return unless @logger
-        return unless @filter.any?{ |match| location.include? match }
+        return if @filter and not @filter.any?{ |match| location.include? match }
 
         @fibers[fiber.__id__] = location
         @logger.debug ".---- BEGIN #{location}"
