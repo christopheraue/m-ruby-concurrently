@@ -120,7 +120,7 @@ describe Concurrently::Proc::Evaluation do
       context "when concluding to a result" do
         let(:result) { :result }
         it { is_expected.to be :concluded }
-        after { expect{ evaluation.await_result }.to be :result}
+        after { expect{ evaluation.await_result }.to be :result }
       end
     end
 
@@ -138,7 +138,25 @@ describe Concurrently::Proc::Evaluation do
       context "when concluding to a result" do
         let(:result) { :result }
         it { is_expected.to be :concluded }
-        after { expect{ evaluation.await_result }.to be :result}
+        after { expect{ evaluation.await_result }.to be :result }
+      end
+
+      context "when concluding the evaluation out of a begin..ensure..end block" do
+        let(:result) { :result }
+
+        let(:evaluation) do
+          concurrent_proc do
+            begin
+              wait 1
+            ensure
+              @evalution = Concurrently::Evaluation.current
+            end
+          end.call_nonblock
+        end
+
+        it { is_expected.to be :concluded }
+        after { expect{ evaluation.await_result }.to be :result }
+        after { expect(@evalution).to be evaluation }
       end
     end
 

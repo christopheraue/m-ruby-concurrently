@@ -262,8 +262,12 @@ module Concurrently
       @concluded = true
 
       if Fiber.current != @fiber
-        # Cancel its fiber by resuming it with itself as argument
+        # Cancel its fiber
+        run_queue = Concurrently::EventLoop.current.run_queue
+        previous_evaluation = run_queue.current_evaluation
+        run_queue.current_evaluation = self
         @fiber.resume Cancelled
+        run_queue.current_evaluation = previous_evaluation
       end
 
       @awaiting_result.each{ |evaluation, override| evaluation.resume! (override or result) }
