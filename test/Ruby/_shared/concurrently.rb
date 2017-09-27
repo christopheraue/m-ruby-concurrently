@@ -31,8 +31,6 @@ shared_examples_for "#concurrently" do
   context "when the code inside the block raises a recoverable error" do
     subject { call{ raise StandardError, 'error' }; wait 0 }
 
-    before { expect(STDERR).to receive(:puts).with(
-      (be_a(StandardError).and have_attributes message: 'error')) }
     before { expect_any_instance_of(Concurrently::Proc).to receive(:trigger).with(:error,
       (be_a(StandardError).and have_attributes message: 'error')) }
     it { is_expected.not_to raise_error }

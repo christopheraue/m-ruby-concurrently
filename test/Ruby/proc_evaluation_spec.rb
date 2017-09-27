@@ -67,8 +67,6 @@ describe Concurrently::Proc::Evaluation do
       before { expect(evaluation).not_to be_concluded }
       after { expect(evaluation).to be_concluded }
 
-      before { expect(STDERR).to receive(:puts).with(
-        be_a(RuntimeError).and have_attributes message: "error") }
       before { expect(conproc).to receive(:trigger).with(:error, (be_a(RuntimeError).
         and have_attributes message: "error")) }
       it { is_expected.to raise_error RuntimeError, 'error' }
