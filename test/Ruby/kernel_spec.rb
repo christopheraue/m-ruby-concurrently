@@ -216,8 +216,8 @@ describe Kernel do
 
   describe "#await_fastest" do
     it_behaves_like "awaiting the result of a deferred evaluation" do
-      let(:evaluation0) { concurrently{ await_resume! } }
-      let(:evaluation1) { concurrently{ await_resume! } }
+      let!(:evaluation0) { concurrent_proc{ await_resume! }.call_nonblock }
+      let!(:evaluation1) { concurrent_proc{ await_resume! }.call_nonblock }
       let(:wait_proc) { proc{ await_fastest evaluation0, evaluation1, wait_options } }
       let(:result) { evaluation1 }
 

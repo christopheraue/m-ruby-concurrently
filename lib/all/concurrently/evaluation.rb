@@ -87,7 +87,8 @@ module Concurrently
     # because of a manual call of {Kernel#await_resume!}.
     #
     # @return [:resumed]
-    # @raise [Error] if the evaluation is already scheduled to resume
+    # @raise [Error] if the evaluation is not waiting or is already scheduled
+    #   to be resumed
     #
     # @example
     #   # Control flow is indicated by (N)
@@ -104,7 +105,8 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def resume!(result = nil)
-      raise self.class::Error, "already scheduled" if @scheduled
+      raise self.class::Error, "not waiting" unless @waiting
+      raise self.class::Error, "already resumed" if @scheduled
       @scheduled = true
 
       run_queue = Concurrently::EventLoop.current.run_queue

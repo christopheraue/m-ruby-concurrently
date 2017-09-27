@@ -273,15 +273,5 @@ module Concurrently
       @awaiting_result.each{ |evaluation, override| evaluation.resume! (override or result) }
       :concluded
     end
-
-    # Schedules the evaluation to be resumed
-    #
-    # For details see: {Concurrently::Evaluation#resume!}
-    #
-    # @raise [Evaluation::Error] if the evaluation is already concluded
-    def resume!(*)
-      raise self.class::Error, "already concluded" if @concluded
-      super
-    end
   end
 end

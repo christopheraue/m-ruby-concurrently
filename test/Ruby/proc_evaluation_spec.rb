@@ -202,46 +202,64 @@ describe Concurrently::Proc::Evaluation do
   end
 
   describe "#resume!" do
-    subject { evaluation.await_result }
     let!(:evaluation) { concurrent_proc(*eval_class){ await_resume! }.call_nonblock }
     let(:eval_class) { nil }
 
-    it_behaves_like "#resume!" do
-      context "if it has already been scheduled to be resumed" do
-        subject { evaluation.resume! }
+    context "if it is not waiting" do
+      subject { evaluation.resume! }
+      before { evaluation.conclude_to :result }
+      it { is_expected.to raise_error Concurrently::Evaluation::Error, "not waiting" }
+    end
 
-        context "when the concurrent proc has a default evaluation" do
-          let(:eval_class) { nil }
-          it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled" }
+    context "if it is waiting" do
+      context "if it is resumed twice" do
+        subject { help_eval.await_result }
+        let!(:help_eval) { concurrently{ evaluation.resume!; evaluation.resume! } }
+        before { evaluation.await_result }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already resumed" }
+      end
+
+      context "if it is resumed once" do
+        subject { evaluation.await_result }
+
+        context "when given no result" do
+          let!(:help_eval) { concurrently{ evaluation.resume! } }
+          it { is_expected.to eq nil }
         end
 
-        context "when the concurrent proc has a custom evaluation" do
-          let(:eval_class) do
-            Class.new(Concurrently::Proc::Evaluation) do
-              const_set :Error, Class.new(Concurrently::Error)
-            end
-          end
-          it { is_expected.to raise_error eval_class::Error, "already scheduled" }
+        context "when given a result" do
+          let!(:help_eval) { concurrently{ evaluation.resume! :result } }
+          it { is_expected.to eq :result }
         end
       end
     end
 
-    context "if it has already been concluded" do
-      subject { evaluation.resume! }
-      before { evaluation.conclude_to :premature_result }
+    context "when the concurrent proc has a custom evaluation" do
+      context "if it is not waiting" do
+        subject { evaluation.resume! }
+        before { evaluation.conclude_to :premature_result }
 
-      context "when the concurrent proc has a default evaluation" do
-        let(:eval_class) { nil }
-        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already concluded" }
-      end
-
-      context "when the concurrent proc has a custom evaluation" do
         let(:eval_class) do
           Class.new(Concurrently::Proc::Evaluation) do
             const_set :Error, Class.new(Concurrently::Error)
           end
         end
-        it { is_expected.to raise_error eval_class::Error, "already concluded" }
+        it { is_expected.to raise_error eval_class::Error, "not waiting" }
+      end
+
+      context "if it is waiting" do
+        context "if it is resumed twice" do
+          subject { help_eval.await_result }
+          let!(:help_eval) { concurrently{ evaluation.resume!; evaluation.resume! } }
+          before { evaluation.await_result }
+
+          let(:eval_class) do
+            Class.new(Concurrently::Proc::Evaluation) do
+              const_set :Error, Class.new(Concurrently::Error)
+            end
+          end
+          it { is_expected.to raise_error eval_class::Error, "already resumed" }
+        end
       end
     end
   end
