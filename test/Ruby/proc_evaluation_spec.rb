@@ -161,12 +161,24 @@ describe Concurrently::Proc::Evaluation do
     end
 
     context "when concluding after it is already evaluated" do
-      subject { evaluation.conclude_to :result }
+      subject { evaluation.conclude_to :premature_result }
 
-      let(:evaluation) { concurrent_proc{ :result }.call_detached }
+      let(:evaluation) { concurrent_proc(*eval_class){ :result }.call_detached }
       before { evaluation.await_result }
 
-      it { is_expected.to raise_error Concurrently::Evaluation::Error, "already concluded" }
+      context "when the concurrent proc has a default evaluation" do
+        let(:eval_class) { nil }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already concluded" }
+      end
+
+      context "when the concurrent proc has a custom evaluation" do
+        let(:eval_class) do
+          Class.new(Concurrently::Proc::Evaluation) do
+            const_set :Error, Class.new(Concurrently::Error)
+          end
+        end
+        it { is_expected.to raise_error eval_class::Error, "already concluded" }
+      end
     end
 
     context "when concluding an evaluation from a nested proc" do
@@ -191,15 +203,46 @@ describe Concurrently::Proc::Evaluation do
 
   describe "#resume!" do
     subject { evaluation.await_result }
-    let!(:evaluation) { concurrent_proc{ await_resume! }.call_nonblock }
+    let!(:evaluation) { concurrent_proc(*eval_class){ await_resume! }.call_nonblock }
+    let(:eval_class) { nil }
 
-    it_behaves_like "#resume!"
+    it_behaves_like "#resume!" do
+      context "if it has already been scheduled to be resumed" do
+        subject { evaluation.resume! }
 
-    context "if it is concluded" do
+        context "when the concurrent proc has a default evaluation" do
+          let(:eval_class) { nil }
+          it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled" }
+        end
+
+        context "when the concurrent proc has a custom evaluation" do
+          let(:eval_class) do
+            Class.new(Concurrently::Proc::Evaluation) do
+              const_set :Error, Class.new(Concurrently::Error)
+            end
+          end
+          it { is_expected.to raise_error eval_class::Error, "already scheduled" }
+        end
+      end
+    end
+
+    context "if it has already been concluded" do
       subject { evaluation.resume! }
       before { evaluation.conclude_to :premature_result }
-      it { is_expected.to raise_error Concurrently::Evaluation::Error,
-        "already concluded to :premature_result" }
+
+      context "when the concurrent proc has a default evaluation" do
+        let(:eval_class) { nil }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already concluded" }
+      end
+
+      context "when the concurrent proc has a custom evaluation" do
+        let(:eval_class) do
+          Class.new(Concurrently::Proc::Evaluation) do
+            const_set :Error, Class.new(Concurrently::Error)
+          end
+        end
+        it { is_expected.to raise_error eval_class::Error, "already concluded" }
+      end
     end
   end
 end

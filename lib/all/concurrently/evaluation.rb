@@ -104,7 +104,7 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def resume!(result = nil)
-      raise Error, "already scheduled to resume" if @scheduled
+      raise self.class::Error, "already scheduled" if @scheduled
       @scheduled = true
 
       run_queue = Concurrently::EventLoop.current.run_queue

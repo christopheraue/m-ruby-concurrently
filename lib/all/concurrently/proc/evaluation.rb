@@ -280,7 +280,7 @@ module Concurrently
     #
     # @raise [Evaluation::Error] if the evaluation is already concluded
     def resume!(*)
-      raise Evaluation::Error, "already concluded to #{@result.inspect}" if @concluded
+      raise self.class::Error, "already concluded" if @concluded
       super
     end
   end
