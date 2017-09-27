@@ -212,7 +212,18 @@ describe Concurrently::Proc::Evaluation do
     context "if it is waiting" do
       context "if it is resumed twice" do
         subject { help_eval.await_result }
-        let!(:help_eval) { concurrently{ evaluation.resume!; evaluation.resume! } }
+        let!(:help_eval) do
+          concurrently do
+            evaluation.resume!
+            begin
+              evaluation.resume!
+            rescue => e
+              # rescue to the error to keep the output clean by not
+              # triggering Concurrently::Proc.on :error
+              e
+            end
+          end
+        end
         before { evaluation.await_result }
         it { is_expected.to raise_error Concurrently::Evaluation::Error, "already resumed" }
       end
@@ -248,7 +259,18 @@ describe Concurrently::Proc::Evaluation do
       context "if it is waiting" do
         context "if it is resumed twice" do
           subject { help_eval.await_result }
-          let!(:help_eval) { concurrently{ evaluation.resume!; evaluation.resume! } }
+          let!(:help_eval) do
+            concurrently do
+              evaluation.resume!
+              begin
+                evaluation.resume!
+              rescue => e
+                # rescue to the error to keep the output clean by not
+                # triggering Concurrently::Proc.on :error
+                e
+              end
+            end
+          end
           before { evaluation.await_result }
 
           let(:eval_class) do
