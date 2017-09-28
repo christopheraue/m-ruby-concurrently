@@ -39,8 +39,6 @@ module Concurrently
     def __suspend__(event_loop_fiber)
       @waiting = true
       event_loop_fiber.resume
-    ensure
-      @waiting = false
     end
 
     # @private
@@ -53,7 +51,7 @@ module Concurrently
 
     # @!attribute [r] waiting?
     #
-    # Checks if the evaluation is waiting
+    # Checks if the evaluation is not running and not resumed.
     #
     # @return [Boolean]
     def waiting?
@@ -105,8 +103,9 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def resume!(result = nil)
-      raise self.class::Error, "not waiting" unless @waiting
       raise self.class::Error, "already resumed" if @scheduled
+      raise self.class::Error, "not waiting" unless @waiting
+      @waiting = false
       @scheduled = true
 
       run_queue = Concurrently::EventLoop.current.run_queue
