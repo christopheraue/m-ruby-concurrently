@@ -27,7 +27,7 @@ DESC
   spec.authors       = ["Christopher Aue"]
   spec.email         = ["rubygems@christopheraue.net"]
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.require_paths = ["lib/Ruby"]
+  spec.require_paths = ["lib/CRuby"]
 
   spec.required_ruby_version = ">= 2.2.7"
 

@@ -5,8 +5,8 @@ perf_dir = File.expand_path "perf"
 # Ruby
 ruby = {
   test: "rspec" ,
-  benchmark: "ruby -Iperf/Ruby -rstage",
-  profile: "ruby -Iperf/Ruby -rstage" }
+  benchmark: "ruby -Iperf/CRuby -rstage",
+  profile: "ruby -Iperf/CRuby -rstage" }
 
 mruby_dir = File.expand_path "mruby_builds"
 mruby = {

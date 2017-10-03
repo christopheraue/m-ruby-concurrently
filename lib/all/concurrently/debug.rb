@@ -8,14 +8,14 @@ module Concurrently
   #
   # It looks like:
   #
-  #     .---- BEGIN 94khk test/Ruby/event_loop_spec.rb:16
+  #     .---- BEGIN 94khk test/CRuby/event_loop_spec.rb:16
   #     '-> SUSPEND 94khk lib/all/concurrently/proc/evaluation.rb:86:in `__suspend__'
   #     ... [other entries] ...
   #     .--- RESUME 94khk lib/all/concurrently/proc/evaluation.rb:86:in `__suspend__'
-  #     '-----> END 94khk test/Ruby/event_loop_spec.rb:16
+  #     '-----> END 94khk test/CRuby/event_loop_spec.rb:16
   #
   # This log section indicates that the concurrent proc defined at
-  # `test/Ruby/event_loop_spec.rb:16` has been started to be evaluated. It is
+  # `test/CRuby/event_loop_spec.rb:16` has been started to be evaluated. It is
   # assigned the id `94khk`. The code of the proc is evaluated until it is
   # suspended at `lib/all/concurrently/proc/evaluation.rb:86`. After other
   # concurrent procs where scheduled to run, proc `94khk` is resumed again and
