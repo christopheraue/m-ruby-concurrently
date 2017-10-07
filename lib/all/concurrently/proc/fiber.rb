@@ -37,7 +37,9 @@ module Concurrently
           else
             begin
               result = proc.__fiber_call__ self, args
-              (evaluation = evaluation_bucket[0]) and evaluation.conclude_to result
+              if (evaluation = evaluation_bucket[0]) and not evaluation.concluded?
+                evaluation.conclude_to result
+              end
               result
             rescue Proc::Evaluation::Cancelled
               # raised in Kernel#await_resume!
@@ -46,7 +48,9 @@ module Concurrently
               # Rescue all errors not critical for other concurrent evaluations
               # and don't let them leak to the loop to keep it up and running.
               proc.trigger :error, error
-              (evaluation = evaluation_bucket[0]) and evaluation.conclude_to error
+              if (evaluation = evaluation_bucket[0]) and not evaluation.concluded?
+                evaluation.conclude_to error
+              end
               error
             end
           end

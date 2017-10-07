@@ -197,6 +197,12 @@ describe Concurrently::Proc::Evaluation do
 
       it { is_expected.not_to raise_error }
     end
+
+    context "when concluding an evaluation from within itself" do
+      subject { evaluation.await_result }
+      let!(:evaluation) { concurrent_proc{ evaluation.conclude_to :cancelled }.call_detached }
+      it { is_expected.to be :cancelled }
+    end
   end
 
   describe "#resume!" do
