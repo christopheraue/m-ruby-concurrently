@@ -222,9 +222,9 @@ module Concurrently
     # Checks if the evaluation is concluded
     #
     # @return [Boolean]
-    def concluded?
-      @concluded
-    end
+    attr_reader :concluded
+    alias concluded? concluded
+    undef concluded
 
     # Cancels the concurrent evaluation prematurely by injecting a result.
     #
