@@ -124,7 +124,7 @@ module Kernel
 
     if Concurrently::Proc::Evaluation::Cancelled.equal? result
       run_queue.cancel evaluation # in case the evaluation has already been scheduled to resume
-      raise Concurrently::Proc::Evaluation::Cancelled, ''
+      raise Concurrently::Proc::Evaluation::Cancelled, '' # TODO: add empty backtrace as last argument once murby supports it
     elsif Concurrently::Evaluation::TimeoutError.equal? result
       raise Concurrently::Evaluation::TimeoutError, "evaluation timed out after #{seconds} second(s)"
     else
