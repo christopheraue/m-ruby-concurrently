@@ -33,6 +33,8 @@ module Concurrently
     @overwrites = []
     @fibers = {}
 
+    @concurrently_path = 'm-ruby-concurrently'.freeze
+
     class << self
       # Enables debugging
       #
@@ -128,7 +130,8 @@ module Concurrently
 
       # @private
       private def satisfies_filter?(location)
-        not @filter or @filter.any?{ |filter| location.include? filter }
+        not location.include? @concurrently_path and
+          (not @filter or @filter.any?{ |filter| location.include? filter })
       end
     end
   end
