@@ -53,7 +53,7 @@ module Concurrently
       #   #   /path/to/file3.rb
       #   #
       #   # Then, the logged location will be /path/to/file2.rb
-      def enable(logger, filter = nil)
+      def enable(logger, filter = false)
         @logger = logger
         @filter = filter
         @overwrites.each{ |overwrite| overwrite.call }
@@ -75,8 +75,7 @@ module Concurrently
       # @private
       def log_begin(fiber, location)
         return unless @logger
-        return if @filter and not @filter.any?{ |match| location.include? match }
-
+        return unless satisfies_filter? location
         @fibers[fiber.__id__] = location
         @logger.debug ".---- BEGIN #{fiber.__id__.to_s 36} #{location}"
       end
@@ -85,26 +84,14 @@ module Concurrently
       def log_suspend(fiber, locations)
         return unless @logger
         return unless @fibers.key? fiber.__id__
-
-        location = if @filter
-                     locations.find{ |loc| @filter.any?{ |match| loc.include? match } }
-                   else
-                     locations.first
-                   end
+        return unless location = locations.find{ |loc| satisfies_filter? loc }
         @logger.debug "'-> SUSPEND #{fiber.__id__.to_s 36} #{location}"
       end
 
       # @private
       def log_schedule(fiber, locations)
         return unless @logger
-
-        location = if @filter
-                     locations.find{ |loc| @filter.any?{ |match| loc.include? match } }
-                   else
-                     locations.first
-                   end
-
-        return unless location
+        return unless location = locations.find{ |loc| satisfies_filter? loc }
 
         prefix = (@fibers.key? Fiber.current.__id__) ? '|' : ' '
         @logger.debug "#{prefix}  SCHEDULE #{fiber.__id__.to_s 36} from #{location}"
@@ -114,12 +101,7 @@ module Concurrently
       def log_resume(fiber, locations)
         return unless @logger
         return unless @fibers.key? fiber.__id__
-
-        location = if @filter
-                     locations.find{ |loc| @filter.any?{ |match| loc.include? match } }
-                   else
-                     locations.first
-                   end
+        return unless location = locations.find{ |loc| satisfies_filter? loc }
         @logger.debug ".--- RESUME #{fiber.__id__.to_s 36} #{location}"
       end
 
@@ -142,6 +124,11 @@ module Concurrently
         return unless @logger
         return unless location = @fibers.delete(fiber.__id__)
         @logger.debug "'---> ERROR #{fiber.__id__.to_s 36} #{location}"
+      end
+
+      # @private
+      private def satisfies_filter?(location)
+        not @filter or @filter.any?{ |filter| location.include? filter }
       end
     end
   end
