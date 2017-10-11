@@ -231,7 +231,7 @@ describe Concurrently::Proc::Evaluation do
           end
         end
         before { evaluation.await_result }
-        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already resumed" }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled" }
       end
 
       context "if it is resumed once" do
@@ -284,7 +284,7 @@ describe Concurrently::Proc::Evaluation do
               const_set :Error, Class.new(Concurrently::Error)
             end
           end
-          it { is_expected.to raise_error eval_class::Error, "already resumed" }
+          it { is_expected.to raise_error eval_class::Error, "already scheduled" }
         end
       end
     end

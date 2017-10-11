@@ -29,7 +29,7 @@ describe Concurrently::Evaluation do
           end
         end
         before { await_resume! }
-        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already resumed" }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled" }
       end
 
       context "if it is resumed once" do
