@@ -95,6 +95,22 @@ module Concurrently
       end
 
       # @private
+      def log_schedule(fiber, locations)
+        return unless @logger
+
+        location = if @filter
+                     locations.find{ |loc| @filter.any?{ |match| loc.include? match } }
+                   else
+                     locations.first
+                   end
+
+        return unless location
+
+        prefix = (@fibers.key? Fiber.current.__id__) ? '|' : ' '
+        @logger.debug "#{prefix}  SCHEDULE #{fiber.__id__.to_s 36} from #{location}"
+      end
+
+      # @private
       def log_resume(fiber, locations)
         return unless @logger
         return unless @fibers.key? fiber.__id__

@@ -102,7 +102,7 @@ module Concurrently
     #   evaluation.resume! :result
     #   # (5)
     #   evaluation.await_result # => :result
-    def resume!(result = nil)
+    def __resume__!(result = nil)
       raise self.class::Error, "already resumed" if @scheduled
       raise self.class::Error, "not waiting" unless @waiting
       @waiting = false
@@ -118,6 +118,14 @@ module Concurrently
 
       run_queue.schedule_immediately(self, result)
       :resumed
+    end
+    alias resume! __resume__!
+
+    Concurrently::Debug.overwrite(self) do
+      def resume!(result = nil)
+        Concurrently::Debug.log_schedule @fiber, caller
+        __resume__! result
+      end
     end
   end
 end
