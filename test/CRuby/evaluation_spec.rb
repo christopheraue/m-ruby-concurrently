@@ -10,7 +10,7 @@ describe Concurrently::Evaluation do
 
     context "if it is not waiting" do
       subject { evaluation.resume! }
-      it { is_expected.to raise_error Concurrently::Evaluation::Error, "not waiting" }
+      it { is_expected.to raise_error Concurrently::Evaluation::Error, start_with("not waiting") }
     end
 
     context "if it is waiting" do
@@ -29,7 +29,7 @@ describe Concurrently::Evaluation do
           end
         end
         before { await_resume! }
-        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled" }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, start_with("already scheduled") }
       end
 
       context "if it is resumed once" do

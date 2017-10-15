@@ -166,7 +166,7 @@ describe Concurrently::Proc::Evaluation do
 
       context "when the concurrent proc has a default evaluation" do
         let(:eval_class) { nil }
-        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already concluded" }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, start_with("already concluded") }
       end
 
       context "when the concurrent proc has a custom evaluation" do
@@ -175,7 +175,7 @@ describe Concurrently::Proc::Evaluation do
             const_set :Error, Class.new(Concurrently::Error)
           end
         end
-        it { is_expected.to raise_error eval_class::Error, "already concluded" }
+        it { is_expected.to raise_error eval_class::Error, start_with("already concluded") }
       end
     end
 
@@ -212,7 +212,7 @@ describe Concurrently::Proc::Evaluation do
     context "if it is not waiting" do
       subject { evaluation.resume! }
       before { evaluation.conclude_to :result }
-      it { is_expected.to raise_error Concurrently::Evaluation::Error, "not waiting" }
+      it { is_expected.to raise_error Concurrently::Evaluation::Error, start_with("not waiting") }
     end
 
     context "if it is waiting" do
@@ -231,7 +231,7 @@ describe Concurrently::Proc::Evaluation do
           end
         end
         before { evaluation.await_result }
-        it { is_expected.to raise_error Concurrently::Evaluation::Error, "already scheduled" }
+        it { is_expected.to raise_error Concurrently::Evaluation::Error, start_with("already scheduled") }
       end
 
       context "if it is resumed once" do
@@ -259,7 +259,7 @@ describe Concurrently::Proc::Evaluation do
             const_set :Error, Class.new(Concurrently::Error)
           end
         end
-        it { is_expected.to raise_error eval_class::Error, "not waiting" }
+        it { is_expected.to raise_error eval_class::Error, start_with("not waiting") }
       end
 
       context "if it is waiting" do
@@ -284,7 +284,7 @@ describe Concurrently::Proc::Evaluation do
               const_set :Error, Class.new(Concurrently::Error)
             end
           end
-          it { is_expected.to raise_error eval_class::Error, "already scheduled" }
+          it { is_expected.to raise_error eval_class::Error, start_with("already scheduled") }
         end
       end
     end

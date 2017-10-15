@@ -74,6 +74,18 @@ module Concurrently
         @overwrites << proc{ klass.class_eval &block }
       end
 
+
+      # @private
+      def notice_for(fiber)
+        <<-MSG
+  Evaluation id: #{fiber.__id__.to_s 36}
+  To debug how this happened enable logging of control flow with:
+
+      require 'logger'
+      Concurrently::Debug.enable Logger.new STDOUT
+        MSG
+      end
+
       # @private
       def log_begin(fiber, location)
         return unless @logger

@@ -103,8 +103,8 @@ module Concurrently
     #   # (5)
     #   evaluation.await_result # => :result
     def __resume__!(result = nil)
-      raise self.class::Error, "already scheduled" if @scheduled
-      raise self.class::Error, "not waiting" unless @waiting
+      raise self.class::Error, "already scheduled\n#{Debug.notice_for @fiber}" if @scheduled
+      raise self.class::Error, "not waiting\n#{Debug.notice_for @fiber}" unless @waiting
       @waiting = false
       @scheduled = true
 

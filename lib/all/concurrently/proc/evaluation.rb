@@ -255,7 +255,7 @@ module Concurrently
     #   # (6)
     def conclude_to(result)
       if @concluded
-        raise self.class::Error, "already concluded"
+        raise self.class::Error, "already concluded\n#{Debug.notice_for @fiber}"
       end
 
       @result = result
