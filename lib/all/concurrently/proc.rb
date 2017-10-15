@@ -88,7 +88,7 @@ module Concurrently
     # Calls the concurrent proc from a fiber
     alias_method :__original_call__, :original_call
 
-    Concurrently::Debug.overwrite(self) do
+    Debug.overwrite(self) do
       def original_call(*args)
         Debug.log_begin Fiber.current, source_location.join(':')
         result = __original_call__ *args

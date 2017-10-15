@@ -55,7 +55,7 @@ module Concurrently
     end
     alias schedule_immediately __schedule_immediately__
 
-    Concurrently::Debug.overwrite(self) do
+    Debug.overwrite(self) do
       def schedule_immediately(evaluation, result = nil, cancellable = true)
         evaluation.instance_variable_set :@scheduled_caller, caller if cancellable
         __schedule_immediately__(evaluation, result, cancellable)
@@ -69,7 +69,7 @@ module Concurrently
     end
     alias schedule_deferred __schedule_deferred__
 
-    Concurrently::Debug.overwrite(self) do
+    Debug.overwrite(self) do
       def schedule_deferred(evaluation, seconds, result = nil)
         evaluation.instance_variable_set :@scheduled_caller, caller
         __schedule_deferred__(evaluation, seconds, result)

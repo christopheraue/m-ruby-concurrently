@@ -96,7 +96,7 @@ module Concurrently
       @fiber.resume result
     end
 
-    Concurrently::Debug.overwrite(self) do
+    Debug.overwrite(self) do
       def __resume__(result)
         @scheduled = false
         @fiber.resume result, @scheduled_caller

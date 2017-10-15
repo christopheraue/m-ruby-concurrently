@@ -121,9 +121,9 @@ module Concurrently
     end
     alias resume! __resume__!
 
-    Concurrently::Debug.overwrite(self) do
+    Debug.overwrite(self) do
       def resume!(result = nil)
-        Concurrently::Debug.log_schedule @fiber, caller
+        Debug.log_schedule @fiber, caller
         __resume__! result
       end
     end
