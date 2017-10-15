@@ -58,6 +58,7 @@ module Concurrently
       def enable(logger, filter = false)
         @logger = logger
         @filter = filter
+        @log_concurrently_gem = filter && filter.any?{ |f| f.include? @concurrently_path }
         @overwrites.each{ |overwrite| overwrite.call }
         true
       end
@@ -142,7 +143,7 @@ module Concurrently
 
       # @private
       private def satisfies_filter?(location)
-        not location.include? @concurrently_path and
+        (not location.include? @concurrently_path or @log_concurrently_gem) and
           (not @filter or @filter.any?{ |filter| location.include? filter })
       end
     end
