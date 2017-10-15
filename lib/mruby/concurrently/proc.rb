@@ -17,9 +17,5 @@ module Concurrently
     def arity
       @proc.arity
     end
-
-    def __sync_call__(*args)
-      @proc.call *args
-    end
   end
 end

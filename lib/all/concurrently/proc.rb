@@ -5,12 +5,18 @@ module Concurrently
     #
     # mruby's Proc does not support instance variables. So, whe have to make
     # it a normal class that does not inherit from Proc :(
-    class Proc; end
+    #
+    # It is continued to be implemented in the mruby folder of lib/
+    class Proc
+      def original_call(*args)
+        @proc.call *args
+      end
+    end
   else
     class Proc < ::Proc
       # @private
       # Calls the concurrent proc like a normal proc
-      alias_method :__sync_call__, :call
+      alias_method :original_call, :call
     end
   end
 
@@ -80,22 +86,20 @@ module Concurrently
 
     # @private
     # Calls the concurrent proc from a fiber
-    def __fiber_call__(fiber, args)
-      __sync_call__ *args
-    end
+    alias_method :__original_call__, :original_call
 
     Concurrently::Debug.overwrite(self) do
-      def __fiber_call__(fiber, args)
-        Debug.log_begin fiber, source_location.join(':')
-        result = __sync_call__ *args
+      def original_call(*args)
+        Debug.log_begin Fiber.current, source_location.join(':')
+        result = __original_call__ *args
       rescue Evaluation::Cancelled => e
-        Debug.log_cancel fiber
+        Debug.log_cancel Fiber.current
         raise e
       rescue Exception => e
-        Debug.log_error fiber
+        Debug.log_error Fiber.current
         raise e
       else
-        Debug.log_end fiber
+        Debug.log_end Fiber.current
         result
       end
     end

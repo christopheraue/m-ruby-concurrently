@@ -36,7 +36,7 @@ module Concurrently
               "there is a bug in Concurrently."
           else
             begin
-              result = proc.__fiber_call__ self, args
+              result = proc.original_call *args
               if (evaluation = evaluation_bucket[0]) and not evaluation.concluded?
                 evaluation.conclude_to result
               end
