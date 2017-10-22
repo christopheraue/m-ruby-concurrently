@@ -33,5 +33,5 @@ DESC
 
   spec.add_dependency "nio4r", "~> 2.1"
   spec.add_dependency "hitimes", "~> 1.2"
-  spec.add_dependency "callbacks_attachable", "~> 2.2"
+  spec.add_dependency "callbacks_attachable", "~> 3.0"
 end
