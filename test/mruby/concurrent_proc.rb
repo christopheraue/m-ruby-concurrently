@@ -5,9 +5,11 @@ end
 assert "concurrent_proc#call" do
   assert_equal conproc.call(:result), :result
 
+  Concurrently::Proc.error_log_output = nil
   assert_raise RuntimeError, "error" do
     concurrent_proc{ raise "error" }.call
   end
+  Concurrently::Proc.error_log_output = STDERR
 end
 
 assert "concurrent_proc#call_nonblock" do

@@ -179,4 +179,54 @@ describe Concurrently::Proc do
       end
     end
   end
+
+  describe ".error_log_output=" do
+    let(:errproc){ concurrent_proc{ raise 'error' } }
+
+    def build_log_message(error)
+      <<MSG
+Concurrent proc exited with error!
+Source location: #{errproc.source_location.join ':'}
+Error: (#{error.class}) #{error.message}
+Backtrace: #{error.backtrace.join "\n"}
+MSG
+    end
+
+    context "when going with the default" do
+      subject{ errproc.call }
+      before{ allow(STDERR).to receive(:puts) }
+      it{ is_expected.to raise_error{ |error| @error = error } }
+      after{ expect(STDERR).to have_received(:puts).with build_log_message(@error) }
+    end
+
+    context "when disabling error logging" do
+      before{ described_class.error_log_output = nil }
+      subject{ errproc.call }
+      before{ allow(STDERR).to receive(:puts) }
+      it{ is_expected.to raise_error{ |error| @error = error } }
+      after{ expect(STDERR).not_to have_received(:puts).with build_log_message(@error) }
+    end
+
+    context "when assigning an IO object" do
+      before{ described_class.error_log_output = STDOUT }
+      subject{ errproc.call }
+      before{ allow(STDOUT).to receive(:puts) }
+      it{ is_expected.to raise_error{ |error| @error = error } }
+      after{ expect(STDOUT).to have_received(:puts).with build_log_message(@error) }
+    end
+
+    context "when assigning a logger" do
+      before{ described_class.error_log_output = logger }
+      let(:logger){ Logger.new STDOUT }
+      subject{ errproc.call }
+      before{ allow(logger).to receive(:error) }
+      it{ is_expected.to raise_error{ |error| @error = error } }
+      after{ expect(logger).to have_received(:error).with build_log_message(@error) }
+    end
+
+    context "when assigning an invalid object" do
+      subject{ described_class.error_log_output = :no_logger_or_io }
+      it{ is_expected.to raise_error Concurrently::Error, 'output no logger or IO' }
+    end
+  end
 end

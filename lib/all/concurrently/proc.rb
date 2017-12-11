@@ -31,13 +31,15 @@ module Concurrently
   # execution of its thread.
   #
   # Errors raised inside concurrent evaluations are re-raised when getting
-  # their result with {Evaluation#await_result}. They can also be watched by
-  # registering callbacks for the `:error` event as shown in the example below.
-  # This is useful as a central hook to all errors inside concurrent
-  # evaluations for monitoring or logging purposes. Also, concurrent procs
-  # evaluated with {Proc#call_and_forget} are evaluated in the background with
-  # no access to their evaluation and will fail silently. The callbacks are the
-  # only way to be notified about errors inside them.
+  # their result with {Evaluation#await_result}. They are also logged to
+  # stderr by default. This behavior can be controlled by {.error_log_output=}.
+  # In addition, errors can be watched by registering callbacks for the
+  # `:error` event as shown in the example below. This is useful as a central
+  # access point to errors happening inside concurrent evaluations for recovery
+  # purposes. Also, concurrent procs evaluated with {Proc#call_and_forget} are
+  # evaluated in the background with no access to their evaluation and if they
+  # fail they do so silently. The callbacks are the only way to gain access to
+  # their errors.
   #
   # The callbacks can be registered for all procs or only for one specific
   # proc:
@@ -73,6 +75,42 @@ module Concurrently
   #   # raises RuntimeError: eternal sunshine
   class Proc
     include CallbacksAttachable
+
+    # @private
+    def self.default_error_log_message(proc, error)
+      <<MSG
+Concurrent proc exited with error!
+Source location: #{proc.source_location.join ':'}
+Error: (#{error.class}) #{error}
+Backtrace: #{error.backtrace.join "\n"}
+MSG
+    end
+
+    # Sets the output to which errors in concurrent procs are written to.
+    #
+    # @param [IO|Logger|false|nil] output
+    #
+    # By default, errors are written to stderr. To disable logging of errors,
+    # set the output to `nil` or `false`.
+    #
+    # @example
+    #   require 'logger'
+    #   Concurrently::Proc.error_log_output = Logger.new(STDOUT)
+    def self.error_log_output=(output)
+      if Object.const_defined? :Logger and Logger === output
+        @error_handler.cancel if @error_handler
+        @error_handler = on(:error){ |error| output.error Proc.default_error_log_message self, error }
+      elsif IO === output
+        @error_handler.cancel if @error_handler
+        @error_handler = on(:error){ |error| output.puts Proc.default_error_log_message self, error }
+      elsif !output
+        remove_instance_variable(:@error_handler).cancel if @error_handler
+      else
+        raise Error, "output no logger or IO"
+      end
+    end
+
+    self.error_log_output = STDERR
 
     # A new instance of {Proc}
     #
