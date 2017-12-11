@@ -39,6 +39,7 @@ DESC
     Dir["#{spec.dir}/lib/mruby/**/*.rb"].sort
   spec.test_rbfiles = Dir["#{spec.dir}/test/mruby/*.rb"]
 
+  spec.add_dependency 'mruby-hash-ext', :core => 'mruby-hash-ext'
   spec.add_dependency 'mruby-array-ext', :core => 'mruby-array-ext'
   spec.add_dependency 'mruby-numeric-ext', :core => 'mruby-numeric-ext'
   spec.add_dependency 'mruby-proc-ext', :core => 'mruby-proc-ext'
