@@ -57,19 +57,19 @@ than that.
         
     Results for ruby 2.4.1
     ----------------------
-      proc.call:                11439300 executions in 1.0000 seconds
-      conproc.call:               700900 executions in 1.0001 seconds
-      conproc.call_nonblock:      838800 executions in 1.0000 seconds
-      conproc.call_detached:      428400 executions in 1.0002 seconds
-      conproc.call_and_forget:    713700 executions in 1.0000 seconds
+      proc.call:                11521800 executions in 1.0000 seconds
+      conproc.call:               756000 executions in 1.0001 seconds
+      conproc.call_nonblock:      881800 executions in 1.0001 seconds
+      conproc.call_detached:      443500 executions in 1.0001 seconds
+      conproc.call_and_forget:    755600 executions in 1.0001 seconds
     
     Results for mruby 1.3.0
     -----------------------
-      proc.call:                 5846400 executions in 1.0000 seconds
-      conproc.call:               436800 executions in 1.0001 seconds
-      conproc.call_nonblock:      509700 executions in 1.0000 seconds
-      conproc.call_detached:      252700 executions in 1.0002 seconds
-      conproc.call_and_forget:    479700 executions in 1.0001 seconds
+      proc.call:                 5801400 executions in 1.0000 seconds
+      conproc.call:               449100 executions in 1.0002 seconds
+      conproc.call_nonblock:      523400 executions in 1.0000 seconds
+      conproc.call_detached:      272500 executions in 1.0000 seconds
+      conproc.call_and_forget:    490500 executions in 1.0001 seconds
 
 *conproc.call_detached* and *conproc.call_and_forget* call `wait 0` after each
 batch so the scheduled evaluations have [a chance to run]
@@ -150,15 +150,15 @@ to expect in these cases.
         
     Results for ruby 2.4.1
     ----------------------
-      wait:                       320100 executions in 1.0001 seconds
-      await_readable:             156800 executions in 1.0003 seconds
-      await_writable:             163800 executions in 1.0001 seconds
+      wait:                       331300 executions in 1.0001 seconds
+      await_readable:             152500 executions in 1.0001 seconds
+      await_writable:             150700 executions in 1.0001 seconds
     
     Results for mruby 1.3.0
     -----------------------
-      wait:                       160200 executions in 1.0005 seconds
-      await_readable:             177400 executions in 1.0002 seconds
-      await_writable:             176800 executions in 1.0004 seconds
+      wait:                       160700 executions in 1.0004 seconds
+      await_readable:             176700 executions in 1.0005 seconds
+      await_writable:             177700 executions in 1.0003 seconds
 
 Explanation of the results:
 
@@ -257,25 +257,25 @@ performance in these scenarios.
         
     Results for ruby 2.4.1
     ----------------------
-      call:                       734100 executions in 1.0000 seconds
-      call_nonblock:              821700 executions in 1.0001 seconds
-      call_detached:              395500 executions in 1.0001 seconds
-      call_and_forget:            730000 executions in 1.0001 seconds
-      waiting call:                91000 executions in 1.0003 seconds
-      waiting call_nonblock:      194000 executions in 1.0003 seconds
-      waiting call_detached:      194100 executions in 1.0004 seconds
-      waiting call_and_forget:    217800 executions in 1.0002 seconds
+      call:                       753800 executions in 1.0000 seconds
+      call_nonblock:              913400 executions in 1.0000 seconds
+      call_detached:              418700 executions in 1.0001 seconds
+      call_and_forget:            748800 executions in 1.0001 seconds
+      waiting call:                89400 executions in 1.0001 seconds
+      waiting call_nonblock:      198800 executions in 1.0001 seconds
+      waiting call_detached:      199600 executions in 1.0004 seconds
+      waiting call_and_forget:    225300 executions in 1.0001 seconds
     
     Results for mruby 1.3.0
     -----------------------
-      call:                       431500 executions in 1.0001 seconds
-      call_nonblock:              510700 executions in 1.0002 seconds
-      call_detached:              212800 executions in 1.0001 seconds
-      call_and_forget:            478300 executions in 1.0002 seconds
-      waiting call:                62200 executions in 1.0015 seconds
-      waiting call_nonblock:       99900 executions in 1.0004 seconds
-      waiting call_detached:       98900 executions in 1.0007 seconds
-      waiting call_and_forget:    113900 executions in 1.0005 seconds
+      call:                       444200 executions in 1.0002 seconds
+      call_nonblock:              525300 executions in 1.0001 seconds
+      call_detached:              232600 executions in 1.0003 seconds
+      call_and_forget:            464500 executions in 1.0000 seconds
+      waiting call:                60100 executions in 1.0004 seconds
+      waiting call_nonblock:       95400 executions in 1.0004 seconds
+      waiting call_detached:      102100 executions in 1.0005 seconds
+      waiting call_and_forget:    118500 executions in 1.0005 seconds
 
 `wait 0` is used as a stand in for all wait methods. Measurements of concurrent
 procs doing nothing are included for comparision.
