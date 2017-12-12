@@ -233,10 +233,10 @@ module Kernel
     else
       begin
         curr_eval = Concurrently::Evaluation.current
-        evaluations.each{ |e| e.instance_eval{ @awaiting_result.store curr_eval, self } }
+        evaluations.each{ |eval| eval.__add_waiting_evaluation__ curr_eval, eval }
         await_resume! opts
       ensure
-        evaluations.each{ |e| e.instance_eval{ @awaiting_result.delete curr_eval } }
+        evaluations.each{ |eval| eval.__remove_waiting_evaluation__ curr_eval }
       end
     end
   end

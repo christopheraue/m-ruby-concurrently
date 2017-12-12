@@ -18,7 +18,7 @@ module Concurrently
     def initialize(fiber)
       super
       @concluded = false
-      @awaiting_result = {}
+      @waiting_evaluations = {}
       @data = {}
     end
 
@@ -101,6 +101,22 @@ module Concurrently
         @scheduled = false
         @fiber.resume result, @scheduled_caller
       end
+    end
+
+    # @private
+    #
+    # Manages bookkeeping of evaluations awaiting the result of this
+    # evaluation. This is a method called internally only.
+    def __add_waiting_evaluation__(evaluation, result_override = false)
+      @waiting_evaluations.store evaluation, result_override
+    end
+
+    # @private
+    #
+    # Manages bookkeeping of evaluations awaiting the result of this
+    # evaluation. This is a method called internally only.
+    def __remove_waiting_evaluation__(evaluation)
+      @waiting_evaluations.delete evaluation
     end
 
     # Waits for the evaluation to be concluded with a result.
@@ -203,12 +219,12 @@ module Concurrently
       else
         result = begin
           evaluation = Concurrently::Evaluation.current
-          @awaiting_result.store evaluation, false
+          __add_waiting_evaluation__ evaluation
           await_resume! opts
         rescue Exception => error
           error
         ensure
-          @awaiting_result.delete evaluation
+          __remove_waiting_evaluation__ evaluation
         end
       end
 
@@ -270,7 +286,7 @@ module Concurrently
         run_queue.current_evaluation = previous_evaluation
       end
 
-      @awaiting_result.each{ |evaluation, override| evaluation.resume! (override or result) }
+      @waiting_evaluations.each{ |evaluation, override| evaluation.resume! (override or result) }
       :concluded
     end
   end
