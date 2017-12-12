@@ -203,6 +203,15 @@ describe Concurrently::Proc::Evaluation do
       let!(:evaluation) { concurrent_proc{ evaluation.conclude_to :cancelled }.call_detached }
       it { is_expected.to be :cancelled }
     end
+
+    context "when concluding an evaluation an already concluded outer evaluation waited for" do
+      subject{ evaluation.conclude_to :result }
+      let!(:evaluation){ concurrently{ wait Float::INFINITY } }
+      let!(:outer_evaluation){ concurrent_proc{ evaluation.await_result }.call_nonblock }
+      before{ outer_evaluation.conclude_to :result }
+
+      it { is_expected.not_to raise_error }
+    end
   end
 
   describe "#resume!" do
