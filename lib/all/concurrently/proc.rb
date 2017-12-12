@@ -86,6 +86,9 @@ Backtrace: #{error.backtrace.join "\n"}
 MSG
     end
 
+    # @api public
+    # @since 1.2.0
+    #
     # Sets the output to which errors in concurrent procs are written to.
     #
     # @param [IO|Logger|false|nil] output
