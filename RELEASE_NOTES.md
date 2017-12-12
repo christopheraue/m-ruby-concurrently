@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.2.0 (2017-12-12)
+
+### Added [Concurrently::Debug](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Debug) interface 
+* [.enable](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Debug#enable-class_method)
+
+### Extended [Concurrently::Proc](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc) interface
+* [.error_log_output=](http://www.rubydoc.info/github/christopheraue/m-ruby-concurrently/Concurrently/Proc#error_log_output=-class_method)
+
 ## 1.1.0 (2017-07-10)
 
 ### Improvements
