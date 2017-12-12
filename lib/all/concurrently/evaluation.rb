@@ -57,6 +57,17 @@ module Concurrently
     def waiting?
       !!@waiting
     end
+
+    # @private
+    #
+    # Called by {Proc::Evaluation#await_result}. This is a method called
+    # internally only.
+    def __await_result_of__(evaluation, opts)
+      evaluation.__add_waiting_evaluation__ self
+      await_resume! opts
+    ensure
+      evaluation.__remove_waiting_evaluation__ self
+    end
     
     # @note The exclamation mark in its name stands for: Watch out!
     #   This method is potentially dangerous and can break stuff. It also

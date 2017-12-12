@@ -214,19 +214,15 @@ module Concurrently
     #     evaluation.await_result{ |result| raise "invalid result" if result != :result }
     #     # => raises "invalid result"
     def await_result(opts = {}) # &with_result
-      if @concluded
-        result = @result
-      else
-        result = begin
-          evaluation = Concurrently::Evaluation.current
-          __add_waiting_evaluation__ evaluation
-          await_resume! opts
-        rescue Exception => error
-          error
-        ensure
-          __remove_waiting_evaluation__ evaluation
-        end
-      end
+      result = if @concluded
+                 @result
+               else
+                 begin
+                   Concurrently::Evaluation.current.__await_result_of__ self, opts
+                 rescue Exception => error
+                   error
+                 end
+               end
 
       result = yield result if block_given?
 
