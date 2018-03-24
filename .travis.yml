@@ -4,9 +4,10 @@ script: rake test:$RUBY
 sudo: false
 
 rvm:
-  - 2.4.1
-  - 2.3.4
-  - 2.2.7
+  - 2.5.0
+  - 2.4.3
+  - 2.3.6
+  - 2.2.9
   - ruby-head
 
 env:
@@ -15,6 +16,7 @@ env:
 matrix:
   include:
   - env: RUBY=mruby[1.3.0]
+  - env: RUBY=mruby[1.4.0]
   - env: RUBY=mruby[master]
   allow_failures:
   - rvm: ruby-head
