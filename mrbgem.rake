@@ -25,7 +25,7 @@ DESC
   spec.license      = 'Apache-2.0'
   spec.authors      = ['Christopher Aue']
 
-  unless system("git merge-base --is-ancestor 5a9eedf5417266b82e3695ae0c29797182a5d04e HEAD")
+  if File.exist?("#{MRUBY_ROOT}/.git") && !system("git merge-base --is-ancestor 5a9eedf5417266b82e3695ae0c29797182a5d04e HEAD")
     # mruby commit 5a9eedf fixed the usage of spec.rbfiles. mruby 1.3.0
     # did not have that commit, yet. Add the patch for this case:
     @generate_functions = true
