@@ -55,7 +55,10 @@ MRuby::Build.new 'profile', File.dirname(__FILE__) do
   enable_debug
   cc.defines = %w(MRB_ENABLE_DEBUG_HOOK)
 
-  gem github: 'miura1729/mruby-profiler'
+  # Use own, fixed version of mruby-profiler until the fix is merged upstream
+  # gem github: 'miura1729/mruby-profiler'
+  gem github: 'christopheraue/mruby-profiler', :branch => 'mrb_method_t_fix'
+
   gem core: 'mruby-bin-mruby'
   gem core: 'mruby-proc-ext'
   gem core: 'mruby-sprintf'
