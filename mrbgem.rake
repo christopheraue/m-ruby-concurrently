@@ -56,4 +56,8 @@ DESC
   else
     spec.add_dependency 'mruby-poll'
   end
+  
+  if File.exist? "#{MRUBY_ROOT}/mrbgems/mruby-metaprog"
+    spec.add_dependency 'mruby-metaprog', core: 'mruby-metaprog'
+  end
 end
